@@ -1,0 +1,60 @@
+From 0fda0fcb4a50e3cec86cbe2da2c1644709b74c9d Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?St=C3=A9phane=20MBAPE?= <rose.martin-8og3raxw@yopmail.com>
+Date: Wed, 12 Aug 2015 22:23:10 +0200
+Subject: [PATCH] add completer feature
+
+---
+ src/watch.coffee | 29 +++++++++++++++++++++++++++--
+ 1 file changed, 27 insertions(+), 2 deletions(-)
+
+diff --git a/src/watch.coffee b/src/watch.coffee
+index a621c11..1ed5d30 100644
+--- a/src/watch.coffee
++++ b/src/watch.coffee
+@@ -153,6 +153,29 @@ isPluginFor = (path) -> (plugin) ->
+     /$0^/ # never match
+   pattern.test(path)
+ 
++isCompleterFor = (path, compilers = [])->
++  if compiler = compilers[0]
++    type = compiler.type
++    if 'template' is type
++      type = 'javascript'
++  else
++    extension = sysPath.extname path
++    if '.js' is extension
++      type = 'javascript'
++    else if '.css' is extension
++      type = 'stylesheet'
++
++  if type
++    (plugin)->
++      return false if not plugin.completer
++      if plugin.typePattern
++        plugin.typePattern.test type
++      else
++        plugin.type is type
++  else
++    (plugin)->
++      plugin.completer and plugin.typeUndefined
++
+ # Determine which compiler should be used for path and
+ # emit `change` event.
+ #
+@@ -164,9 +187,11 @@ isPluginFor = (path) -> (plugin) ->
+ #
+ # Returns nothing.
+ changeFileList = (compilers, linters, fileList, path, isHelper) ->
+-  compiler = compilers.filter(isPluginFor path)
++  currentCompilers = compilers.filter(isPluginFor path)
++  completers = compilers.filter(isCompleterFor path, currentCompilers)
++  currentCompilers.push.apply currentCompilers, completers
+   currentLinters = linters.filter(isPluginFor path)
+-  fileList.emit 'change', path, compiler, currentLinters, isHelper
++  fileList.emit 'change', path, currentCompilers, currentLinters, isHelper
+ 
+ generateCompilationLog = (startTime, allAssets, generatedFiles, disposedFiles) ->
+   # compiled 4 files and 145 cached files into app.js
+-- 
+1.9.5.msysgit.1
+

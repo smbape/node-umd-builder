@@ -1,0 +1,51 @@
+--- handlebars.ori.js	2015-09-02 01:06:03.316879800 +0200
++++ handlebars.js	2015-09-02 01:06:05.450650700 +0200
+@@ -1,5 +1,5 @@
+ module.exports = function(hljs) {
+-  var EXPRESSION_KEYWORDS = 'each in with if else unless bindattr action collection debugger log outlet template unbound view yield';
++  var JS_IDENT_RE = '[A-Za-z$_][0-9A-Za-z$_]*';
+   return {
+     aliases: ['hbs', 'html.hbs', 'html.handlebars'],
+     case_insensitive: true,
+@@ -7,23 +7,33 @@
+     contains: [
+       {
+         className: 'expression',
+-        begin: '{{', end: '}}',
++        begin: '{?{{',
++        end: '}}}?',
++        returnBegin: true,
+         contains: [
++          hljs.COMMENT('{{!--', '--}}'),
+           {
+-            className: 'begin-block', begin: '\#[a-zA-Z\-\ \.]+',
+-            keywords: EXPRESSION_KEYWORDS
++            className: 'keyword',
++            begin: '{?{{/' + JS_IDENT_RE + '}}}?'
+           },
+           {
+-            className: 'string',
+-            begin: '"', end: '"'
++            className: 'keyword',
++            begin: '{{\#' + JS_IDENT_RE
++          },
++          {
++            className: 'keyword',
++            begin: '{?{{'
+           },
++          // {
++          //   className: 'keyword', begin: '}}}?'
++          // },
+           {
+-            className: 'end-block', begin: '\\\/[a-zA-Z\-\ \.]+',
+-            keywords: EXPRESSION_KEYWORDS
++            className: 'string',
++            begin: '"', end: '"'
+           },
+           {
+             className: 'variable', begin: '[a-zA-Z\-\.]+',
+-            keywords: EXPRESSION_KEYWORDS
++            keywords: 'as'
+           }
+         ]
+       }

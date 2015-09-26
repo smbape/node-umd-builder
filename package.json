@@ -1,0 +1,34 @@
+{
+  "author": "Stéphane Mbape",
+  "name": "umd-builder",
+  "description": "Umd builder for front end website",
+  "version": "1.0.0",
+  "scripts": {
+    "prepublish": "coffee -bo lib/ src/",
+    "postinstall": "node -e \"require('fs').readdir('lib',function(e){e&&require('child_process').exec('npm run prepublish')})\""
+  },
+  "dependencies": {
+    "anyspawn": "git+https://github.com/smbape/node-anyspawn.git",
+    "chalk": "*",
+    "log4js": "*",
+    "mkdirp": "*",
+    "lodash": "*",
+    "fs-explorer": "*",
+    "sem-lib": "*",
+    "anymatch": "*",
+    "ejs": "*",
+    "esprima": "*",
+    "handlebars": "*",
+    "umd-wrapper": "*",
+    "marked": "*",
+    "highlight.js": "*",
+    "clean-css": "*",
+    "stylus": "*",
+    "nib": "*",
+    "progeny": "*",
+    "username": "*",
+    "which": "*"
+  },
+  "main": "lib/builder.js",
+  "license": "MIT"
+}

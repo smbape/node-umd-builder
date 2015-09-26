@@ -1,0 +1,70 @@
+From afe791ada4df3860bb77a52a58b79a6ba9a2794d Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?St=C3=A9phane=20MBAPE?= <rose.martin-8og3raxw@yopmail.com>
+Date: Mon, 10 Aug 2015 20:23:02 +0200
+Subject: [PATCH] add anymatch feature
+
+---
+ src/watch.coffee | 39 +++++++++++++++++++++++++++++++++++----
+ 1 file changed, 35 insertions(+), 4 deletions(-)
+
+diff --git a/src/watch.coffee b/src/watch.coffee
+index a621c11..1caa290 100644
+--- a/src/watch.coffee
++++ b/src/watch.coffee
+@@ -8,6 +8,8 @@ sysPath = require 'path'
+ spawn = require('child_process').spawn
+ logger = require 'loggy'
+ pushserve = require 'pushserve'
++anymatch = require 'anymatch'
++explore = require('fs-explorer').explore
+ # worker must be loaded before fs_utils
+ worker = require './worker'
+ fs_utils = require './fs_utils'
+@@ -130,11 +132,40 @@ initWatcher = (config, callback) ->
+   )
+ 
+   exists = (path, callback) ->
+-    fs_utils.exists path, (value) ->
+-      callback undefined, value
++    # http://www.regular-expressions.info/characters.html#special
++    if /[\^\$\|\?\*\+\(\)\[\]\{\}]/.test path
++      # matchers are relative to component directory
++      # path = <basedir>/<component>/relative
++      # componentDir = <basedir>/<component>
++      # replace(/[\\]/g, '/') to avoid path sep OS differencies
++      # /[\\]/g instead of /\\/g because of sublime text 2 coffee syntax highlight error
++
++      componentDir = path.replace /([^\/\\]+[\/\\][^\/\\]+)[\/\\].*/g, '$1'
++      matcher = anymatch [path]
++
++      files = []
++      explore componentDir, (path, stats, next)->
++        files.push(path) if matcher path.replace(/[\\]/g, '/')
++        next()
++        return
++      , (err)->
++        err = null if err and err.code is 'ENOENT'
++        callback err, files
++        return
++    else
++      fs_utils.exists path, (value) ->
++        callback undefined, path
++
++    return
+ 
+-  each watched, exists, (err, existing) ->
+-    watchedFiles = watched.filter((_, index) -> existing[index])
++  each watched, exists, (err, files) ->
++    watchedFiles = []
++    if Array.isArray files
++      for file in files
++        if Array.isArray file
++          watchedFiles.push.apply watchedFiles, file
++        else
++          watchedFiles.push file
+     params = ignored: fs_utils.ignored, persistent: config.persistent, usePolling: config.watcher?.usePolling
+     callback null, chokidar.watch watchedFiles, params
+ 
+-- 
+1.9.5.msysgit.1
+

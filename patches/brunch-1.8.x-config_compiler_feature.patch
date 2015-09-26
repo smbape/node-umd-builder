@@ -1,0 +1,26 @@
+From 4a2a232867b8ff3746bd4353faf4727e774df716 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?St=C3=A9phane=20MBAPE?= <rose.martin-8og3raxw@yopmail.com>
+Date: Wed, 12 Aug 2015 22:19:25 +0200
+Subject: [PATCH] add config compiler feature
+
+---
+ src/watch.coffee | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/src/watch.coffee b/src/watch.coffee
+index a621c11..5556746 100644
+--- a/src/watch.coffee
++++ b/src/watch.coffee
+@@ -399,7 +399,8 @@ initialize = (options, configParams, onCompile, callback) ->
+     if options.optimize?
+       logger.warn '`-o, --optimize` option is deprecated. Use `-P, --production` instead'
+     joinConfig = config._normalized.join
+-    packages = (loadPackages '.').filter ({brunchPluginName}) ->
++    packages = if Array.isArray(config.compilers) then config.compilers else []
++    packages = (packages.concat loadPackages '.').filter ({brunchPluginName}) ->
+       if config.plugins.off?.length and brunchPluginName in config.plugins.off
+         false
+       else if config.plugins.only?.length and brunchPluginName not in config.plugins.only
+-- 
+1.9.5.msysgit.1
+

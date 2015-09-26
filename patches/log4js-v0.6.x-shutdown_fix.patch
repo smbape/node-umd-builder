@@ -1,0 +1,19 @@
+--- a/log4js.js	Sun Jul 26 13:38:20 2015
++++ b/log4js.js	Mon Aug 17 19:44:01 2015
+@@ -441,7 +441,15 @@
+     function(shutdownFn, done) {
+       shutdownFn(done);
+     },
+-		cb
++    function() {
++      if (configState.timerId) {
++        clearInterval(configState.timerId);
++        delete configState.timerId;
++      }
++      if ('function' === typeof cb) {
++        cb.apply(null, arguments);
++      }
++    }
+   );
+ }
+ 
