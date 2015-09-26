@@ -14,7 +14,7 @@
     "mkdirp": "*",
     "lodash": "*",
     "fs-explorer": "git+http://127.0.0.1:20080/git/fs-explorer.git",
-    "sem-lib": "*",
+    "sem-lib": "git+http://127.0.0.1:20080/git/sem-lib.git",
     "anymatch": "*",
     "ejs": "*",
     "esprima": "*",
