@@ -8,12 +8,12 @@
     "postinstall": "node -e \"require('fs').readdir('lib',function(e){e&&require('child_process').exec('npm run prepublish')})\""
   },
   "dependencies": {
-    "anyspawn": "git+https://github.com/smbape/node-anyspawn.git",
+    "anyspawn": "git+http://127.0.0.1:20080/git/node-anyspawn.git",
     "chalk": "*",
     "log4js": "*",
     "mkdirp": "*",
     "lodash": "*",
-    "fs-explorer": "*",
+    "fs-explorer": "git+http://127.0.0.1:20080/git/fs-explorer.git",
     "sem-lib": "*",
     "anymatch": "*",
     "ejs": "*",
