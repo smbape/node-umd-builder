@@ -21,6 +21,7 @@ function setup(projectRoot, done) {
         new_branch = '__umd_features__',
         is_new_branch = new RegExp('\\*\\s+' + new_branch + '(?:\\n|$)'),
         has_new_branch = new RegExp('(?:^|\n)' + new_branch + '(?:\\n|$)'),
+        patchesFolder = sysPath.join(__dirname, 'patches'),
         push = Array.prototype.push,
         slice = Array.prototype.slice;
 
@@ -97,7 +98,8 @@ function setup(projectRoot, done) {
             filePatches = [
                 ['node_modules/log4js/lib/log4js.js', 'log4js-v0.6.x-shutdown_fix.patch'],
                 ['node_modules/highlight.js/lib/languages/handlebars.js', 'hljs_hbs-8.7.0_fix.patch']
-            ];
+            ],
+            patchFile;
 
         push.apply(tasks, [
             ['git checkout tags/1.8.5', {
@@ -109,9 +111,10 @@ function setup(projectRoot, done) {
         ]);
 
         for (var i = 0, _len = brunchPatches.length; i < _len; i++) {
-            tasks.push(['git apply --check ../../amd-builder/patches/' + brunchPatches[i] + '.patch', {
+            patchFile = sysPath.join(patchesFolder, brunchPatches[i] + '.patch');
+            tasks.push(['git', ['apply', '--check', patchFile], {
                 cwd: projectBrunch
-            }], ['git apply ../../amd-builder/patches/' + brunchPatches[i] + '.patch', {
+            }], ['git', ['apply', patchFile], {
                 cwd: projectBrunch
             }]);
         }
@@ -128,7 +131,9 @@ function setup(projectRoot, done) {
             }],
         ]);
 
-        anyspawn.spawnSeries(tasks, function(err) {
+        anyspawn.spawnSeries(tasks, {
+            stdio: 'inherit'
+        }, function(err) {
             if (err) {
                 done(err);
                 return;
@@ -147,8 +152,8 @@ function setup(projectRoot, done) {
         function iterate(err) {
             var file, patch;
             if (err === 0 && ++i < _len) {
-                file = sysPath.relative(projectRoot, sysPath.resolve(projectRoot, patches[i][0]));
-                patch = sysPath.relative(projectRoot, sysPath.resolve(projectRoot, 'amd-builder/patches', patches[i][1]));
+                file = sysPath.relative(projectRoot, sysPath.join(projectRoot, patches[i][0]));
+                patch = sysPath.relative(projectRoot, sysPath.join(patchesFolder, patches[i][1]));
                 anyspawn.spawn('patch ' + anyspawn.quoteArg(file) + ' < ' + anyspawn.quoteArg(patch), {
                     cwd: projectRoot,
                     stdio: 'inherit'

@@ -4,7 +4,7 @@ sysPath = require 'path'
 semLib = require 'sem-lib'
 log4js = global.log4js || (global.log4js = require('log4js'))
 logger = log4js.getLogger 'copy'
-builder = require '../builder'
+builder = require '../../'
 _ = require 'lodash'
 
 # 4 parallel copies at most

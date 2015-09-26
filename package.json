@@ -12,7 +12,7 @@
     "chalk": "*",
     "log4js": "*",
     "mkdirp": "*",
-    "lodash": "*",
+    "lodash": "git+https://github.com/lodash/lodash.git#6b09f1f233172eeff0643213f4ad846a5b74edd4",
     "fs-explorer": "git+http://127.0.0.1:20080/git/fs-explorer.git",
     "sem-lib": "git+http://127.0.0.1:20080/git/sem-lib.git",
     "anymatch": "*",
@@ -29,6 +29,6 @@
     "username": "*",
     "which": "*"
   },
-  "main": "lib/builder.js",
+  "main": "index.js",
   "license": "MIT"
 }

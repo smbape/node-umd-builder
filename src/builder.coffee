@@ -1,4 +1,4 @@
-log4js = require('./log4js')
+log4js = require('../log4js')
 cluster = require 'cluster'
 util = require 'util'
 fs = require 'fs'
@@ -8,12 +8,12 @@ _ = require 'lodash'
 explore = require('fs-explorer').explore
 semLib = require 'sem-lib'
 anymatch = require 'anymatch'
-logger = log4js.getLogger 'amd-builder'
+logger = log4js.getLogger 'umd-builder'
 
 initConfig = (options)->
     config = options._c = {}
 
-    APPLICATION_PATH = sysPath.resolve __dirname, '..', options.paths.root
+    APPLICATION_PATH = sysPath.resolve options.paths.root
     CLIENT_RELATIVE_PATH = options.paths.watched[0]
 
     # Where to find client files
@@ -343,7 +343,7 @@ _writeMainFile = (config, options)->
 
             requirejs.config(config);
 
-            define(['lib/depsLoader'], function(depsLoader) {
+            define(['umd-stdlib/depsLoader'], function(depsLoader) {
                 window.depsLoader = depsLoader;
                 require(deps, function() {
                     require(['initialize']);
@@ -455,5 +455,3 @@ exports.initialize = (options = {}, next)->
         next config
         return
     return
-
-exports.setup = require('../setup');

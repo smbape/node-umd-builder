@@ -4,7 +4,7 @@ mkdirp = require 'mkdirp'
 sysPath = require 'path'
 semLib = require 'sem-lib'
 logger = log4js.getLogger 'AmdCompiler'
-builder = require '../builder'
+builder = require '../../'
 
 customUmdWrapper = (data)->
     """
@@ -46,7 +46,6 @@ module.exports = class AmdCompiler
     completer: true
     
     constructor: (config = {})->
-        # logger.info require('util').inspect config, {colors: true, depth: 10}
         # TODO: find a better way to initialize builder with config before starting compilation
         picked = [
             'jsExtensions'

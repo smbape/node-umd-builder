@@ -9,9 +9,7 @@ var fs = require('fs'),
     log4js = require('umd-builder/log4js'),
     logger = log4js.getLogger('umd-builder');
 
-global.isDevBrunch = true;
-var src = sysPath.join(__dirname, 'node_modules', 'brunch', 'src', 'cli'),
-    cli = require(src);
+var cli = require('brunch/src/cli');
 
 var program = require('brunch/node_modules/commander');
 program.commands.filter(function(command) {
