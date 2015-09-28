@@ -1,28 +1,30 @@
 // jshint node: true
 'use strict';
 
-module.exports = setup;
+var fs = require('fs'),
+    sysPath = require('path'),
+    os = require('os'),
+    chalk = require('chalk'),
+    which = require('which'),
+    anyspawn = require('anyspawn'),
+    new_branch = '__umd_features__';
+
+fs.readdir('lib', function(err) {
+    anyspawn.spawn('npm run prepublish', function() {
+        setup(sysPath.join(__dirname, '..'));
+    });
+});
 
 function setup(projectRoot, done) {
     // https://ariejan.net/2009/10/26/how-to-create-and-apply-a-patch-with-git/
 
-    var fs = require('fs'),
-        sysPath = require('path'),
-        os = require('os'),
-        chalk = require('chalk'),
-        which = require('which'),
-        anyspawn = require('anyspawn'),
-        projectModules = sysPath.join(projectRoot, 'node_modules'),
+    var projectModules = sysPath.join(projectRoot, 'node_modules'),
         projectBrunch = sysPath.join(projectModules, 'brunch'),
         projectLodash = sysPath.join(projectModules, 'lodash'),
-        hostname = os.hostname(),
         username = require('username').sync(),
-        isWindows = process.platform.substring(0, 3) === 'win',
-        npm = isWindows ? 'npm.cmd' : 'npm',
-        new_branch = '__umd_features__',
         is_new_branch = new RegExp('\\*\\s+' + new_branch + '(?:\\n|$)'),
         has_new_branch = new RegExp('(?:^|\n)' + new_branch + '(?:\\n|$)'),
-        patchesFolder = sysPath.join(__dirname, 'patches'),
+        patchesFolder = sysPath.join(__dirname, '..', 'patches'),
         push = Array.prototype.push,
         slice = Array.prototype.slice;
 
@@ -112,7 +114,7 @@ function setup(projectRoot, done) {
         ]);
 
         for (var i = 0, _len = brunchPatches.length; i < _len; i++) {
-            patchFile = sysPath.join(patchesFolder, brunchPatches[i] + '.patch');
+            patchFile = sysPath.relative(projectBrunch, sysPath.join(patchesFolder, brunchPatches[i] + '.patch'));
             tasks.push(['git apply -v --check ' + anyspawn.quoteArg(patchFile), {
                 cwd: projectBrunch
             }], ['git apply ' + anyspawn.quoteArg(patchFile), {
@@ -121,9 +123,6 @@ function setup(projectRoot, done) {
         }
 
         push.apply(tasks, [
-            ['bower install', {
-                cwd: projectRoot
-            }],
             ['npm install', {
                 cwd: projectLodash
             }],
