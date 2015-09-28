@@ -9,6 +9,7 @@ explore = require('fs-explorer').explore
 semLib = require 'sem-lib'
 anymatch = require 'anymatch'
 logger = log4js.getLogger 'umd-builder'
+chokidar = require 'chokidar'
 
 initConfig = (options)->
     config = options._c = {}
@@ -400,7 +401,6 @@ buildClient = (options, next)->
 
 watchClientFiles = (options, next)->
     logger.info 'Start watching client files'
-    chokidar = require 'chokidar'
 
     watcher = chokidar.watch sysPath.join options._c.paths.CLIENT_ASSETS_PATH, 'index.hbs'
     watcher.on('add', (path)->
