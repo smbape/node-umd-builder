@@ -1,9 +1,10 @@
+// jshint node: true
+'use strict';
+
 module.exports = setup;
 
 function setup(projectRoot, done) {
     // https://ariejan.net/2009/10/26/how-to-create-and-apply-a-patch-with-git/
-
-    'use strict';
 
     var fs = require('fs'),
         sysPath = require('path'),
@@ -112,9 +113,9 @@ function setup(projectRoot, done) {
 
         for (var i = 0, _len = brunchPatches.length; i < _len; i++) {
             patchFile = sysPath.join(patchesFolder, brunchPatches[i] + '.patch');
-            tasks.push(['git apply -v --check ' + quoteArg(patchFile), {
+            tasks.push(['git apply -v --check ' + anyspawn.quoteArg(patchFile), {
                 cwd: projectBrunch
-            }], ['git apply ' + quoteArg(patchFile), {
+            }], ['git apply ' + anyspawn.quoteArg(patchFile), {
                 cwd: projectBrunch
             }]);
         }
