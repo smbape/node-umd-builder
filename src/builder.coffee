@@ -39,7 +39,7 @@ initConfig = (options)->
 
     bowerConfig = require sysPath.resolve APPLICATION_PATH, 'bower.json'
     config.dependencies = bowerConfig.dependencies
-    config.overrides = bowerConfig.overrides
+    config.overrides = bowerConfig.overrides || {}
 
     config.paths = {
         APPLICATION_PATH
