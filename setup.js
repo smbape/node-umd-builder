@@ -112,9 +112,9 @@ function setup(projectRoot, done) {
 
         for (var i = 0, _len = brunchPatches.length; i < _len; i++) {
             patchFile = sysPath.join(patchesFolder, brunchPatches[i] + '.patch');
-            tasks.push(['git', ['apply', '--check', patchFile], {
+            tasks.push(['git apply -v --check ' + quoteArg(patchFile), {
                 cwd: projectBrunch
-            }], ['git', ['apply', patchFile], {
+            }], ['git apply ' + quoteArg(patchFile), {
                 cwd: projectBrunch
             }]);
         }
