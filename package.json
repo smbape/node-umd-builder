@@ -24,6 +24,7 @@
     "mkdirp": "^0.5.1",
     "nib": "^1.1.0",
     "progeny": "^0.5.2",
+    "prompt": "^0.2.14",
     "sem-lib": "git+https://gitlab.smbape.com/smbape/node-sem-lib.git",
     "stylus": "^0.52.4",
     "umd-wrapper": "^0.1.0",

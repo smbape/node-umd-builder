@@ -129,6 +129,9 @@ function setup(projectRoot, done) {
             ['npm install', {
                 cwd: projectBrunch
             }],
+            ['npm install --ignore-scripts', {
+                cwd: projectRoot
+            }]
         ]);
 
         anyspawn.spawnSeries(tasks, {

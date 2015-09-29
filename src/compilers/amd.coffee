@@ -3,6 +3,7 @@ fs = require 'fs'
 mkdirp = require 'mkdirp'
 sysPath = require 'path'
 semLib = require 'sem-lib'
+_ = require 'lodash'
 logger = log4js.getLogger 'AmdCompiler'
 builder = require '../../'
 
@@ -47,14 +48,8 @@ module.exports = class AmdCompiler
     
     constructor: (config = {})->
         # TODO: find a better way to initialize builder with config before starting compilation
-        picked = [
-            'jsExtensions'
-            'paths'
-            'links'
-        ]
-        @options = {}
-        for opt in picked
-            @options[opt] = config[opt]
+        @options = _.extend {}, config
+        @amdDestination = config.modules.amdDestination
 
         @sourceMaps = !!config.sourceMaps
         @amdDestination = config.modules.amdDestination

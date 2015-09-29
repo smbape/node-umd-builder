@@ -111,10 +111,7 @@ buildBower = (options, next)->
         # http://requirejs.org/docs/api.html#config-deps
         deps: []
 
-        # http://requirejs.org/docs/api.html#config-map
-        map: '*': underscore: 'lodash'
-
-    _.extend config.map, options.map
+    _.extend config, options.requirejs
 
     count = 0
 
@@ -324,6 +321,7 @@ _writeMainFile = (config, options)->
     }
     """
     delete config.bundles
+    loader = config.loader or 'umd-stdlib/core/depsLoader'
 
     mainjs = """
         window.appConfig || (window.appConfig = {});
@@ -344,7 +342,7 @@ _writeMainFile = (config, options)->
 
             requirejs.config(config);
 
-            define(['umd-stdlib/depsLoader'], function(depsLoader) {
+            define(['#{loader}'], function(depsLoader) {
                 window.depsLoader = depsLoader;
                 require(deps, function() {
                     require(['initialize']);

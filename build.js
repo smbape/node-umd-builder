@@ -6,23 +6,34 @@ var fs = require('fs'),
     sysPath = require('path'),
     _explore = require('fs-explorer')._explore,
     mkdirp = require('mkdirp'),
+    anyspawn = require('anyspawn'),
     log4js = require('umd-builder/log4js'),
     logger = log4js.getLogger('umd-builder');
 
 var cli = require('brunch/src/cli');
 
 var program = require('brunch/node_modules/commander');
-program.commands.filter(function(command) {
+program.commands.forEach(function(command) {
     if (command._name === 'build' || command._name === 'watch') {
-        command.option('--clean', 'remove public directory before starting');
-        return true;
+        command.option('-c, --clean', 'remove public directory before starting');
+        command.option('-f, --force', 'Force clean without prompt');
     }
-    return false;
 });
 
-var command = process.argv[2];
+var command = process.argv[2],
+    cleanOpt, forceOpt;
+if (command === 'build' || command === 'watch') {
+    process.argv.slice(2).forEach(function(arg) {
+        if (arg === '--clean' || (/-\w/.test(arg) && ~arg.indexOf('c'))) {
+            cleanOpt = true;
+        }
+        if (arg === '--force' || (/-\w/.test(arg) && ~arg.indexOf('f'))) {
+            forceOpt = true;
+        }
+    });
+}
 
-if ((command === 'build' || command === 'watch') && ~(process.argv.indexOf('--clean'))) {
+if (cleanOpt) {
     clean(run);
 } else {
     run();
@@ -32,15 +43,39 @@ function clean(next) {
     // todo, take plublic path from config
     var PUBLIC_PATH = sysPath.resolve('public');
 
-    logger.warn('Cleaning', PUBLIC_PATH);
-    remove(PUBLIC_PATH, {
-        empty: true
-    }, function(err) {
-        logger.warn('Cleaning done');
-        if (err && err.code !== 'ENOENT') {
-            logger.error(err);
+    var prompt = require('prompt');
+    if (forceOpt) {
+        prompt.override = {
+            answer: 'yes'
+        };
+    }
+    prompt.colors = false;
+    prompt.message = '';
+    prompt.delimiter = '';
+    prompt.start();
+
+    prompt.get({
+        properties: {
+            answer: {
+                description: 'Confirm cleaning of ' + anyspawn.quoteArg(PUBLIC_PATH) + '? [yes/no]: '
+            }
         }
-        next();
+    }, function(err, result) {
+        if (result && /^yes$/i.test(result.answer)) {
+            logger.warn('cleaning folder '+ anyspawn.quoteArg(PUBLIC_PATH));
+
+            remove(PUBLIC_PATH, {
+                empty: true
+            }, function(err) {
+                logger.warn('cleaned '+ anyspawn.quoteArg(PUBLIC_PATH));
+                if (err && err.code !== 'ENOENT') {
+                    logger.error(err);
+                }
+                next();
+            });
+        } else {
+            next();
+        }
     });
 }
 
