@@ -201,7 +201,7 @@ _processComponentMainFiles = (mainFiles, component, bowerConfig, config, options
         take()
         if /\*/.test path
             componentDir = sysPath.resolve options._c.paths.BOWER_COMPONENTS_RELATIVE_PATH, component
-            _patterMatchBowerFiles component, bowerConfig, config, {path, componentDir, memo}, options, give
+            _matchBowerFiles component, bowerConfig, config, {path, componentDir, memo}, options, give
         else
             _compileBowerFile path, component, bowerConfig, config, memo, false, options, give
 
@@ -210,8 +210,8 @@ _processComponentMainFiles = (mainFiles, component, bowerConfig, config, options
 
 # path is relative path without leading slash
 # componentDir is absolute path without trailing slash
-_patterMatchBowerFiles = (component, bowerConfig, config, {path, componentDir, memo}, options, done)->
-    matcher = anymatch [path.replace(/[\\]/g, '/')]
+_matchBowerFiles = (component, bowerConfig, config, {path, componentDir, memo}, options, done)->
+    matcher = anymatch [path]
     start = componentDir.length + 1
     explore componentDir, (path, stats, next)->
         relativePath = path.substring(start).replace(/[\\]/g, '/')
