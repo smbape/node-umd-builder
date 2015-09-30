@@ -20,7 +20,7 @@ function setup(projectRoot, done) {
         username = require('username').sync(),
         is_new_branch = new RegExp('\\*\\s+' + new_branch + '(?:\\n|$)'),
         has_new_branch = new RegExp('(?:^|\n)' + new_branch + '(?:\\n|$)'),
-        patchesFolder = sysPath.join(__dirname, '..', 'patches'),
+        patchesFolder = sysPath.join(__dirname, 'patches'),
         push = Array.prototype.push,
         slice = Array.prototype.slice;
 
