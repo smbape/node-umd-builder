@@ -5,7 +5,7 @@ sysPath = require 'path'
 semLib = require 'sem-lib'
 _ = require 'lodash'
 logger = log4js.getLogger 'AmdCompiler'
-builder = require '../../'
+builder = require('../../').builder
 
 customUmdWrapper = (data)->
     """
