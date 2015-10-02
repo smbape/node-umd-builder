@@ -119,13 +119,13 @@ function setup(projectRoot, done) {
         }
 
         push.apply(tasks, [
-            ['npm install', {
+            ['npm install --production', {
                 cwd: projectLodash
             }],
-            ['npm install', {
+            ['npm install --production', {
                 cwd: projectBrunch
             }],
-            ['npm install --ignore-scripts', {
+            ['npm install --production --ignore-scripts', {
                 cwd: projectRoot
             }]
         ]);
