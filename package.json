@@ -1,12 +1,26 @@
 {
-  "author": "Stéphane Mbape",
   "name": "umd-builder",
-  "description": "Umd builder for front end website",
   "version": "1.0.0",
+  "description": "Build modular client application with support of commonjs, requirejs and nodejs without duplicating source code",
+  "main": "index.js",
   "scripts": {
     "prepublish": "coffee -bo lib/ src/",
-    "postinstall": "node scripts/install.js"
+    "postinstall": "node scripts/install.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/smbape/node-umd-builder"
+  },
+  "keywords": [
+    "umd"
+  ],
+  "author": "Stéphane MBAPE",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/smbape/node-umd-builder/issues"
+  },
+  "homepage": "https://github.com/smbape/node-umd-builder",
   "dependencies": {
     "anymatch": "^1.3.0",
     "anyspawn": "git+https://gitlab.smbape.com/smbape/node-anyspawn.git",
@@ -30,7 +44,5 @@
     "umd-wrapper": "^0.1.0",
     "username": "^1.0.0",
     "which": "^1.1.2"
-  },
-  "main": "index.js",
-  "license": "MIT"
+  }
 }
