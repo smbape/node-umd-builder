@@ -55,6 +55,11 @@ module.exports = class AmdCompiler
     constructor: (config = {})->
         # TODO: find a better way to initialize builder with config before starting compilation
         @options = _.extend {}, config
+        if config.optimize
+            try
+                UglifyJSOptimizer = require 'uglify-js-brunch'
+                @options.optimizer = new UglifyJSOptimizer config
+
         @amdDestination = config.modules.amdDestination
 
     compile: (params, next)->

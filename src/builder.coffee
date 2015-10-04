@@ -12,7 +12,7 @@ logger = log4js.getLogger 'umd-builder'
 chokidar = require 'chokidar'
 
 initConfig = (options)->
-    config = options._c = {}
+    config = options._c = {optimizer: options.optimizer}
 
     APPLICATION_PATH = sysPath.resolve options.paths.root
     CLIENT_RELATIVE_PATH = options.paths.watched[0]
@@ -351,9 +351,17 @@ _writeMainFile = (config, options)->
         })();
     """
 
-    MAIN_JS_FILE = sysPath.resolve options._c.paths.PUBLIC_PATH, 'javascripts/main.js'
+    path = 'javascripts/main.js'
+    MAIN_JS_FILE = sysPath.resolve options._c.paths.PUBLIC_PATH, path
     mkdirp.sync sysPath.dirname MAIN_JS_FILE
     writer = fs.createWriteStream MAIN_JS_FILE, flags: 'w'
+
+    if options.optimizer
+        options.optimizer.optimize {data:mainjs, path}, (err, {data: optimized, path, map})->
+            logger.error err if err
+            writer.write optimized || mainjs
+            return
+        return
     writer.write mainjs
     return
 

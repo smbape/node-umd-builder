@@ -49,11 +49,17 @@ module.exports = class AmdCompiler
     constructor: (config = {})->
         # TODO: find a better way to initialize builder with config before starting compilation
         @options = _.extend {}, config
+        if config.optimize
+            try
+                UglifyJSOptimizer = require 'uglify-js-brunch'
+                @options.optimizer = new UglifyJSOptimizer config
+
         @amdDestination = config.modules.amdDestination
 
         @sourceMaps = !!config.sourceMaps
         @amdDestination = config.modules.amdDestination
         @isCustomUmdModule = config.modules.isCustomUmdModule
+
 
     compile: (params, next)->
         return @_compile params, next if @initialized
@@ -74,6 +80,13 @@ module.exports = class AmdCompiler
 
         if @isCustomUmdModule path, data
             data = customUmdWrapper data
+
+        if @options.optimizer
+            @options.optimizer.optimize {data, path, map}, (err, {data: optimized, path, map})->
+                logger.error err if err
+                writeData optimized || data, dst
+                return
+            return
 
         writeData data, dst
 
