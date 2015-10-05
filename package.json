@@ -4,8 +4,8 @@
   "description": "Build modular client application with support of commonjs, requirejs and nodejs without duplicating source code",
   "main": "index.js",
   "scripts": {
-    "prepublish": "coffee -bo lib/ src/",
-    "postinstall": "node scripts/install.js",
+    "prepublish": "node scripts/prepublish.js",
+    "postinstall": "node scripts/postinstall.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -27,6 +27,7 @@
     "chalk": "^1.1.1",
     "chokidar": "^1.1.0",
     "clean-css": "^3.4.5",
+    "commander": "^2.8.1",
     "ejs": "^2.3.4",
     "esprima": "^2.6.0",
     "fs-explorer": "^1.0.0",
@@ -44,5 +45,9 @@
     "umd-wrapper": "^0.1.0",
     "username": "^1.0.0",
     "which": "^1.1.2"
+  },
+  "devDependencies": {
+    "coffee-script": "^1.10.0",
+    "mkdirp": "^0.5.1"
   }
 }
