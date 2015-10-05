@@ -22,7 +22,7 @@ program.commands.forEach(function(command) {
 
 var command = process.argv[2],
     cleanOpt, forceOpt;
-if (command === 'build' || command === 'watch') {
+if (/^w|watch|b|build$/.test(command)) {
     process.argv.slice(2).forEach(function(arg) {
         if (arg === '--clean' || (/^-\w/.test(arg) && ~arg.indexOf('c'))) {
             cleanOpt = true;
