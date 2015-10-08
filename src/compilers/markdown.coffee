@@ -12,13 +12,6 @@ defaultOptions =
         else
             hljs.highlight(lang, code).value
 
-defaultOptions.renderer.heading =  (text, level) ->
-    escapedText = text.toLowerCase().replace(/[^\w]+/g, '-')
-    """<h#{level}>
-        <a name="#{escapedText}" class="anchor" href="##{escapedText}"></a>
-        #{text}
-    </h#{level}>"""
-
 module.exports = class MarkdownCompiler
     brunchPlugin: true
     type: 'template'
