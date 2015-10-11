@@ -12,6 +12,7 @@ var coffeescript = require('coffee-script'),
 explore(src, function(path, stats, next) {
     var dst = sysPath.join(lib, sysPath.relative(src, path));
     mkdirp(sysPath.dirname(dst), function(err) {
+        var readable, writable;
         if (err) return next(err);
         if (/\.coffee$/.test(path)) {
             fs.readFile(path, function(err, data) {
@@ -20,8 +21,8 @@ explore(src, function(path, stats, next) {
                 fs.writeFile(dst.replace(/\.coffee$/, '.js'), compiled, next);
             });
         } else {
-            var readable = fs.createReadStream(path);
-            var writable = fs.createWriteStream(dst);
+            readable = fs.createReadStream(path);
+            writable = fs.createWriteStream(dst);
             readable.pipe(writable);
             writable.on('finish', next);
         }

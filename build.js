@@ -7,7 +7,7 @@ var fs = require('fs'),
     _explore = require('fs-explorer')._explore,
     mkdirp = require('mkdirp'),
     quoteArg = require('anyspawn').quoteArg,
-    log4js = require('umd-builder/log4js'),
+    log4js = require('./log4js'),
     logger = log4js.getLogger('umd-builder');
 
 var cli = require('brunch/src/cli');
