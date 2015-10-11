@@ -42,6 +42,7 @@
     "prompt": "^0.2.14",
     "sem-lib": "^1.0.0",
     "stylus": "^0.52.4",
+    "uglify-js-brunch": "^1.7.8",
     "umd-wrapper": "^0.1.0",
     "username": "^1.0.0",
     "which": "^1.1.2"

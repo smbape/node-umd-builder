@@ -6,6 +6,7 @@ semLib = require 'sem-lib'
 _ = require 'lodash'
 logger = log4js.getLogger 'AmdCompiler'
 builder = require('../../').builder
+UglifyJSOptimizer = require 'uglify-js-brunch'
 
 customUmdWrapper = (data)->
     """
@@ -50,9 +51,7 @@ module.exports = class AmdCompiler
         # TODO: find a better way to initialize builder with config before starting compilation
         @options = _.extend {}, config
         if config.optimize
-            try
-                UglifyJSOptimizer = require 'uglify-js-brunch'
-                @options.optimizer = new UglifyJSOptimizer config
+            @options.optimizer = new UglifyJSOptimizer config
 
         @amdDestination = config.modules.amdDestination
 
