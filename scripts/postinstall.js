@@ -13,7 +13,7 @@ var fs = require('fs'),
 
 require('fs').readdir('../lib', function(err) {
     if (err) {
-        anyspawn.spawn('npm run prepublish', function(err) {
+        anyspawn.spawn('npm run prepublish', {stdio: 'inherit'}, function(err) {
             if (err) throw err;
             setup(sysPath.join(__dirname, '..'));
         });
@@ -91,7 +91,7 @@ function setup(projectRoot, done) {
         });
     } else {
         tasks.push(['git clone https://github.com/brunch/brunch.git', {
-            cwd: projectModules
+            cwd: sysPath.dirname(projectBrunch)
         }]);
         install(tasks, config, done);
     }
@@ -141,6 +141,9 @@ function install(tasks, config, done) {
             cwd: projectLodash
         }],
         ['npm install --production', {
+            cwd: projectBrunch
+        }],
+        ['rm -rf .git', {
             cwd: projectBrunch
         }],
         ['npm install --production --ignore-scripts', {
