@@ -13,7 +13,9 @@ var fs = require('fs'),
 
 require('fs').readdir('../lib', function(err) {
     if (err) {
-        anyspawn.spawn('npm run prepublish', {stdio: 'inherit'}, function(err) {
+        anyspawn.spawn('npm run prepublish', {
+            stdio: 'inherit'
+        }, function(err) {
             if (err) throw err;
             setup(sysPath.join(__dirname, '..'));
         });
@@ -39,7 +41,12 @@ function setup(projectRoot, done) {
     // make such patch executable exists
     which.sync('patch');
 
-    var tasks = [],
+    var tasks = [
+            // with node v4 and npm 3.4.0 and npm 3.4.1, nested postinstall script is launched before end of all packages installation
+            ['npm install --production --ignore-scripts', {
+                cwd: projectRoot
+            }]
+        ],
         options = {
             stdio: 'inherit',
             cwd: projectBrunch
@@ -142,12 +149,6 @@ function install(tasks, config, done) {
         }],
         ['npm install --production', {
             cwd: projectBrunch
-        }],
-        ['rm -rf .git', {
-            cwd: projectBrunch
-        }],
-        ['npm install --production --ignore-scripts', {
-            cwd: projectRoot
         }]
     ]);
 
