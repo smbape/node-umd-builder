@@ -398,7 +398,7 @@ buildClient = (options, next)->
                     return
         
         command = process.argv[2]
-        if command is 'watch'
+        if command is 'watch' or command is 'w'
             watchClientFiles options, next
             return
 
