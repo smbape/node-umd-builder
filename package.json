@@ -34,7 +34,7 @@
     "fs-explorer": "^1.0.0",
     "handlebars": "^4.0.3",
     "highlight.js": "^8.8.0",
-    "lodash": "git+https://github.com/lodash/lodash.git#6b09f1f233172eeff0643213f4ad846a5b74edd4",
+    "lodash": "git+https://github.com/lodash/lodash.git#13d43deb5b104920403d3854bf805f0b44f91900",
     "log4js": "^0.6.27",
     "marked": "^0.3.5",
     "mkdirp": "^0.5.1",
