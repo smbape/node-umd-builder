@@ -321,7 +321,7 @@ _writeMainFile = (config, options)->
     }
     """
     delete config.bundles
-    loader = config.loader or 'umd-stdlib/core/depsLoader'
+    loader = config.loader or 'umd-core/depsLoader'
 
     mainjs = """
         window.appConfig || (window.appConfig = {});
@@ -365,20 +365,26 @@ _writeMainFile = (config, options)->
     writer.write mainjs
     return
 
+_.template = require('./compilers/jst/template')
+_.templateSettings.variable = 'root'
+_.templateSettings.ignore = /<%--([\s\S]+?)--%>/g
+
 compileIndex = (path, options)->
     configPaths = options._c.paths
-    logger.info 'compile amd index file'
-    Handlebars = require 'handlebars'
     source = fs.readFileSync sysPath.resolve(configPaths.CLIENT_ASSETS_PATH, path), 'utf8'
-    template = Handlebars.compile source
+    template = _.template source
+
     destFileSingle = sysPath.resolve configPaths.PUBLIC_PATH, 'index.single.html'
-    destFileClassic = sysPath.resolve configPaths.PUBLIC_PATH, 'index.classic.html'
     fs.writeFileSync destFileSingle, template
         single: true
         resource: 'app'
+
+    destFileClassic = sysPath.resolve configPaths.PUBLIC_PATH, 'index.classic.html'
     fs.writeFileSync destFileClassic, template
         single: false
         resource: 'web'
+
+    logger.info 'compiled index file'
 
 buildClient = (options, next)->
     if cluster.isMaster
@@ -405,10 +411,12 @@ buildClient = (options, next)->
         exploreClientFiles options, next
     return
 
+INDEX_FILE = 'index.jst'
+
 watchClientFiles = (options, next)->
     logger.info 'Start watching client files'
 
-    watcher = chokidar.watch sysPath.join options._c.paths.CLIENT_ASSETS_PATH, 'index.hbs'
+    watcher = chokidar.watch sysPath.join options._c.paths.CLIENT_ASSETS_PATH, INDEX_FILE
     watcher.on('add', (path)->
         compileIndex path, options
         return
@@ -420,7 +428,7 @@ watchClientFiles = (options, next)->
     return
 
 exploreClientFiles = (options, next)->
-    compileIndex  'index.hbs', options
+    compileIndex  INDEX_FILE, options
     next()
     return
 
