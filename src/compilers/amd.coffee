@@ -87,8 +87,12 @@ comWrapper = (data)->
     module.exports = depsLoader.common.call(this, require, 'common', deps, factory);
     """
 
-factoryProxy = (modulePath, ctor, locals, head, body, withoutName)->
+factoryProxy = (plugin, modulePath, ctor, locals, head, body, withoutName)->
     ngmethod = ctor.substring NG_PREFIX.length
+    realPath = plugin.options.paths.modules + '/' + modulePath
+    $name = modulePath.replace(/\//g, '.')
+    $dirname = sysPath.dirname realPath
+    $shortName = modulePath.replace(/.*\/([^\/]+)$/, '$1')
 
     """
     var ngdeps = [];
@@ -100,63 +104,22 @@ factoryProxy = (modulePath, ctor, locals, head, body, withoutName)->
     for (var i = 0, len = ngdeps.length, dep; i < len; i++) {
         dep = ngdeps[i];
         if ('string' === typeof dep && '/' === dep.charAt(0)) {
-            dep = dep.substring(1).replace(/\./g, '/');
+            ngdeps[i] = dep.substring(1);
+            dep = ngdeps[i].replace(/\\./g, '/');
             // deps.length - ngoffset + 1 correspond to ng dependency index
             // that index will be used to know which ngdeps must only by a deps
             // and therefore removed from ngdeps
             ngmap[deps.length - ngoffset + 1] = i;
             deps.push(dep);
-            ngdeps[i] = dep;
         }
     }
 
     function factory(require, angular#{if locals then ', ' + locals else ''}) {
-        var name = '#{modulePath.replace(/\//g, '.')}',
-            resolvedDeps = Array.prototype.slice.call(arguments, ngoffset);
+        var resolvedDeps = Array.prototype.slice.call(arguments, ngoffset);
 
         #{body}
-
-        #{ctor}.$inject = ngdeps;
-        usable.name = name;
-        usable.ctor = #{ctor};
-        usable.$ng = '#{ngmethod}';
-
-        return usable;
-
-        function usable(app) {
-            var has = Object.prototype.hasOwnProperty,
-                toRemove = [];
-
-            app.dependencies || (app.dependencies = {});
-            app.dependencies.#{ngmethod} || (app.dependencies.#{ngmethod} = {});
-            if (!has.call(app.dependencies.#{ngmethod}, name)) {
-                // first instruction to prevent infinite loop with recursion
-                app.dependencies.#{ngmethod}[name] = true;
-
-                // recursively register usable dependencies
-                for(var i = 0, len = resolvedDeps.length, dusable; i < len; i++) {
-                    dusable = resolvedDeps[i];
-                    if (dusable.$ng) {
-                        switch (dusable.$ng) {
-                            case 'controller':
-                            case 'directive':
-                            case 'filter':
-                                // this is not an injectable dependency
-                                debugger;
-                                toRemove.unshift(ngmap[i]);
-                                break;
-                        }
-                        for (var j = 0, lenj = toRemove.length; j < jlength; j++) {
-                            ngdeps.splice(toRemove[j], 1);
-                        }
-                        dusable(app);
-                    }
-                }
-
-                // register this usable
-                app.register.#{ngmethod}(#{if withoutName then '' else 'name, '}#{ctor});
-            }
-        }
+        
+        return depsLoader.createNgUsable(#{ctor}, '#{ngmethod}', '#{$name}', '#{realPath}', '#{$dirname}', '#{$shortName}', ngdeps, resolvedDeps, ngmap, #{withoutName});
     }
     """
 
@@ -166,20 +129,26 @@ ngModuleFactoryProxy = (modulePath, head, body)->
 
     #{head}
     deps.unshift({amd: 'angular', common: '!angular'});
+    var ngoffset = deps.length, ngmap = {};
 
     for (var i = 0, len = ngdeps.length, dep; i < len; i++) {
         dep = ngdeps[i];
         if ('string' === typeof dep && '/' === dep.charAt(0)) {
-            dep = dep.substring(1).replace(/\./g, '/');
+            ngdeps[i] = dep.substring(1);
+            dep = ngdeps[i].replace(/\\./g, '/');
+            // deps.length - ngoffset + 1 correspond to ng dependency index
+            // that index will be used to know which ngdeps must only by a deps
+            // and therefore removed from ngdeps
+            ngmap[deps.length - ngoffset + 1] = i;
             deps.push(dep);
-            ngdeps[i] = dep;
         }
     }
 
     function factory(require, angular) {
         var name = '#{modulePath.replace(/\//g, '.')}',
-            exports = angular.module(name, ngdeps);
-        exports.name = name;
+            resolvedDeps = Array.prototype.slice.call(arguments, ngoffset);
+
+        var exports = depsLoader.createNgModule(angular, name, ngdeps, ngmap, resolvedDeps);
 
         #{body}
 
@@ -252,7 +221,7 @@ module.exports = class AmdCompiler
                         comData = comWrapper data
                     else
                         modulePath = self.nameCleaner path
-                        data = factoryProxy modulePath, name, locals, head, body
+                        data = factoryProxy self, modulePath, name, locals, head, body
                         umdData = umdWrapper data
                         comData = comWrapper data
 

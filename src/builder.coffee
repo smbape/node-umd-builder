@@ -29,7 +29,7 @@ initConfig = (options)->
     PUBLIC_PATH = sysPath.resolve APPLICATION_PATH, options.paths.public
 
     # where to copy non asset files
-    CLIENT_MODULES_URL = 'node_modules'
+    CLIENT_MODULES_URL = options.paths.modules  or 'node_modules'
     CLIENT_MODULES_PATH = sysPath.join PUBLIC_PATH, CLIENT_MODULES_URL
 
     # where to copy bower files
