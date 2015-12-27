@@ -24,11 +24,13 @@
   "dependencies": {
     "anymatch": "^1.3.0",
     "anyspawn": "^1.0.0",
+    "async-each": "^1.0.0",
     "chalk": "^1.1.1",
     "chokidar": "^1.1.0",
     "clean-css": "^3.4.5",
     "coffee-script": "^1.10.0",
     "commander": "^2.8.1",
+    "component-builder": "^1.2.1",
     "ejs": "^2.3.4",
     "esprima": "^2.6.0",
     "fs-explorer": "^1.0.0",

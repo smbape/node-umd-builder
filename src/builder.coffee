@@ -125,58 +125,40 @@ buildBower = (options, next)->
             next(err) if typeof next is 'function'
         return
 
-    # Start work
-    take()
+    read = require './read'
+    read sysPath.resolve(options._c.paths.APPLICATION_PATH), 'bower', (err, components)->
+        return give err if err
 
-    for component of options._c.dependencies
+        # Start work
         take()
-        _processComponent component, options._c.overrides[component], config, options, give
 
-    # End of current work
-    give()
-    
+        for component in components
+            take()
+            # _processComponent component, options._c.overrides[component], config, options, give
+            _processComponent component, config, options, give
+
+        # End of current work
+        give()
+
+        return
+        
     return 
 
-_processComponent = (component, overrides, config, options, done)->
-    configPaths = options._c.paths
-    isFile sysPath.resolve(configPaths.BOWER_COMPONENTS_RELATIVE_PATH, component, '.bower.json'), (err, path)->
-        if path
-            bowerConfig = require path
-            _.extend bowerConfig, overrides
-            _processBowerConfiguration component, bowerConfig, config, options, done
-            return
-
-        isFile sysPath.resolve(configPaths.BOWER_COMPONENTS_RELATIVE_PATH, component, 'bower.json'), (err, path)->
-            if path
-                bowerConfig = require path
-                _.extend bowerConfig, overrides
-            else
-                bowerConfig = overrides or {}
-
-            _processBowerConfiguration component, bowerConfig, config, options, done
-            return
-        return
-    return
-
-_processBowerConfiguration = (component, bowerConfig, config, options, done)->
-    if bowerConfig.umd
+_processComponent = (component, config, options, done)->
+    if component.umd
         done()
         return
 
-    mainFiles = bowerConfig.main
+    files = component.files
+    return done() if not (files instanceof Array)
 
-    mainFiles = [mainFiles] if typeof mainFiles is 'string'
-    return done() if not (mainFiles instanceof Array)
+    name = component.name
 
-    if bowerConfig.ignored
-        logger.debug 'ignored', component
+    if component.ignored
+        logger.debug 'ignored', name
     else
-        config.deps.push component
+        config.deps.push name
 
-    _processComponentMainFiles mainFiles, component, bowerConfig, config, options, done
-    return
-
-_processComponentMainFiles = (mainFiles, component, bowerConfig, config, options, done)->
     count = 0
 
     take = -> ++count
@@ -184,8 +166,8 @@ _processComponentMainFiles = (mainFiles, component, bowerConfig, config, options
     give = (err)->
         if --count is 0 or err
             if not memo.hasJs
-                delete config.paths[component]
-                if ~(idx = config.deps.indexOf component)
+                delete config.paths[name]
+                if ~(idx = config.deps.indexOf name)
                     config.deps.splice idx, 1
             done()
         return
@@ -196,115 +178,117 @@ _processComponentMainFiles = (mainFiles, component, bowerConfig, config, options
     bundleIndex = 0
 
     memo = {processed, bundleIndex}
+    componentDir = sysPath.resolve options._c.paths.BOWER_COMPONENTS_RELATIVE_PATH, name
 
-    for path in mainFiles
+    for path in files
         take()
+        path = path.substring(componentDir.length + 1).replace(/[\\]/g, '/')
         if /\*/.test path
-            componentDir = sysPath.resolve options._c.paths.BOWER_COMPONENTS_RELATIVE_PATH, component
-            _matchBowerFiles component, bowerConfig, config, {path, componentDir, memo}, options, give
+            _matchBowerFiles component, config, {path, componentDir, memo}, options, give
         else
-            _compileBowerFile path, component, bowerConfig, config, memo, false, options, give
+            _compileBowerFile path, component, config, memo, false, options, give
 
     give()
     return
 
 # path is relative path without leading slash
 # componentDir is absolute path without trailing slash
-_matchBowerFiles = (component, bowerConfig, config, {path, componentDir, memo}, options, done)->
+_matchBowerFiles = (component, config, {path, componentDir, memo}, options, done)->
     matcher = anymatch [path]
     start = componentDir.length + 1
     explore componentDir, (path, stats, next)->
         relativePath = path.substring(start).replace(/[\\]/g, '/')
         if matcher relativePath
-            _compileBowerFile path, component, bowerConfig, config, memo, true, options, next
+            _compileBowerFile path, component, config, memo, true, options, next
             return
         next()
     , done
     return
 
-_compileBowerFile = (path, component, bowerConfig, config, memo, isAbsolutePath, options, done)->
+_compileBowerFile = (path, component, config, memo, isAbsolutePath, options, done)->
+    name = component.name
     configPaths = options._c.paths
     {processed, bundleIndex} = memo
     jsExtensions = options.jsExtensions
 
     if isAbsolutePath
         absolutePath = path
-        path = sysPath.relative sysPath.resolve(configPaths.BOWER_COMPONENTS_RELATIVE_PATH, component), path
+        path = sysPath.relative sysPath.resolve(configPaths.BOWER_COMPONENTS_RELATIVE_PATH, name), path
     else
-        absolutePath = sysPath.resolve configPaths.BOWER_COMPONENTS_RELATIVE_PATH, component, path
+        absolutePath = sysPath.resolve configPaths.BOWER_COMPONENTS_RELATIVE_PATH, name, path
 
     return done() if processed.hasOwnProperty absolutePath
 
     processed[absolutePath] = true
     extname = sysPath.extname path
-    destFile = sysPath.resolve configPaths.BOWER_PUBLIC_PATH, component, path
+    destFile = sysPath.resolve configPaths.BOWER_PUBLIC_PATH, name, path
 
     if jsExtensions.test extname
         memo.hasJs = true
 
-        if typeof config.paths[component] is 'undefined'
-            if bowerConfig.exports
+        if typeof config.paths[name] is 'undefined'
+            if component.exports
                 # shim non amd file
-                shim = exports: bowerConfig.exports
+                shim = exports: component.exports
 
-                if typeof bowerConfig.dependencies is 'object' and bowerConfig.dependencies isnt null
-                    shim.deps = Object.keys bowerConfig.dependencies
+                if typeof component.dependencies is 'object' and component.dependencies isnt null
+                    shim.deps = Object.keys component.dependencies
 
-                config.shim[component] = shim
+                config.shim[name] = shim
 
-            if typeof bowerConfig.paths is 'string'
-                paths = [bowerConfig.paths]
-            else if bowerConfig.paths instanceof Array
-                paths = bowerConfig.paths
+            if typeof component.paths is 'string'
+                paths = [component.paths]
+            else if component.paths instanceof Array
+                paths = component.paths
             else
                 paths = []
 
             # never includes a '.js' extension since
             # the paths config could be for a directory.
-            paths.push configPaths.BOWER_COMPONENTS_URL + '/' + sysPath.join(component, path).replace /[\\]/g, '/'
+            paths.push configPaths.BOWER_COMPONENTS_URL + '/' + sysPath.join(name, path).replace /[\\]/g, '/'
             for url, index in paths
                 paths[index] = url.replace /\.js$/, ''
-            config.paths[component] = paths
+            config.paths[name] = paths
 
         else
-            logger.debug  "[#{component}] add [#{path}] as bundle"
+            logger.debug  "[#{name}] add [#{path}] as bundle"
 
-            if bowerConfig.exports
+            if component.exports
                 # shim non amd file
 
-                if not config.bundles.hasOwnProperty component
+                if not config.bundles.hasOwnProperty name
                     # Make first file the main file
-                    plugin = component + '.plugin.' + memo.bundleIndex++
-                    config.shim[plugin] = config.shim[component]
-                    config.paths[plugin] = config.paths[component]
-                    config.bundles[component] = [plugin]
+                    plugin = name + '.plugin.' + memo.bundleIndex++
+                    config.shim[plugin] = config.shim[name]
+                    config.paths[plugin] = config.paths[name]
+                    config.bundles[name] = [plugin]
 
-                # make current file to load with component
-                plugin = component + '.plugin.' + memo.bundleIndex++
-                config.bundles[component].push plugin
+                # make current file to load with name
+                plugin = name + '.plugin.' + memo.bundleIndex++
+                config.bundles[name].push plugin
 
                 # make current file to load after the main file
                 config.shim[plugin] =
-                    exports: bowerConfig.exports
-                    deps: [config.bundles[component][0]]
+                    exports: component.exports
+                    deps: [config.bundles[name][0]]
 
                 # configure requirejs for plugin path resolution
-                path = configPaths.BOWER_COMPONENTS_URL + '/' + sysPath.join(component, path).replace(/[\\]/g, '/').replace(/\.js$/, '')
+                path = configPaths.BOWER_COMPONENTS_URL + '/' + sysPath.join(name, path).replace(/[\\]/g, '/').replace(/\.js$/, '')
                 config.paths[plugin] = [path]
 
             else
                 # amd module
-                if not config.bundles.hasOwnProperty component
-                    config.bundles[component] = [config.paths[component][0]]
-                    delete config.paths[component]
+                if not config.bundles.hasOwnProperty name
+                    config.bundles[name] = [config.paths[name][0]]
+                    delete config.paths[name]
 
                 # never includes a '.js' extension since
                 # the paths config could be for a directory.
-                path = configPaths.BOWER_COMPONENTS_URL + '/' + sysPath.join(component, path).replace(/[\\]/g, '/').replace(/\.js$/, '')
+                path = configPaths.BOWER_COMPONENTS_URL + '/' + sysPath.join(name, path).replace(/[\\]/g, '/').replace(/\.js$/, '')
 
-                # make current file to load with component
+                # make current file to load with name
                 # full path name is needed for relative path resolution
-                config.bundles[component].push path
+                config.bundles[name].push path
 
     done()
     return
