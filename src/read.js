@@ -1,3 +1,6 @@
+/* jshint node: true */
+'use strict';
+
 /**
  * Modified version of read-components to track custom properties
  */
@@ -20,11 +23,18 @@ var dependencyLocator = {
 };
 
 var Builder = require('component-builder').Builder;
+Builder.prototype.alias = function(a, b) {
+    var name = this.root ? this.config.name : this.basename;
+    var res = {};
+    res[name + '/' + b] = a;
+    emitter.emit('addAlias', res);
+    return 'require.alias("' + name + '/' + b + '", "' + a + '");';
+};
 
 var jsonProps = ['main', 'scripts', 'styles'];
 
-var getDir = function(root, type, callback) {
-    if (type == 'bower') {
+function getDir(root, type, callback) {
+    if (type === 'bower') {
         var defaultBowerDir = 'bower_components';
         var bowerrcPath = sysPath.join(root, '.bowerrc');
 
@@ -41,22 +51,22 @@ var getDir = function(root, type, callback) {
                 callback(null, defaultBowerDir);
             }
         });
-    } else if (type == 'component') {
+    } else if (type === 'component') {
         return callback(null, 'components');
     } else {
         return callback(null);
     }
-};
+}
 
 // Return unique list items.
-var unique = function(list) {
+function unique(list) {
     return Object.keys(list.reduce(function(obj, _) {
         if (!obj[_]) obj[_] = true;
         return obj;
     }, {}));
-};
+}
 
-var sanitizeRepo = function(repo) {
+function sanitizeRepo(repo) {
     if (repo.indexOf('/') !== repo.lastIndexOf('/')) {
         var res = repo.split('/');
         return res[res.length - 1] + '=' + res[res.length];
@@ -64,13 +74,13 @@ var sanitizeRepo = function(repo) {
     return repo.replace('/', '-');
 }
 
-var readJson = function(file, type, callback) {
+function readJson(file, type, callback) {
     fs.exists(file, function(exists) {
         if (!exists) {
             var err = new Error('Component must have "' + file + '"');
             err.code = 'NO_' + type.toUpperCase() + '_JSON';
             return callback(err);
-        };
+        }
 
         fs.readFile(file, function(err, contents) {
             if (err) return callback(err);
@@ -87,36 +97,38 @@ var readJson = function(file, type, callback) {
             callback(null, json);
         });
     });
-};
+}
 
-var getJsonPath = function(path, type) {
+function getJsonPath(path, type) {
     return sysPath.resolve(sysPath.join(path, jsonPaths[type]));
-};
+}
 
 // Coerce data.main, data.scripts and data.styles to Array.
-var standardizePackage = function(data) {
+function standardizePackage(data) {
     if (data.main && !Array.isArray(data.main)) data.main = [data.main];
     jsonProps.forEach(function(_) {
         if (!data[_]) data[_] = [];
     });
     return data;
-};
+}
 
 var getPackageFiles = exports.getPackageFiles = function(pkg) {
     var list = [];
     jsonProps.forEach(function(property) {
-        Array.isArray(pkg[property]) && list.push.apply(list, pkg[property]);
+        if (Array.isArray(pkg[property])) {
+            list.push.apply(list, pkg[property]);
+        }
     });
     return unique(list);
 };
 
-var processPackage = function(type, pkg, callback) {
+function processPackage(type, pkg, callback) {
     var path = pkg.path;
     var overrides = pkg.overrides;
     var fullPath = getJsonPath(path, type);
     var dotpath = getJsonPath(path, 'dotbower');
 
-    var _read = function(actualPath) {
+    function _read(actualPath) {
         readJson(actualPath, type, function(error, json) {
 
             if (error) return callback(error);
@@ -149,13 +161,13 @@ var processPackage = function(type, pkg, callback) {
                 dependencies: pkg.dependencies || {}
             });
         });
-    };
+    }
     fs.exists(dotpath, function(isStableBower) {
-        _read(isStableBower ? dotpath : fullPath)
+        _read(isStableBower ? dotpath : fullPath);
     });
-};
+}
 
-var gatherDeps = function(packages, type) {
+function gatherDeps(packages, type) {
     return Object.keys(packages.reduce(function(obj, item) {
         if (!obj[item[dependencyLocator[type]]]) obj[item[dependencyLocator[type]]] = true;
         Object.keys(item.dependencies).forEach(function(dep) {
@@ -164,9 +176,9 @@ var gatherDeps = function(packages, type) {
         });
         return obj;
     }, {}));
-};
+}
 
-var readPackages = function(root, type, allProcessed, list, overrides, callback) {
+function readPackages(root, type, allProcessed, list, overrides, callback) {
     getDir(root, type, function(error, dir) {
         if (error) return callback(error);
 
@@ -199,28 +211,29 @@ var readPackages = function(root, type, allProcessed, list, overrides, callback)
             }
         });
     });
-};
-
+}
 
 // Find an item in list.
-var find = function(list, predicate) {
+function find(list, predicate) {
     for (var i = 0, length = list.length, item; i < length; i++) {
         item = list[i];
         if (predicate(item)) return item;
     }
-};
-
+}
 
 // Iterate recursively over each dependency and increase level
 // on each iteration.
-var setSortingLevels = function(packages, type) {
-    var setLevel = function(initial, pkg) {
+function setSortingLevels(packages, type) {
+    packages.forEach(setLevel.bind(null, 1));
+    return packages;
+
+    function setLevel(initial, pkg) {
         var level = Math.max(pkg.sortingLevel || 0, initial);
         var deps = Object.keys(pkg.dependencies);
         // console.log('setLevel', pkg.name, level);
         pkg.sortingLevel = level;
         deps.forEach(function(depName) {
-            depName = sanitizeRepo(depName)
+            depName = sanitizeRepo(depName);
             var dep = find(packages, function(_) {
                 if (type === 'component') {
                     var repo = _[dependencyLocator[type]];
@@ -243,29 +256,27 @@ var setSortingLevels = function(packages, type) {
             }
             setLevel(initial + 1, dep);
         });
-    };
-    packages.forEach(setLevel.bind(null, 1));
-    return packages;
-};
+    }
+}
 
 // Sort packages automatically, bas'component'ed on their dependencies.
-var sortPackages = function(packages, type) {
+function sortPackages(packages, type) {
     return setSortingLevels(packages, type).sort(function(a, b) {
         return b.sortingLevel - a.sortingLevel;
     });
-};
+}
 
-var init = function(directory, type, callback) {
+function init(directory, type, callback) {
     readJson(sysPath.join(directory, jsonPaths[type]), type, callback);
-};
+}
 
 
-var readComponents = function(directory, callback, type) {
+function readComponents(directory, callback, type) {
     if (typeof directory === 'function') {
         callback = directory;
         directory = null;
     }
-    if (directory == null) directory = '.';
+    if (directory === null) directory = '.';
 
     init(directory, type, function(error, json) {
         if (error) {
@@ -281,14 +292,15 @@ var readComponents = function(directory, callback, type) {
 
         readPackages(directory, type, [], deps, overrides, function(error, data) {
             if (error) return callback(error);
-            var sorted = sortPackages(data, type);
+            var sorted = sortPackages(data, type),
+                builder;
             aliases = [];
             if (type === 'component') {
                 builder = new Builder(directory);
                 var aliases = [];
                 emitter.on('addAlias', function(alias) {
                     aliases.push(alias);
-                })
+                });
                 builder.buildAliases(function(err, res) {
                     callback(null, sorted, aliases);
                 });
@@ -296,17 +308,9 @@ var readComponents = function(directory, callback, type) {
                 callback(null, sorted);
         });
     });
-};
+}
 
-Builder.prototype.alias = function(a, b) {
-    var name = this.root ? this.config.name : this.basename;
-    var res = {};
-    res[name + '/' + b] = a;
-    emitter.emit('addAlias', res)
-    return 'require.alias("' + name + '/' + b + '", "' + a + '");';
-};
-
-var read = function(root, type, callback) {
+function read(root, type, callback) {
     if (type === 'bower') {
         readComponents(root, callback, type);
     } else if (type === 'component') {
@@ -314,6 +318,6 @@ var read = function(root, type, callback) {
     } else {
         throw new Error('read-components: unknown type');
     }
-};
+}
 
 module.exports = read;

@@ -31,7 +31,7 @@ annotate = (fn) ->
 
 NG_PREFIX = 'ng'
 FN_ARGS_REG = '(\\b\\s*[^\\(]*\\(\\s*[^\\)]*\\))'
-authorisedFunctions = ['module', 'factory', 'filter', 'directive', 'controller', 'service', 'value', 'constant', 'decorator', 'provider']
+authorisedFunctions = ['run', 'config', 'module', 'factory', 'filter', 'directive', 'controller', 'service', 'value', 'constant', 'decorator', 'provider']
 selectorReg = '(' + NG_PREFIX + authorisedFunctions.join( '|' + NG_PREFIX) + ')'
 NG_REGEXP = new RegExp "^(?:#{selectorReg}\\s*=|function\s+#{selectorReg}\\b|factory\\s*=\\s*function#{FN_ARGS_REG}|function\\s+factory#{FN_ARGS_REG})", 'mg'
 
@@ -87,7 +87,7 @@ comWrapper = (data)->
     module.exports = depsLoader.common.call(this, require, 'common', deps, factory);
     """
 
-factoryProxy = (plugin, modulePath, ctor, locals, head, body, withoutName)->
+factoryProxy = (plugin, modulePath, ctor, locals, head, body)->
     ngmethod = ctor.substring NG_PREFIX.length
     realPath = plugin.options.paths.modules + '/' + modulePath
     $name = modulePath.replace(/\//g, '.')
@@ -105,7 +105,7 @@ factoryProxy = (plugin, modulePath, ctor, locals, head, body, withoutName)->
         dep = ngdeps[i];
         if ('string' === typeof dep && '/' === dep.charAt(0)) {
             ngdeps[i] = dep.substring(1);
-            dep = ngdeps[i].replace(/\\./g, '/');
+            dep = ngdeps[i];
             // deps.length - ngoffset + 1 correspond to ng dependency index
             // that index will be used to know which ngdeps must only by a deps
             // and therefore removed from ngdeps
@@ -119,7 +119,7 @@ factoryProxy = (plugin, modulePath, ctor, locals, head, body, withoutName)->
 
         #{body}
         
-        return depsLoader.createNgUsable(#{ctor}, '#{ngmethod}', '#{$name}', '#{realPath}', '#{$dirname}', '#{$shortName}', ngdeps, resolvedDeps, ngmap, #{withoutName});
+        return depsLoader.createNgUsable(#{ctor}, '#{ngmethod}', '#{$name}', '#{realPath}', '#{$dirname}', '#{$shortName}', ngdeps, resolvedDeps, ngmap);
     }
     """
 

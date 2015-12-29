@@ -1,0 +1,43 @@
+From 147a1ade8b18d27189322f10b41b55825a1976ea Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?St=C3=A9phane=20MBAPE?= <rose.martin-8og3raxw@yopmail.com>
+Date: Mon, 28 Dec 2015 19:55:28 +0100
+Subject: [PATCH] add initialize feature
+
+---
+ src/watch.coffee | 19 ++++++++++++++++---
+ 1 file changed, 16 insertions(+), 3 deletions(-)
+
+diff --git a/src/watch.coffee b/src/watch.coffee
+index a621c11..e5e9224 100644
+--- a/src/watch.coffee
++++ b/src/watch.coffee
+@@ -472,10 +472,23 @@ initialize = (options, configParams, onCompile, callback) ->
+           config, watcher, server, fileList, compilers, linters, compile, reload, includes
+         }
+ 
+-    if config.persistent and config.server.run
+-      server = startServer config, launchWatcher
++    server = null
++    initCb = ->
++      clearTimeout initTimeout
++      if config.persistent and config.server.run
++        server = startServer config, launchWatcher
++      else
++        launchWatcher()
++
++    initTimeout = setTimeout ->
++      logger.warn 'initialize is taking a long time to start'
++      logger.warn '**don\'t forget to invoke callback()**'
++    , config.timeout or 5000
++
++    if 'function' is typeof config.initialize
++      config.initialize config, initCb
+     else
+-      launchWatcher()
++      initCb()
+ 
+ isConfigFile = (basename, configPath) ->
+   files = Object.keys(require.extensions).map (_) -> configPath + _
+-- 
+2.6.2.windows.1
+

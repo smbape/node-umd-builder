@@ -113,6 +113,7 @@ function install(tasks, config, done) {
             'brunch-1.8.x-anymatch_feature',
             'brunch-1.8.x-completer_feature',
             'brunch-1.8.x-config_compiler_feature',
+            'brunch-1.8.x-init_feature'
             'brunch-1.8.x-module_not_found_inaccuracy_fix'
         ],
         filePatches = [
@@ -138,7 +139,7 @@ function install(tasks, config, done) {
         patchFile = sysPath.relative(projectBrunch, sysPath.join(patchesFolder, brunchPatches[i] + '.patch'));
         tasks.push(['git apply -v --check ' + anyspawn.quoteArg(patchFile), {
             cwd: projectBrunch
-        }], ['git apply ' + anyspawn.quoteArg(patchFile), {
+        }], ['git apply -v ' + anyspawn.quoteArg(patchFile), {
             cwd: projectBrunch
         }]);
     }
