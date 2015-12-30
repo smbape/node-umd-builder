@@ -53,26 +53,16 @@ module.exports = class AmdCompiler
     completer: true
     
     constructor: (config = {})->
-        # TODO: find a better way to initialize builder with config before starting compilation
         @options = _.extend {}, config
         @amdDestination = config.modules.amdDestination
 
     compile: (params, next)->
-        return @_compile params, next if @initialized
-
-        builder.initialize @options, (config)=>
-            @paths = config.paths
-            @initialized = true
-            @_compile params, next
-            return
-
-        return
-
-    _compile: (params, next)->
         {data, path, map} = params
+        self = @
+        self.paths = self.paths or builder.getConfig().paths
 
-        src = sysPath.join @paths.APPLICATION_PATH, path
-        dst = sysPath.join @paths.PUBLIC_PATH, @amdDestination(path, true)
+        src = sysPath.join self.paths.APPLICATION_PATH, path
+        dst = sysPath.join self.paths.PUBLIC_PATH, self.amdDestination(path, true)
         copyFile @, src, dst, (err)->
             next err, params
             return

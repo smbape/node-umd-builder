@@ -180,7 +180,6 @@ module.exports = class AmdCompiler
     completer: true
     
     constructor: (config = {})->
-        # TODO: find a better way to initialize builder with config before starting compilation
         @options = _.extend {}, config
         if config.optimize
             @options.optimizer = new UglifyJSOptimizer config
@@ -192,19 +191,9 @@ module.exports = class AmdCompiler
         @nameCleaner = config.modules.nameCleaner
 
     compile: (params, next)->
-        return @_compile params, next if @initialized
-
-        builder.initialize @options, (config)=>
-            @paths = config.paths
-            @initialized = true
-            @_compile params, next
-            return
-
-        return
-
-    _compile: (params, next)->
         self = @
         {data, path, map} = params
+        self.paths = self.paths or builder.getConfig().paths
 
         checkMethod path, data, (err, res)->
             umdData = comData = data

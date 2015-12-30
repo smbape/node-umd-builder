@@ -420,24 +420,26 @@ buildSem = semLib.semCreate 1, true
 # count = 0
 
 build = (options, next)->
-    return next @config if @config
+    self = build
+    return next self.config if self.config
 
-    if @building
+    if self.building
         # logger.warn 'waiting', ++count
-        buildSem.semTake =>
+        buildSem.semTake ->
             # logger.warn 'freeing', --count
-            next @config
+            next self.config
             return
         return
 
-    @building = true
+    self.building = true
+    options = _.clone options
 
     buildSem.semTake ->
         config = initConfig options
         buildBower options, ->
             buildClient options, ->
-                @config = config
-                @building = false
+                self.config = config
+                self.building = false
                 # logger.warn 'flushing', count
                 buildSem.semFlush()
                 next config
@@ -446,6 +448,9 @@ build = (options, next)->
         return
 
     return
+
+exports.getConfig = ->
+    build.config
 
 exports.initialize = (options = {}, next)->
     options.jsExtensions or (options.jsExtensions = /\.js$/)
