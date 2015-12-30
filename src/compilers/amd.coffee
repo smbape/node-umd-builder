@@ -33,7 +33,7 @@ NG_PREFIX = 'ng'
 FN_ARGS_REG = '(\\b\\s*[^\\(]*\\(\\s*[^\\)]*\\))'
 authorisedFunctions = ['usable', 'run', 'config', 'module', 'factory', 'filter', 'directive', 'controller', 'service', 'value', 'constant', 'decorator', 'provider']
 selectorReg = '(' + NG_PREFIX + authorisedFunctions.join( '|' + NG_PREFIX) + ')'
-NG_REGEXP = new RegExp "^(?:#{selectorReg}\\s*=|function\s+#{selectorReg}\\b|factory\\s*=\\s*function#{FN_ARGS_REG}|function\\s+factory#{FN_ARGS_REG})", 'mg'
+NG_REGEXP = new RegExp "^(?:#{selectorReg}\\s*=|function\\s+#{selectorReg}\\b|factory\\s*=\\s*function#{FN_ARGS_REG}|function\\s+factory#{FN_ARGS_REG})", 'mg'
 
 checkMethod = (path, script, done)->
     # reset lastIndex to start search from the begining of string
@@ -218,8 +218,9 @@ module.exports = class AmdCompiler
 
             dst = sysPath.join self.paths.PUBLIC_PATH, self.amdDestination(path) + '.js'
             if self.options.optimizer
-                self.options.optimizer.optimize {umdData, path, map}, (err, {data: optimized, path, map})->
-                    logger.error err if err
+                self.options.optimizer.optimize {data: umdData, path, map}, (err, res)->
+                    return logger.error err if err
+                    {data: optimized, path, map} = res
                     writeUmdData optimized || umdData, dst
                     return
                 return
