@@ -48,19 +48,17 @@ copyFile = (plugin, src, dst, next)->
 module.exports = class AmdCompiler
     brunchPlugin: true
     type: 'copy'
-    typePattern: /^(?!(?:javascript|stylesheet)$)/
+    typePattern: /^(?!(?:javascript|stylesheet|markdown-html)$)/
     typeUndefined: true
     completer: true
     
     constructor: (config = {})->
-        @options = _.extend {}, config
         @amdDestination = config.modules.amdDestination
 
     compile: (params, next)->
         {data, path, map} = params
         self = @
         self.paths = self.paths or builder.getConfig().paths
-
         src = sysPath.join self.paths.APPLICATION_PATH, path
         dst = sysPath.join self.paths.PUBLIC_PATH, self.amdDestination(path, true)
         copyFile @, src, dst, (err)->

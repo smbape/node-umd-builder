@@ -159,16 +159,17 @@ ngModuleFactoryProxy = (modulePath, head, body)->
 
 # 8 parallel write at most
 writeSem = semLib.semCreate Math.pow(2, 3), true
-writeUmdData = (data, dst)->
+writeData = (data, dst, done)->
     writeSem.semTake ->
-        done = (err)->
+        next = (err)->
             writeSem.semGive()
+            done(err)
             return
         
         mkdirp sysPath.dirname(dst), (err)->
-            return done(err) if err
+            return next(err) if err
             writeStream = fs.createWriteStream dst
-            writeStream.write data, 'utf8', done
+            writeStream.write data, 'utf8', next
             writeStream.end()
             return
         return
@@ -214,18 +215,20 @@ module.exports = class AmdCompiler
                         umdData = umdWrapper data
                         comData = comWrapper data
 
-            next null, {data: comData, path, map}
+            done = ->
+                next null, {data: comData, path, map}
+                return
 
             dst = sysPath.join self.paths.PUBLIC_PATH, self.amdDestination(path) + '.js'
             if self.options.optimizer
                 self.options.optimizer.optimize {data: umdData, path, map}, (err, res)->
                     return logger.error err if err
                     {data: optimized, path, map} = res
-                    writeUmdData optimized || umdData, dst
+                    writeData optimized || umdData, dst, done
                     return
                 return
 
-            writeUmdData umdData, dst
+            writeData umdData, dst, done
 
             return
 

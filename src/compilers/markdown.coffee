@@ -15,7 +15,6 @@ defaultOptions =
 module.exports = class MarkdownCompiler
     brunchPlugin: true
     type: 'template'
-    # extension: '(?:markdown|mdown|mkdn|md|mkd|mdwn|mdtxt|mdtext|text)'
     pattern: /\.(?:markdown|mdown|mkdn|md|mkd|mdwn|mdtxt|mdtext|text)$/
 
     constructor: (config = {})->
