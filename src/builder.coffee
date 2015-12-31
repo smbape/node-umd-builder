@@ -10,9 +10,17 @@ semLib = require 'sem-lib'
 anymatch = require 'anymatch'
 logger = log4js.getLogger 'umd-builder'
 chokidar = require 'chokidar'
+UglifyJSOptimizer = require 'uglify-js-brunch'
+beautify = require('js-beautify').js_beautify
+
+_.template = require('./compilers/jst/template')
+_.templateSettings.variable = 'root'
+_.templateSettings.ignore = /<%--([\s\S]+?)--%>/g
 
 initConfig = (options)->
-    config = options._c = {optimizer: options.optimizer}
+    config = options._c = {}
+    if options.optimize
+        config.optimizer = new UglifyJSOptimizer options
 
     APPLICATION_PATH = sysPath.resolve options.paths.root
     CLIENT_RELATIVE_PATH = options.paths.watched[0]
@@ -78,13 +86,13 @@ isFile = (path, next)->
 isFileSync = (path)->
     return fs.existsSync(path) and fs.lstatSync(path).isFile() and path
 
-buildBower = (options, next)->
+buildBower = (options, done)->
     logger.info 'Build Bower start'
 
     config =
         # http://requirejs.org/docs/api.html#config-enforceDefine
         # To get timely, correct error triggers in IE, force a define/shim exports check.
-        enforceDefine: true,
+        enforceDefine: false,
 
         # http://requirejs.org/docs/api.html#config
         # By default load any module IDs from CLIENT_MODULES_URL
@@ -119,10 +127,13 @@ buildBower = (options, next)->
 
     give = (err)->
         if --count is 0 or err
-            _writeMainFile config, options
-            logger.info 'Build Bower finish'
-            logger.error 'Error while building bower components', err if err
-            next(err) if typeof next is 'function'
+            return done(err) if err
+            _writeMainFile config, options, (err)->
+                return done(err)
+                logger.info 'Build Bower finish'
+                logger.error 'Error while building bower components', err if err
+                done(err)
+                return
         return
 
     read = require './read'
@@ -293,65 +304,83 @@ _compileBowerFile = (path, component, config, memo, isAbsolutePath, options, don
     done()
     return
 
-_writeMainFile = (config, options)->
-    bundles = """
-    // Bundles
-    var bundles = #{JSON.stringify config.bundles},
-        component;
-    for (component in bundles) {
-        define(component, bundles[component], function(main) {
-            return main;
-        });
-    }
-    """
+_writeMainFile = (config, options, done)->
+    bundles = config.bundles
     delete config.bundles
+
     loader = config.loader or 'umd-core/depsLoader'
+    delete config.loader
 
-    mainjs = """
-        window.appConfig || (window.appConfig = {});
-        (function() {
-            'use strict';
-            var config = #{util.inspect config, depth: null};
-            if (!/\\.\\w+$/.test(window.location.pathname)) {
-                if (typeof appConfig.baseUrl === 'string') {
-                    config.baseUrl = appConfig.baseUrl + config.baseUrl;
-                } else {
-                    config.baseUrl = '/' + config.baseUrl;
-                }
-            }
-            var deps = config.deps;
-            delete config.deps;
+    pathBrowserify = config['path-browserify'] or 'umd-core/path-browserify'
+    delete config['path-browserify']
 
-            #{bundles}
+    source = fs.readFileSync sysPath.resolve(__dirname, './templates/main.js'), 'utf8'
+    template = _.template source
 
-            requirejs.config(config);
-
-            define(['#{loader}'], function(depsLoader) {
-                window.depsLoader = depsLoader;
-                require(deps, function() {
-                    require(['initialize']);
-                });
-            });
-        })();
-    """
+    data = template
+        config: util.inspect config, depth: null
+        bundles: JSON.stringify bundles
+        loader: loader
+        pathBrowserify: pathBrowserify
+        unit: false
 
     path = 'javascripts/main.js'
-    MAIN_JS_FILE = sysPath.resolve options._c.paths.PUBLIC_PATH, path
-    mkdirp.sync sysPath.dirname MAIN_JS_FILE
-    writer = fs.createWriteStream MAIN_JS_FILE, flags: 'w'
+    realPath = sysPath.resolve options._c.paths.PUBLIC_PATH, path
 
-    if options.optimizer
-        options.optimizer.optimize {data:mainjs, path}, (err, {data: optimized, path, map})->
-            logger.error err if err
-            writer.write optimized || mainjs
-            return
+    _writeData data, realPath, path, {optimizer: options._c.optimizer}, (err)->
+        return done(err) if err
+
+        config.baseUrl = '/base/' + options.paths.public + '/' + config.baseUrl
+        config.paths['angular-mocks'] = ['/base/bower_components/angular-mocks/angular-mocks']
+        config.shim['angular-mocks'] =
+            exports: 'angular.module'
+            deps: ['angular']
+        data = template
+            config: util.inspect config, depth: null
+            bundles: JSON.stringify bundles
+            loader: loader
+            pathBrowserify: pathBrowserify
+            unit: true
+
+        path = 'test/unit/test-main.js'
+        realPath = sysPath.resolve options._c.paths.APPLICATION_PATH, path
+        _writeData data, realPath, path, {}, done
+
         return
-    writer.write mainjs
     return
 
-_.template = require('./compilers/jst/template')
-_.templateSettings.variable = 'root'
-_.templateSettings.ignore = /<%--([\s\S]+?)--%>/g
+_writeData = (data, realPath, path, options, done)->
+    mkdirp sysPath.dirname(realPath), (err)->
+        return done err if err
+
+        writer = fs.createWriteStream realPath, flags: 'w'
+
+        if options.optimizer
+            options.optimizer.optimize {data, path}, (err, {data: optimized, path, map})->
+                return done err if err
+                writer.write optimized || data
+                done()
+                return
+        else
+            writer.write beautify data, 
+                indent_with_tabs: false
+                preserve_newlines: true
+                max_preserve_newlines: 4
+                space_in_paren: false
+                jslint_happy: false
+                brace_style: 'collapse'
+                keep_array_indentation: false
+                keep_function_indentation: false
+                eval_code: false
+                unescape_strings: false
+                break_chained_methods: false
+                e4x: false
+                wrap_line_length: 0
+            done()
+        return
+    return
+
+
 
 compileIndex = (path, options)->
     configPaths = options._c.paths
@@ -436,8 +465,10 @@ build = (options, next)->
 
     buildSem.semTake ->
         config = initConfig options
-        buildBower options, ->
-            buildClient options, ->
+        buildBower options, (err)->
+            throw err if err
+            buildClient options, (err)->
+                throw err if err
                 self.config = config
                 self.building = false
                 # logger.warn 'flushing', count
