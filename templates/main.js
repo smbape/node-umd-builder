@@ -28,7 +28,7 @@
             window.depsLoader = depsLoader;
 
             var allTestFiles = [];
-            var TEST_REGEXP = /\btest\.js$/;
+            var TEST_REGEXP = /-test\.js$/;
 
             // add test files
             Object.keys(window.__karma__.files).forEach(function(file) {

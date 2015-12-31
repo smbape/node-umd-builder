@@ -92,7 +92,7 @@ buildBower = (options, done)->
     config =
         # http://requirejs.org/docs/api.html#config-enforceDefine
         # To get timely, correct error triggers in IE, force a define/shim exports check.
-        enforceDefine: false,
+        enforceDefine: true,
 
         # http://requirejs.org/docs/api.html#config
         # By default load any module IDs from CLIENT_MODULES_URL
@@ -314,7 +314,7 @@ _writeMainFile = (config, options, done)->
     pathBrowserify = config['path-browserify'] or 'umd-core/path-browserify'
     delete config['path-browserify']
 
-    source = fs.readFileSync sysPath.resolve(__dirname, './templates/main.js'), 'utf8'
+    source = fs.readFileSync sysPath.resolve(__dirname, '../templates/main.js'), 'utf8'
     template = _.template source
 
     data = template
