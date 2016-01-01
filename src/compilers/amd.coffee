@@ -1,12 +1,13 @@
+
 log4js = global.log4js || (global.log4js = require('log4js'))
 logger = log4js.getLogger 'AmdCompiler'
-fs = require 'fs'
-mkdirp = require 'mkdirp'
+
 sysPath = require 'path'
-semLib = require 'sem-lib'
 _ = require 'lodash'
-builder = require('../../').builder
 UglifyJSOptimizer = require 'uglify-js-brunch'
+
+builder = require('../../').builder
+writeData = require '../writeData'
 
 # http://stackoverflow.com/questions/1007981/how-to-get-function-parameter-names-values-dynamically-from-javascript#12108723
 FN_ARGS = /^function\s*[^\(]*\(\s*([^\)]*)\)/m
@@ -156,24 +157,6 @@ ngModuleFactoryProxy = (modulePath, head, body)->
         return exports;
     }
     """
-
-# 8 parallel write at most
-writeSem = semLib.semCreate Math.pow(2, 3), true
-writeData = (data, dst, done)->
-    writeSem.semTake ->
-        next = (err)->
-            writeSem.semGive()
-            done(err)
-            return
-        
-        mkdirp sysPath.dirname(dst), (err)->
-            return next(err) if err
-            writeStream = fs.createWriteStream dst
-            writeStream.write data, 'utf8', next
-            writeStream.end()
-            return
-        return
-    return
 
 module.exports = class AmdCompiler
     brunchPlugin: true

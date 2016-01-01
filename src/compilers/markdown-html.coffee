@@ -1,31 +1,11 @@
-umd = require 'umd-wrapper'
+
+sysPath = require 'path'
 marked = require 'marked'
 hljs = require 'highlight.js'
 languages = hljs.listLanguages()
 
-fs = require 'fs'
-mkdirp = require 'mkdirp'
-sysPath = require 'path'
-semLib = require 'sem-lib'
 builder = require('../../').builder
-
-# 8 parallel write at most
-writeSem = semLib.semCreate Math.pow(2, 3), true
-writeData = (data, dst, done)->
-    writeSem.semTake ->
-        next = (err)->
-            writeSem.semGive()
-            done(err)
-            return
-        
-        mkdirp sysPath.dirname(dst), (err)->
-            return next(err) if err
-            writeStream = fs.createWriteStream dst
-            writeStream.write data, 'utf8', next
-            writeStream.end()
-            return
-        return
-    return
+writeData = require '../writeData'
 
 defaultOptions =
     renderer: new marked.Renderer()
@@ -38,7 +18,7 @@ defaultOptions =
 
 module.exports = class MarkdownCompiler
     brunchPlugin: true
-    type: 'markdown-html'
+    type: 'html'
     pattern: /\.(?:markdown|mdown|mkdn|md|mkd|mdwn|mdtxt|mdtext|text)$/
 
     constructor: (config = {})->
