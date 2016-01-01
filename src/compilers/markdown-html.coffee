@@ -55,7 +55,8 @@ module.exports = class MarkdownCompiler
         self.paths = self.paths or builder.getConfig().paths
 
         dst = sysPath.join self.paths.PUBLIC_PATH, self.amdDestination(path) + '.html'
-        writeData """<span class="mkd">#{marked(data)}</div>""", dst, (err)->
+        # escape every curly braces to avoid interpretation by angular
+        writeData marked(data).replace(/(\{|\}){2}/g, "{{ '\\$1\\$1' }}"), dst, (err)->
             return next(err) if err
             next err, params
             return
