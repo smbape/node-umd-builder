@@ -127,11 +127,17 @@ buildBower = (options, done)->
 
     give = (err)->
         if --count is 0 or err
-            return done(err) if err
+            if err
+                logger.error 'Error while building bower components', err
+                done(err)
+                return
+
             _writeMainFile config, options, (err)->
-                return done(err)
+                if err
+                    logger.error 'Error while building bower components', err
+                    done(err)
+                    return
                 logger.info 'Build Bower finish'
-                logger.error 'Error while building bower components', err if err
                 done(err)
                 return
         return
@@ -205,16 +211,35 @@ _processComponent = (component, config, options, done)->
 # path is relative path without leading slash
 # componentDir is absolute path without trailing slash
 _matchBowerFiles = (component, config, {path, componentDir, memo}, options, done)->
-    matcher = anymatch [path]
-    start = componentDir.length + 1
-    explore componentDir, (path, stats, next)->
-        relativePath = path.substring(start).replace(/[\\]/g, '/')
-        if matcher relativePath
+    anyspawn = require 'anyspawn'
+    anyspawn.exec 'ls ' + path.replace(/[\\]/g, '/'), {cwd: componentDir, prompt: false}, (err, outpout, code)->
+        return done(err) if err
+        outpout = outpout.split(/[\r?\n]+/g)
+
+        next = (err)->
+            if err or outpout.length is 0
+                done(err)
+                return
+
+            path = outpout.shift()
+            return next() if path is ''
+            path = sysPath.resolve(componentDir, path)
             _compileBowerFile path, component, config, memo, true, options, next
             return
+
         next()
-    , done
-    return
+        return
+    # return done()
+    # matcher = anymatch [path]
+    # start = componentDir.length + 1
+    # explore componentDir, (path, stats, next)->
+    #     relativePath = path.substring(start).replace(/[\\]/g, '/')
+    #     if matcher relativePath
+    #         _compileBowerFile path, component, config, memo, true, options, next
+    #         return
+    #     next()
+    # , done
+    # return
 
 _compileBowerFile = (path, component, config, memo, isAbsolutePath, options, done)->
     name = component.name
@@ -229,6 +254,7 @@ _compileBowerFile = (path, component, config, memo, isAbsolutePath, options, don
         absolutePath = sysPath.resolve configPaths.BOWER_COMPONENTS_RELATIVE_PATH, name, path
 
     return done() if processed.hasOwnProperty absolutePath
+    logger.trace "compiling bower file #{component.name}, #{path}"
 
     processed[absolutePath] = true
     extname = sysPath.extname path
@@ -314,10 +340,14 @@ _writeMainFile = (config, options, done)->
     pathBrowserify = config['path-browserify'] or 'umd-core/path-browserify'
     delete config['path-browserify']
 
-    source = fs.readFileSync sysPath.resolve(__dirname, '../templates/main.js'), 'utf8'
+    srcPath = sysPath.resolve(__dirname, '../templates/main.js')
+    source = fs.readFileSync srcPath, 'utf8'
     template = _.template source
 
     data = template
+        require: require
+        __filename: srcPath
+        __dirname: sysPath.dirname srcPath
         config: util.inspect config, depth: null
         bundles: JSON.stringify bundles
         loader: loader
@@ -336,6 +366,9 @@ _writeMainFile = (config, options, done)->
             exports: 'angular.module'
             deps: ['angular']
         data = template
+            require: require
+            __filename: srcPath
+            __dirname: sysPath.dirname srcPath
             config: util.inspect config, depth: null
             bundles: JSON.stringify bundles
             loader: loader
@@ -381,25 +414,59 @@ _writeData = (data, realPath, path, options, done)->
     return
 
 
+compileIndex = do ->
+    timeWindow = 500
+    # time in ms
+    timeout = undefined
 
-compileIndex = (path, options)->
+    ->
+        context = this
+        args = arguments
+        clearTimeout timeout
+        timeout = setTimeout ->
+            _compileIndex.apply context, args
+            return
+        , timeWindow
+        return
+
+_compileIndex = (path, options)->
     configPaths = options._c.paths
-    source = fs.readFileSync sysPath.resolve(configPaths.CLIENT_ASSETS_PATH, path), 'utf8'
+    srcpath = sysPath.resolve(configPaths.CLIENT_ASSETS_PATH, path)
+    source = fs.readFileSync srcpath, 'utf8'
     template = _.template source
 
     destFileSingle = sysPath.resolve configPaths.PUBLIC_PATH, 'index.single.html'
     fs.writeFileSync destFileSingle, template
+        require: require
+        __filename: srcpath
+        __dirname: sysPath.dirname srcpath
         single: true
         resource: 'app'
 
     destFileClassic = sysPath.resolve configPaths.PUBLIC_PATH, 'index.classic.html'
     fs.writeFileSync destFileClassic, template
+        require: require
+        __filename: srcpath
+        __dirname: sysPath.dirname srcpath
         single: false
         resource: 'web'
 
     logger.info 'compiled index file'
 
-buildClient = (options, next)->
+buildClient = (config, options, extra, next)->
+    if extra.watcher
+        watcher = extra.watcher
+        indexPath = sysPath.join config.paths.CLIENT_ASSETS_PATH, INDEX_FILE
+        watcher.on 'ready', ->
+            compileIndex indexPath, options
+            return
+        watcher.on 'change', (path)->
+            compileIndex indexPath, options, path
+            return
+
+        next()
+        return
+
     if cluster.isMaster
         if options.links
             for dstpath, srcpath of options.links
@@ -461,31 +528,36 @@ build = (options, next)->
         return
 
     self.building = true
-    options = _.clone options
+    options = self.options = _.clone options
+    self.config = initConfig options
 
     buildSem.semTake ->
-        config = initConfig options
         buildBower options, (err)->
             throw err if err
-            buildClient options, (err)->
-                throw err if err
-                self.config = config
-                self.building = false
-                # logger.warn 'flushing', count
-                buildSem.semFlush()
-                next config
-                return
+            self.building = false
+            next self.config
             return
         return
 
     return
 
-exports.getConfig = ->
-    build.config
 
-exports.initialize = (options = {}, next)->
+self = {}
+
+exports.getConfig = ->
+    self.config
+
+exports.buildClient = (extra, done)->
+    buildClient self.config, self.options, extra, done or (->)
+    return
+
+exports.buildBower = (options, done)->
+    options = self.options = _.clone options
+    self.config = initConfig options
+
     options.jsExtensions or (options.jsExtensions = /\.js$/)
-    build options, (config)=>
-        next config
+
+    buildBower options, ->
+        done self.config
         return
     return

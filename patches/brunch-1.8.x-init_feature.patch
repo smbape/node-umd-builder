@@ -8,10 +8,18 @@ Subject: [PATCH] add initialize feature
  1 file changed, 16 insertions(+), 3 deletions(-)
 
 diff --git a/src/watch.coffee b/src/watch.coffee
-index a621c11..e5e9224 100644
+index a621c11..9fe174c 100644
 --- a/src/watch.coffee
 +++ b/src/watch.coffee
-@@ -472,10 +472,23 @@ initialize = (options, configParams, onCompile, callback) ->
+@@ -468,14 +468,31 @@ initialize = (options, configParams, onCompile, callback) ->
+         compile = getCompileFn config, joinConfig, fileList, optimizers, watcher, callPreCompillers, callCompileCallbacks
+         reload = getReloadFn config, options, onCompile, watcher, server, plugins
+         includes = getPluginIncludes(plugins)
++
++        if 'function' is typeof config.onwatch
++          config.onwatch watcher
++
+         callback error, {
            config, watcher, server, fileList, compilers, linters, compile, reload, includes
          }
  
