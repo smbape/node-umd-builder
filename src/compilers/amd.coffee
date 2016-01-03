@@ -1,10 +1,10 @@
-
 log4js = global.log4js || (global.log4js = require('log4js'))
 logger = log4js.getLogger 'AmdCompiler'
 
 sysPath = require 'path'
 _ = require 'lodash'
 UglifyJSOptimizer = require 'uglify-js-brunch'
+JsHinter = require './jshinter'
 
 builder = require('../../').builder
 writeData = require '../writeData'
@@ -62,9 +62,18 @@ checkMethod = (path, script, done)->
                 return ''
     return done(null, res)
 
-umdWrapper = (data)->
+removeStrictOptions = (str)->
+    str.replace /^\s*(['"])use strict\1;?[^\n]*$/m, ''
+
+umdWrapper = (data, options)->
+    strict = ''
+    if options.strict
+        data = removeStrictOptions data
+        strict = "'use strict';"
+
     """
     (function(require) {
+        #{strict}
         var deps = [];
 
         #{data}
@@ -76,21 +85,27 @@ umdWrapper = (data)->
             // AMD
             depsLoader.amd.call(this, deps, factory);
         }
-    }.call(this, require));
+    }.call(typeof window !== 'undefined' && window === window.window ? window : typeof global !== 'undefined' ? global : null, require));
     """
 
-comWrapper = (data)->
+comWrapper = (data, options)->
+    strict = ''
+    if options.strict
+        data = removeStrictOptions data
+        strict = "'use strict';"
+
     """
+    #{strict}
     var deps = [];
 
     #{data}
 
-    module.exports = depsLoader.common.call(this, require, 'common', deps, factory);
+    module.exports = depsLoader.common.call(typeof window !== 'undefined' && window === window.window ? window : typeof global !== 'undefined' ? global : null, require);
     """
 
 factoryProxy = (plugin, modulePath, ctor, locals, head, body)->
     ngmethod = ctor.substring NG_PREFIX.length
-    realPath = plugin.options.paths.modules + '/' + modulePath
+    realPath = plugin.config.paths.modules + '/' + modulePath
     $name = modulePath.replace(/\//g, '.')
     $dirname = sysPath.dirname realPath
     $shortName = modulePath.replace(/.*\/([^\/]+)$/, '$1')
@@ -153,7 +168,7 @@ ngModuleFactoryProxy = (modulePath, head, body)->
 
         #{body}
 
-        ngmodule.apply(this, Array.prototype.slice.call(arguments, 2));
+        ngmodule.apply(typeof window !== 'undefined' && window === window.window ? window : typeof global !== 'undefined' ? global : null, Array.prototype.slice.call(arguments, 2));
         return exports;
     }
     """
@@ -164,19 +179,23 @@ module.exports = class AmdCompiler
     completer: true
     
     constructor: (config = {})->
-        @options = _.extend {}, config
         if config.optimize
-            @options.optimizer = new UglifyJSOptimizer config
+            @optimizer = new UglifyJSOptimizer config
 
+        @config = _.clone config
         @amdDestination = config.modules.amdDestination
 
         @sourceMaps = !!config.sourceMaps
         @amdDestination = config.modules.amdDestination
         @nameCleaner = config.modules.nameCleaner
+        @options = _.extend {}, config.plugins?.amd
+        if @options.jshint
+            @jshinter = new JsHinter config
 
     compile: (params, next)->
         self = @
         {data, path, map} = params
+
         self.paths = self.paths or builder.getConfig().paths
 
         checkMethod path, data, (err, res)->
@@ -185,33 +204,46 @@ module.exports = class AmdCompiler
                 {name, $inject, locals, head, body} = res
                 switch name
                     when 'factory'
-                        umdData = umdWrapper data
-                        comData = comWrapper data
+                        umdData = umdWrapper data, self.options
+                        comData = comWrapper data, self.options
                     when 'ngmodule'
                         modulePath = self.nameCleaner path
                         data = ngModuleFactoryProxy modulePath, head, body
-                        umdData = umdWrapper data
-                        comData = comWrapper data
+                        umdData = umdWrapper data, self.options
+                        comData = comWrapper data, self.options
                     else
                         modulePath = self.nameCleaner path
                         data = factoryProxy self, modulePath, name, locals, head, body
-                        umdData = umdWrapper data
-                        comData = comWrapper data
+                        umdData = umdWrapper data, self.options
+                        comData = comWrapper data, self.options
 
             done = ->
                 next null, {data: comData, path, map}
                 return
 
             dst = sysPath.join self.paths.PUBLIC_PATH, self.amdDestination(path) + '.js'
-            if self.options.optimizer
-                self.options.optimizer.optimize {data: umdData, path, map}, (err, res)->
-                    return logger.error err if err
-                    {data: optimized, path, map} = res
-                    writeData optimized || umdData, dst, done
+
+            finishCompilation = ->
+                if self.optimizer
+                    self.optimizer.optimize {data: umdData, path, map}, (err, res)->
+                        return logger.error err if err
+                        {data: optimized, path, map} = res
+                        writeData optimized || umdData, dst, done
+                        return
                     return
+
+                writeData umdData, dst, done
                 return
 
-            writeData umdData, dst, done
+            if self.jshinter
+                self.jshinter.lint {data: umdData, path, map}, (msg)->
+                    logger.warn path, msg if msg
+                    finishCompilation()
+                    return
+
+                return
+
+            finishCompilation()
 
             return
 
