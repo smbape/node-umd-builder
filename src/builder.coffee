@@ -46,10 +46,6 @@ initConfig = (options)->
     # Bower relative path to be used by require.js for path resolution
     BOWER_COMPONENTS_URL = sysPath.relative(CLIENT_MODULES_PATH, BOWER_PUBLIC_PATH).replace /[\\]/g, '/'
 
-    bowerConfig = require sysPath.resolve APPLICATION_PATH, 'bower.json'
-    config.dependencies = bowerConfig.dependencies
-    config.overrides = bowerConfig.overrides || {}
-
     config.paths = {
         APPLICATION_PATH
         CLIENT_RELATIVE_PATH

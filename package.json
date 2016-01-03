@@ -6,7 +6,7 @@
   "scripts": {
     "prepublish": "node scripts/prepublish.js",
     "postinstall": "node scripts/postinstall.js",
-    "test": "node test/template.js"
+    "test": "node node_modules/mocha/bin/_mocha --full-trace --compilers coffee:coffee-script/register --require test/mocha/common.coffee test/mocha && node test/template.js"
   },
   "repository": {
     "type": "git",
@@ -52,5 +52,9 @@
     "umd-wrapper": "^0.1.0",
     "username": "^1.0.0",
     "which": "^1.1.2"
+  },
+  "devDependencies": {
+    "chai": "^3.4.1",
+    "mocha": "^2.3.4"
   }
 }

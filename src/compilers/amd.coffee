@@ -100,7 +100,7 @@ comWrapper = (data, options)->
 
     #{data}
 
-    module.exports = depsLoader.common.call(typeof window !== 'undefined' && window === window.window ? window : typeof global !== 'undefined' ? global : null, require);
+    module.exports = depsLoader.common.call(typeof window !== 'undefined' && window === window.window ? window : typeof global !== 'undefined' ? global : null, require, 'common', deps, factory);
     """
 
 factoryProxy = (plugin, modulePath, ctor, locals, head, body)->
