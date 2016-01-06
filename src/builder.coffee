@@ -138,7 +138,7 @@ buildBower = (options, done)->
                 return
         return
 
-    read = require './read'
+    read = require '../utils/read-components'
     read sysPath.resolve(options._c.paths.APPLICATION_PATH), 'bower', (err, components)->
         return give err if err
 

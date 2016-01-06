@@ -4,63 +4,14 @@ logger = log4js.getLogger 'AmdCompiler'
 sysPath = require 'path'
 _ = require 'lodash'
 UglifyJSOptimizer = require 'uglify-js-brunch'
+anymatch = require 'anymatch'
 JsHinter = require './jshinter'
 
 builder = require('../../').builder
 writeData = require '../writeData'
-
-# http://stackoverflow.com/questions/1007981/how-to-get-function-parameter-names-values-dynamically-from-javascript#12108723
-FN_ARGS = /^function\s*[^\(]*\(\s*([^\)]*)\)/m
-FN_ARG_SPLIT = /,/
-FN_ARG = /^\s*(_?)(.+?)\1\s*$/
-STRIP_COMMENTS = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/mg
-
-forEach = (arr, cb)->
-    Array::forEach.call arr, cb
-
-annotate = (fn) ->
-    return if 'string' isnt typeof fn
-    $inject = []
-    fnText = fn.replace(STRIP_COMMENTS, '')
-    argDecl = fnText.match(FN_ARGS)
-    forEach argDecl[1].split(FN_ARG_SPLIT), (arg) ->
-        arg.replace FN_ARG, (all, underscore, name) ->
-            $inject.push name
-            return
-        return
-    $inject
-
-NG_PREFIX = 'ng'
-FN_ARGS_REG = '(\\b\\s*[^\\(]*\\(\\s*[^\\)]*\\))'
-authorisedFunctions = ['usable', 'run', 'config', 'module', 'factory', 'filter', 'directive', 'controller', 'service', 'value', 'constant', 'decorator', 'provider']
-selectorReg = '(' + NG_PREFIX + authorisedFunctions.join( '|' + NG_PREFIX) + ')'
-NG_REGEXP = new RegExp "^(?:#{selectorReg}\\s*=|function\\s+#{selectorReg}\\b|factory\\s*=\\s*function#{FN_ARGS_REG}|function\\s+factory#{FN_ARGS_REG})", 'mg'
-
-checkMethod = (path, script, done)->
-    # reset lastIndex to start search from the begining of string
-    NG_REGEXP.lastIndex = 0 if NG_REGEXP.lastIndex
-
-    match = NG_REGEXP.exec script
-    return done() if not match
-
-    name = match[1] || match[2] || 'factory'
-    index = NG_REGEXP.lastIndex - match[0].length
-
-    head = script.substring 0, index
-    body = script.substring index
-
-    res = {name, head, body}
-
-    switch name
-        when 'factory'
-            res.$inject = $inject = annotate "function #{match[3] || match[4]}"
-            return done(null, res) if $inject[0] is 'require'
-        else
-            # find locals
-            res.head = head.replace /^\/\*\s*locals\s*=\s*([^*]+)\s*\*\/\n?/m, (match, _locals)->
-                res.locals = _locals.trim()
-                return ''
-    return done(null, res)
+methodParser = require('../../utils/method-parser')
+parse = methodParser.parse
+NG_PREFIX = methodParser.NG_PREFIX
 
 removeStrictOptions = (str)->
     str.replace /^\s*(['"])use strict\1;?[^\n]*$/m, ''
@@ -103,7 +54,7 @@ comWrapper = (data, options)->
     module.exports = depsLoader.common.call(typeof window !== 'undefined' && window === window.window ? window : typeof global !== 'undefined' ? global : null, require, 'common', deps, factory);
     """
 
-factoryProxy = (plugin, modulePath, ctor, locals, head, body)->
+ngFactoryProxy = (plugin, modulePath, ctor, locals, head, body)->
     ngmethod = ctor.substring NG_PREFIX.length
     realPath = plugin.config.paths.modules + '/' + modulePath
     $name = modulePath.replace(/\//g, '.')
@@ -191,6 +142,7 @@ module.exports = class AmdCompiler
         @options = _.extend {}, config.plugins?.amd
         if @options.jshint
             @jshinter = new JsHinter config
+        @isIgnored = if @options.ignore then anymatch(@options.ignore) else if config.conventions and config.conventions.vendor then config.conventions.vendor else anymatch(/^(bower_components|vendor)/)
 
     compile: (params, next)->
         self = @
@@ -198,53 +150,58 @@ module.exports = class AmdCompiler
 
         self.paths = self.paths or builder.getConfig().paths
 
-        checkMethod path, data, (err, res)->
-            umdData = comData = data
-            if res
-                {name, $inject, locals, head, body} = res
-                switch name
-                    when 'factory'
-                        umdData = umdWrapper data, self.options
-                        comData = comWrapper data, self.options
-                    when 'ngmodule'
+        umdData = comData = data
+        # console.log path
+        
+        if not @isIgnored params.path
+            [locals, name, args, head, declaration, body] = res = parse data
+
+            switch name
+                when 'factory'
+                    if 'require' isnt args[0]
+                        args.unshift 'require'
+                        data = "#{head}#{declaration}#{args.join(', ')}#{body}"
+                    umdData = umdWrapper data, self.options
+                    comData = comWrapper data, self.options
+                # when 'freact'
+                when 'ngmodule'
+                    modulePath = self.nameCleaner path
+                    data = ngModuleFactoryProxy modulePath, head, "#{declaration}#{args.join(', ')}#{body}"
+                    umdData = umdWrapper data, self.options
+                    comData = comWrapper data, self.options
+                else
+                    if name in methodParser.NG_FNS
                         modulePath = self.nameCleaner path
-                        data = ngModuleFactoryProxy modulePath, head, body
-                        umdData = umdWrapper data, self.options
-                        comData = comWrapper data, self.options
-                    else
-                        modulePath = self.nameCleaner path
-                        data = factoryProxy self, modulePath, name, locals, head, body
+                        data = ngFactoryProxy self, modulePath, name, locals, head, "#{declaration}#{args.join(', ')}#{body}"
                         umdData = umdWrapper data, self.options
                         comData = comWrapper data, self.options
 
-            done = ->
-                next null, {data: comData, path, map}
-                return
+        done = ->
+            next null, {data: comData, path}
+            return
 
-            dst = sysPath.join self.paths.PUBLIC_PATH, self.amdDestination(path) + '.js'
+        dst = sysPath.join self.paths.PUBLIC_PATH, self.amdDestination(path) + '.js'
 
-            finishCompilation = ->
-                if self.optimizer
-                    self.optimizer.optimize {data: umdData, path, map}, (err, res)->
-                        return logger.error err if err
-                        {data: optimized, path, map} = res
-                        writeData optimized || umdData, dst, done
-                        return
+        finishCompilation = ->
+            if self.optimizer
+                self.optimizer.optimize {data: umdData, path}, (err, res)->
+                    return logger.error err if err
+                    {data: optimized, path, map} = res
+                    writeData optimized || umdData, dst, done
                     return
-
-                writeData umdData, dst, done
                 return
 
-            if self.jshinter
-                self.jshinter.lint {data: umdData, path, map}, (msg)->
-                    logger.warn path, msg if msg
-                    finishCompilation()
-                    return
+            writeData umdData, dst, done
+            return
 
+        if self.jshinter
+            self.jshinter.lint {data: umdData, path, map}, (msg)->
+                logger.warn path, msg if msg
+                finishCompilation()
                 return
-
-            finishCompilation()
 
             return
+
+        finishCompilation()
 
         return

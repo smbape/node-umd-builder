@@ -16,11 +16,18 @@
     delete config.deps;
 
     var bundles = <%= root.bundles %>,
-        component;
+        component, paths;
     for (component in bundles) {
-        define(component, bundles[component], function(main) {
-            return main;
+        paths = bundles[component];
+        config.paths[component] = paths[0];
+        paths[0] = component;
+        for (var i = 0, len = paths.length; i < len; i++) {
+            paths[i]
+        }
+        define(component + '-bundle', paths, function() {
+            return Array.prototype.slice.call(arguments);
         });
+        deps.push(component + '-bundle');
     }
     requirejs.config(config);
     <% if (root.unit) { %>
