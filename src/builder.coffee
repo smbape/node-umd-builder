@@ -88,7 +88,7 @@ buildBower = (options, done)->
     config =
         # http://requirejs.org/docs/api.html#config-enforceDefine
         # To get timely, correct error triggers in IE, force a define/shim exports check.
-        enforceDefine: true,
+        enforceDefine: false,
 
         # http://requirejs.org/docs/api.html#config
         # By default load any module IDs from CLIENT_MODULES_URL
@@ -333,6 +333,9 @@ _writeMainFile = (config, options, done)->
     loader = config.loader or 'umd-core/depsLoader'
     delete config.loader
 
+    env = config.env or {}
+    delete config.env
+
     pathBrowserify = config['path-browserify'] or 'umd-core/path-browserify'
     delete config['path-browserify']
 
@@ -340,49 +343,50 @@ _writeMainFile = (config, options, done)->
     source = fs.readFileSync srcPath, 'utf8'
     template = _.template source
 
-    data = template
+    tplOpts = {
         require: require
         __filename: srcPath
         __dirname: sysPath.dirname srcPath
-        config: util.inspect config, depth: null
-        bundles: JSON.stringify bundles
-        loader: loader
-        pathBrowserify: pathBrowserify
-        unit: false
+        config
+        bundles
+        pathBrowserify
+        paths: options.paths
+        optimize: !!options._c.optimizer
+    }
 
-    path = 'javascripts/main.js'
-    realPath = sysPath.resolve options._c.paths.PUBLIC_PATH, path
+    types =
+        build: [sysPath.resolve(options._c.paths.APPLICATION_PATH, 'rbuild.js'), 'rbuild.js' ]
+        unit: [sysPath.resolve(options._c.paths.APPLICATION_PATH, 'test/unit/test-main.js'), 'test/unit/test-main.js']
+        main: [sysPath.resolve(options._c.paths.PUBLIC_PATH, 'javascripts/main.js'), 'javascripts/main.js']
+        'main-dev': [sysPath.resolve(options._c.paths.PUBLIC_PATH, 'javascripts/main-dev.js'), 'javascripts/main-dev.js']
 
-    _writeData data, realPath, path, {optimizer: options._c.optimizer}, (err)->
-        return done(err) if err
+    keys = Object.keys types
+    index = 0
+    length = keys.length
 
-        config.baseUrl = '/base/' + options.paths.public + '/' + config.baseUrl
-        config.paths['angular-mocks'] = ['/base/bower_components/angular-mocks/angular-mocks']
-        config.shim['angular-mocks'] =
-            exports: 'angular.module'
-            deps: ['angular']
-        data = template
-            require: require
-            __filename: srcPath
-            __dirname: sysPath.dirname srcPath
-            config: util.inspect config, depth: null
-            bundles: JSON.stringify bundles
-            loader: loader
-            pathBrowserify: pathBrowserify
-            unit: true
+    iterate = (err)->
+        if err or index is length
+            done err
+            return
 
-        path = 'test/unit/test-main.js'
-        realPath = sysPath.resolve options._c.paths.APPLICATION_PATH, path
-        _writeData data, realPath, path, {}, done
+        tplOpts.type = keys[index++]
+        data = template tplOpts
+
+        opts = if tplOpts.type is 'main-dev' then {optimizer: options._c.optimizer} else {}
+
+        _writeData data, types[tplOpts.type][0], types[tplOpts.type][1], opts, iterate
 
         return
+
+    iterate()
+
     return
 
-_writeData = (data, realPath, path, options, done)->
-    mkdirp sysPath.dirname(realPath), (err)->
+_writeData = (data, dst, path, options, done)->
+    mkdirp sysPath.dirname(dst), (err)->
         return done err if err
 
-        writer = fs.createWriteStream realPath, flags: 'w'
+        writer = fs.createWriteStream dst, flags: 'w'
 
         if options.optimizer
             options.optimizer.optimize {data, path}, (err, {data: optimized, path, map})->

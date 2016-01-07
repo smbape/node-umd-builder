@@ -41,7 +41,7 @@ var NG_FNS = ['usable', 'run', 'config', 'module', 'factory', 'filter', 'directi
 });
 exports.NG_FNS = NG_FNS;
 
-var OTHER_FNS = ['factory', 'reactf'];
+var OTHER_FNS = ['factory', 'freact'];
 exports.OTHER_FNS = OTHER_FNS;
 
 var ALL_FNS = '\\b(' + OTHER_FNS.concat(NG_FNS).join('|') + ')\\b';

@@ -21,7 +21,7 @@ describe 'method-parser', ->
     )
     OTHER_FNS = [
         'factory'
-        'reactf'
+        'freact'
     ]
 
     ALL_FNS = OTHER_FNS.concat(NG_FNS)
@@ -233,7 +233,7 @@ describe 'method-parser', ->
         parse fs.readFileSync(__dirname + '/../jquery.js').toString()
         return
 
-    it 'parse', ->
+    it 'should parse not function', ->
         str = """
         deps = ['lib/AbstractController'];
         
@@ -263,4 +263,62 @@ describe 'method-parser', ->
         assert.strictEqual parsed[0], 'AbstractController'
         assert.strictEqual parsed[1], 'ngcontroller'
         assert.ok _.isEqual(parsed[2], [])
+        return
+
+    it 'should parse freact', ->
+        str = """
+        function freact() {
+            var CommentBox = React.createClass({
+                displayName: "CommentBox",
+
+                render: function () {
+                    return React.createElement(
+                        "div",
+                        { className: "commentBox" },
+                        "Hello, world!I am a CommentBox. "
+                    );
+                }
+            });
+            ReactDOM.render(React.createElement(CommentBox, null), document.getElementById('content'));
+        }
+        """
+        parsed = parse(str)
+        assert.strictEqual parsed[0], undefined
+        assert.strictEqual parsed[1], 'freact'
+        assert.ok _.isEqual(parsed[2], [])
+        return
+
+    it 'should have not method', ->
+        str = """
+        (function(global, factory) {
+            var depsLoader;
+            if (typeof exports !== 'undefined') {
+
+                /* globals angular: false */
+                depsLoader = require('umd-core/depsLoader');
+                module.exports = factory(global, depsLoader, angular);
+            } else if (typeof define === 'function' && define.amd) {
+                define(['umd-core/depsLoader', 'angular'], function(depsLoader, angular) {
+                    factory(global, depsLoader, angular);
+                });
+            }
+        })(window, function(global, depsLoader, angular) {
+            var start;
+            start = function(application) {
+                application.start(document.getElementsByTagName('html')[0]);
+            };
+            global.depsLoader = depsLoader;
+            if (typeof exports !== 'undefined') {
+                return start(require('application'));
+            } else if (typeof define === 'function' && define.amd) {
+                return require(['application'], function(application) {
+                    start(application);
+                });
+            }
+        });
+        """
+        parsed = parse(str)
+        assert.strictEqual parsed[0], undefined
+        assert.strictEqual parsed[1], undefined
+        assert.ok _.isEqual(parsed[2], undefined)
         return

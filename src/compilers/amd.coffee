@@ -16,7 +16,7 @@ NG_PREFIX = methodParser.NG_PREFIX
 removeStrictOptions = (str)->
     str.replace /^\s*(['"])use strict\1;?[^\n]*$/m, ''
 
-umdWrapper = (data, options)->
+umdWrapper = (data, options, modulePath)->
     strict = ''
     if options.strict
         data = removeStrictOptions data
@@ -112,6 +112,7 @@ ngModuleFactoryProxy = (modulePath, head, body)->
     }
 
     function factory(require, angular) {
+        /*jshint validthis: true */
         var name = '#{modulePath.replace(/\//g, '.')}',
             resolvedDeps = Array.prototype.slice.call(arguments, ngoffset);
 
@@ -119,8 +120,30 @@ ngModuleFactoryProxy = (modulePath, head, body)->
 
         #{body}
 
-        ngmodule.apply(typeof window !== 'undefined' && window === window.window ? window : typeof global !== 'undefined' ? global : null, Array.prototype.slice.call(arguments, 2));
+        ngmodule.apply(this, Array.prototype.slice.call(arguments, 2));
         return exports;
+    }
+    """
+
+reactFactoryProxy = (modulePath, head, declaration, args, body)->
+    """
+    #{head}
+    deps.unshift({amd: 'react-bundle'});
+    
+    function factory(require, React) {
+        /*jshint validthis: true */
+        var ReactDOM;
+        if (React) {
+            ReactDOM = React[1];
+            React = React[0];
+        } else {
+            React = window.React;
+            ReactDOM = window.ReactDOM;
+        }
+
+        #{declaration}#{args.join(', ')}#{body}
+
+        return freact.apply(this, Array.prototype.slice.call(arguments, 2));
     }
     """
 
@@ -156,25 +179,23 @@ module.exports = class AmdCompiler
         if not @isIgnored params.path
             [locals, name, args, head, declaration, body] = res = parse data
 
-            switch name
-                when 'factory'
-                    if 'require' isnt args[0]
-                        args.unshift 'require'
-                        data = "#{head}#{declaration}#{args.join(', ')}#{body}"
-                    umdData = umdWrapper data, self.options
-                    comData = comWrapper data, self.options
-                # when 'freact'
-                when 'ngmodule'
-                    modulePath = self.nameCleaner path
-                    data = ngModuleFactoryProxy modulePath, head, "#{declaration}#{args.join(', ')}#{body}"
-                    umdData = umdWrapper data, self.options
-                    comData = comWrapper data, self.options
-                else
-                    if name in methodParser.NG_FNS
-                        modulePath = self.nameCleaner path
-                        data = ngFactoryProxy self, modulePath, name, locals, head, "#{declaration}#{args.join(', ')}#{body}"
-                        umdData = umdWrapper data, self.options
-                        comData = comWrapper data, self.options
+            if name
+                modulePath = self.nameCleaner path
+                switch name
+                    when 'factory'
+                        if 'require' isnt args[0]
+                            args.unshift 'require'
+                            data = "#{head}#{declaration}#{args.join(', ')}#{body}"
+                    when 'freact'
+                        data = reactFactoryProxy modulePath, head, declaration, args, body
+                    when 'ngmodule'
+                        data = ngModuleFactoryProxy modulePath, head, "#{declaration}#{args.join(', ')}#{body}"
+                    else
+                        if name in methodParser.NG_FNS
+                            data = ngFactoryProxy self, modulePath, name, locals, head, "#{declaration}#{args.join(', ')}#{body}"
+
+                umdData = umdWrapper data, self.options, modulePath
+                comData = comWrapper data, self.options
 
         done = ->
             next null, {data: comData, path}
