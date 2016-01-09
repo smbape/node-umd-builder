@@ -1,7 +1,14 @@
 /* jshint node: true */
 'use strict';
 
+var vm = require('vm');
+
 exports.parse = parse;
+exports.vmParse = vmParse;
+
+function vmParse(str) {
+
+}
 
 // http://www.regular-expressions.info/characters.html#special
 var specialReg = new RegExp('([' + '\\/^$.|?*+()[]{}'.split('').join('\\') + '])', 'g');

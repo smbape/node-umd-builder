@@ -23,7 +23,7 @@ umdWrapper = (data, options, modulePath)->
         strict = "'use strict';"
 
     """
-    (function(require) {
+    (function(require, global) {
         #{strict}
         var deps = [];
 
@@ -34,9 +34,9 @@ umdWrapper = (data, options, modulePath)->
             module.exports = depsLoader.common.call(this, require, 'node', deps, factory);
         } else if (typeof define === 'function' && define.amd) {
             // AMD
-            depsLoader.amd.call(this, deps, factory);
+            depsLoader.amd(deps, factory, global);
         }
-    }.call(typeof window !== 'undefined' && window === window.window ? window : typeof global !== 'undefined' ? global : null, require));
+    }(require, typeof window !== 'undefined' && window === window.window ? window : typeof global !== 'undefined' ? global : null));
     """
 
 comWrapper = (data, options)->
@@ -51,7 +51,7 @@ comWrapper = (data, options)->
 
     #{data}
 
-    module.exports = depsLoader.common.call(typeof window !== 'undefined' && window === window.window ? window : typeof global !== 'undefined' ? global : null, require, 'common', deps, factory);
+    module.exports = depsLoader.common(require, 'common', deps, factory, typeof window !== 'undefined' && window === window.window ? window : typeof global !== 'undefined' ? global : null);
     """
 
 ngFactoryProxy = (plugin, modulePath, ctor, locals, head, body)->
