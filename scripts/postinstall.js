@@ -118,7 +118,8 @@ function install(tasks, config, done) {
         ],
         filePatches = [
             ['node_modules/log4js/lib/log4js.js', 'log4js-v0.6.x-shutdown_fix.patch'],
-            ['node_modules/highlight.js/lib/languages/handlebars.js', 'hljs_hbs-8.7.0_fix.patch']
+            ['node_modules/highlight.js/lib/languages/handlebars.js', 'hljs_hbs-8.7.0_fix.patch'],
+            ['node_modules/requirejs/bin/r.js', 'rjs-2.1.22.patch']
         ],
         projectBrunch = config.project.brunch,
         projectLodash = config.project.lodash,

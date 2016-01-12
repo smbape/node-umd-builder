@@ -5,7 +5,8 @@ var require = root.require,
     __dirname = root.__dirname;
 
 var util = require('util'),
-    _ = require('lodash');
+    _ = require('lodash'),
+    sysPath = require('path');
 
 var config = _.cloneDeep(root.config),
     bundles = _.cloneDeep(root.bundles),
@@ -25,7 +26,7 @@ switch(root.type) {
         isUnit = true;
         config.baseUrl = '/base/' + root.paths.public + '/' + config.baseUrl;
         config.paths['angular-mocks'] = ['/base/bower_components/angular-mocks/angular-mocks'];
-        config.shim['angular-mocks'] ={
+        config.shim['angular-mocks'] = {
             exports: 'angular.module',
             deps: ['angular']
         };
@@ -41,9 +42,9 @@ switch(root.type) {
             config.paths[component] = config.paths[component][0];
         }
 
-        config.baseUrl = root.paths.public + '/' + config.baseUrl;
+        config.baseUrl = '../' + root.paths.public + '/' + config.baseUrl;
         config.name = '../javascripts/main';
-        config.out = root.paths.public + '/javascripts/main-built.js';
+        config.out = '../' + root.paths.public + '/javascripts/main-built.js';
 
         break;
     case 'main':
@@ -86,12 +87,6 @@ switch(root.type) {
         deps.push(config.paths[component]);
         for (var i = 1, len = paths.length; i < len; i++) {
             deps.push(paths[i]);
-            // bundleId = component + '-bundle-' + i;
-            // config.paths[bundleId] = paths[i];
-            // config.shim[bundleId] = {
-            //     deps: [component]
-            // };
-            // deps.push(bundleId);
         }
     }
     <% } else if (isMainDev || isUnit) { %>
@@ -107,13 +102,16 @@ switch(root.type) {
     }
     <% } %>
     <% if (isMainBuild) { %>
-        return config;
+        var basePath = '<%= sysPath.normalize(root.public).replace(/\\/g, '/') + '/' %>';
+        var augment = nodeRequire('<%= sysPath.normalize(root.root + '/work/raugment').replace(/\\/g, '/') %>');
+        return augment(basePath, config);
     <% } else if (isUnit) { %>
         requirejs.config(config);
 
         delete config.deps;
         require(['umd-core/depsLoader', 'umd-core/path-browserify'], function(depsLoader, pathBrowserify) {
             window.depsLoader = depsLoader;
+            window.pathBrowserify = pathBrowserify;
 
             var allTestFiles = [];
             var TEST_REGEXP = /-test\.js$/;
@@ -134,9 +132,13 @@ switch(root.type) {
                 return pathBrowserify.relative(config.baseUrl, path).replace(/\.js$/, '');
             }
         });
-    <% } else if (isMain || isMainDev) { %>
+    <% } else if (isMain) { %>
         requirejs.config(config);
-
-        define(['initialize'], function() {});
+        require(['initialize'], function() {});
+    <% } else if (isMainDev) { %>
+        requirejs.config(config);
+        define(config.deps, function() {
+            require(['initialize']);
+        });
     <% } %>
 }())

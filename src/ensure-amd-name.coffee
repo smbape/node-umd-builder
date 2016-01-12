@@ -48,7 +48,7 @@ getIndex = (str, line, col)->
 ensureAmdName = (data, name, depth = 0)->
     res = data
     data = """
-    define.amd = true; var depsLoader = {amd: amd}, window = {}; window.window = window;
+    define.amd = {jQuery: true}; var depsLoader = {amd: amd}, window = {}; window.window = window;
     #{data}
 
     function require() {}

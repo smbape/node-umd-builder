@@ -352,10 +352,12 @@ _writeMainFile = (config, options, done)->
         pathBrowserify
         paths: options.paths
         optimize: !!options._c.optimizer
+        root: options._c.paths.APPLICATION_PATH
+        public: options._c.paths.PUBLIC_PATH
     }
 
     types =
-        build: [sysPath.resolve(options._c.paths.APPLICATION_PATH, 'rbuild.js'), 'rbuild.js' ]
+        build: [sysPath.resolve(options._c.paths.APPLICATION_PATH, 'work/rbuild.js'), 'work/rbuild.js' ]
         unit: [sysPath.resolve(options._c.paths.APPLICATION_PATH, 'test/unit/test-main.js'), 'test/unit/test-main.js']
         main: [sysPath.resolve(options._c.paths.PUBLIC_PATH, 'javascripts/main.js'), 'javascripts/main.js']
         'main-dev': [sysPath.resolve(options._c.paths.PUBLIC_PATH, 'javascripts/main-dev.js'), 'javascripts/main-dev.js']
@@ -433,26 +435,30 @@ _compileIndex = (path, options)->
     configPaths = options._c.paths
     srcpath = sysPath.resolve(configPaths.CLIENT_ASSETS_PATH, path)
     source = fs.readFileSync srcpath, 'utf8'
-    template = _.template source
 
-    destFileSingle = sysPath.resolve configPaths.PUBLIC_PATH, 'index.single.html'
-    fs.writeFileSync destFileSingle, template
-        require: require
-        __filename: srcpath
-        __dirname: sysPath.dirname srcpath
-        single: true
-        resource: 'app'
+    try
+        template = _.template source
 
-    destFileClassic = sysPath.resolve configPaths.PUBLIC_PATH, 'index.classic.html'
-    fs.writeFileSync destFileClassic, template
-        require: require
-        __filename: srcpath
-        __dirname: sysPath.dirname srcpath
-        single: false
-        resource: 'web'
+        destFileSingle = sysPath.resolve configPaths.PUBLIC_PATH, 'index.single.html'
+        fs.writeFileSync destFileSingle, template
+            require: require
+            __filename: srcpath
+            __dirname: sysPath.dirname srcpath
+            single: true
+            resource: 'app'
 
-    logger.info 'compiled index file'
+        destFileClassic = sysPath.resolve configPaths.PUBLIC_PATH, 'index.classic.html'
+        fs.writeFileSync destFileClassic, template
+            require: require
+            __filename: srcpath
+            __dirname: sysPath.dirname srcpath
+            single: false
+            resource: 'web'
 
+        logger.info 'compiled index file'
+    catch e
+        logger.error e
+    
 buildClient = (config, options, extra, next)->
     if extra.watcher
         watcher = extra.watcher

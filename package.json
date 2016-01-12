@@ -53,6 +53,7 @@
     "pluralize": "^1.2.1",
     "progeny": "^0.5.2",
     "prompt": "^0.2.14",
+    "requirejs": "^2.1.22",
     "sem-lib": "^1.0.0",
     "stylus": "^0.52.4",
     "uglify-js-brunch": "^1.7.8",

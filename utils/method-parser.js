@@ -53,6 +53,7 @@ exports.OTHER_FNS = OTHER_FNS;
 
 var ALL_FNS = '\\b(' + OTHER_FNS.concat(NG_FNS).join('|') + ')\\b';
 // var ALL_FNS = '\\b(' + ['factory'].join('|') + ')\\b';
+exports.ALL_FNS = ALL_FNS;
 var FN_ARGS_REG = /(\s*[^\(]*\(\s*[^\)]*\))/;
 var ALL_FNS_REG = new RegExp("(?:" + ALL_FNS + "\\s*=\\s*(?:function" + FN_ARGS_REG.source + ")?|function\\s+" + ALL_FNS + FN_ARGS_REG.source + ")");
 

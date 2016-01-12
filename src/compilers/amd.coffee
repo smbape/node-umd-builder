@@ -102,7 +102,7 @@ ngModuleFactoryProxy = (modulePath, head, body)->
         dep = ngdeps[i];
         if ('string' === typeof dep && '/' === dep.charAt(0)) {
             ngdeps[i] = dep.substring(1);
-            dep = ngdeps[i].replace(/\\./g, '/');
+            dep = ngdeps[i];
             // deps.length - ngoffset + 1 correspond to ng dependency index
             // that index will be used to know which ngdeps must only by a deps
             // and therefore removed from ngdeps
