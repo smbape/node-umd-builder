@@ -4,7 +4,7 @@ marked = require 'marked'
 hljs = require 'highlight.js'
 languages = hljs.listLanguages()
 
-builder = require('../../').builder
+builder = require '../builder'
 writeData = require '../writeData'
 
 defaultOptions =

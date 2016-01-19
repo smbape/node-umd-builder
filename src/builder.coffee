@@ -12,6 +12,7 @@ logger = log4js.getLogger 'umd-builder'
 chokidar = require 'chokidar'
 UglifyJSOptimizer = require 'uglify-js-brunch'
 beautify = require('js-beautify').js_beautify
+anyspawn = require 'anyspawn'
 
 _.template = require('./compilers/jst/template')
 _.templateSettings.variable = 'root'
@@ -207,7 +208,6 @@ _processComponent = (component, config, options, done)->
 # path is relative path without leading slash
 # componentDir is absolute path without trailing slash
 _matchBowerFiles = (component, config, {path, componentDir, memo}, options, done)->
-    anyspawn = require 'anyspawn'
     anyspawn.exec 'ls ' + path.replace(/[\\]/g, '/'), {cwd: componentDir, prompt: false}, (err, outpout, code)->
         return done(err) if err
         outpout = outpout.split(/[\r?\n]+/g)
@@ -225,23 +225,11 @@ _matchBowerFiles = (component, config, {path, componentDir, memo}, options, done
 
         next()
         return
-    # return done()
-    # matcher = anymatch [path]
-    # start = componentDir.length + 1
-    # explore componentDir, (path, stats, next)->
-    #     relativePath = path.substring(start).replace(/[\\]/g, '/')
-    #     if matcher relativePath
-    #         _compileBowerFile path, component, config, memo, true, options, next
-    #         return
-    #     next()
-    # , done
-    # return
 
 _compileBowerFile = (path, component, config, memo, isAbsolutePath, options, done)->
     name = component.name
     configPaths = options._c.paths
     {processed, bundleIndex} = memo
-    jsExtensions = options.jsExtensions
 
     if isAbsolutePath
         absolutePath = path
@@ -256,7 +244,7 @@ _compileBowerFile = (path, component, config, memo, isAbsolutePath, options, don
     extname = sysPath.extname path
     destFile = sysPath.resolve configPaths.BOWER_PUBLIC_PATH, name, path
 
-    if jsExtensions.test extname
+    if options.jsExtensions.test extname
         memo.hasJs = true
 
         if typeof config.paths[name] is 'undefined'
@@ -313,7 +301,7 @@ _compileBowerFile = (path, component, config, memo, isAbsolutePath, options, don
                 # amd module
                 if not config.bundles.hasOwnProperty name
                     config.bundles[name] = [config.paths[name][0]]
-                    delete config.paths[name]
+                    # delete config.paths[name]
 
                 # never includes a '.js' extension since
                 # the paths config could be for a directory.
@@ -330,11 +318,21 @@ _writeMainFile = (config, options, done)->
     bundles = config.bundles
     delete config.bundles
 
-    loader = config.loader or 'umd-core/depsLoader'
-    delete config.loader
+    deps = config.deps
 
-    env = config.env or {}
-    delete config.env
+    for component of bundles
+        bundles[component].shift()
+        i = 0
+        len = bundles[component].length
+        while i < len
+            path = bundles[component][i]
+            bundle = 'bundle-' + component + '-' + i
+            deps[deps.length] = bundle
+            config.paths[bundle] = bundles[component][i]
+            if config.shim[component]?.exports
+                config.shim[bundle] = deps: [ component ]
+                config.shim[bundle].exports = config.shim[component].exports
+            i++
 
     pathBrowserify = config['path-browserify'] or 'umd-core/path-browserify'
     delete config['path-browserify']
@@ -348,7 +346,6 @@ _writeMainFile = (config, options, done)->
         __filename: srcPath
         __dirname: sysPath.dirname srcPath
         config
-        bundles
         pathBrowserify
         paths: options.paths
         optimize: !!options._c.optimizer

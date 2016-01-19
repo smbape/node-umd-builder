@@ -9,7 +9,6 @@ var util = require('util'),
     sysPath = require('path');
 
 var config = _.cloneDeep(root.config),
-    bundles = _.cloneDeep(root.bundles),
     pathBrowserify = root.pathBrowserify;
 
 function toString(obj) {
@@ -25,11 +24,13 @@ switch(root.type) {
     case 'unit':
         isUnit = true;
         config.baseUrl = '/base/' + root.paths.public + '/' + config.baseUrl;
-        config.paths['angular-mocks'] = ['/base/bower_components/angular-mocks/angular-mocks'];
-        config.shim['angular-mocks'] = {
-            exports: 'angular.module',
-            deps: ['angular']
-        };
+        if (config.paths.angular) {
+            config.paths['angular-mocks'] = ['/base/bower_components/angular-mocks/angular-mocks'];
+            config.shim['angular-mocks'] = {
+                exports: 'angular.module',
+                deps: ['angular']
+            };
+        }
         break;
     case 'build':
         isMainBuild = true;
@@ -39,7 +40,9 @@ switch(root.type) {
 
         // path fallbacks are not supported by r.js
         for (var component in config.paths) {
-            config.paths[component] = config.paths[component][0];
+            if (Array.isArray(config.paths[component])) {
+                config.paths[component] = config.paths[component][0];
+            }
         }
 
         config.baseUrl = '../' + root.paths.public + '/' + config.baseUrl;
@@ -77,39 +80,64 @@ switch(root.type) {
     <% } %>
 
     <% if (isMainBuild) { %>
-    var deps = config.deps;
-
-    var bundles = <%= toString(bundles) %>,
-        component, paths, bundleId;
-    for (component in bundles) {
-        paths = bundles[component];
-        config.paths[component] = paths[0];
-        deps.push(config.paths[component]);
-        for (var i = 1, len = paths.length; i < len; i++) {
-            deps.push(paths[i]);
-        }
-    }
-    <% } else if (isMainDev || isUnit) { %>
-    var deps = config.deps;
-
-    var bundles = <%= toString(bundles) %>,
-        component;
-
-    for (component in bundles) {
-        define(component, bundles[component], function(main) {
-            return main;
-        });
-    }
-    <% } %>
-    <% if (isMainBuild) { %>
         var basePath = '<%= sysPath.normalize(root.public).replace(/\\/g, '/') + '/' %>';
-        var augment = nodeRequire('<%= sysPath.normalize(root.root + '/work/raugment').replace(/\\/g, '/') %>');
+
+        var hasOwn = Object.prototype.hasOwnProperty,
+            push = Array.prototype.push;
+
+        var filenameMap = nodeRequire('<%= sysPath.normalize(root.root + '/work/filenameMap').replace(/\\/g, '/') %>');
+        var modulesWithDefine = [];
+        for (var filename in filenameMap) {
+            modulesWithDefine.push(filenameMap[filename].name);
+        }
+
         return augment(basePath, config);
+
+        function augment(basePath, config) {
+            config.modulesWithDefine = modulesWithDefine;
+            config.onReadFile = onReadFile;
+            push.apply(config.deps, modulesWithDefine);
+            return config;
+
+            function onReadFile(path, text) {
+                var relativePath = path.substring(basePath.length);
+                if (hasOwn.call(filenameMap, relativePath)) {
+                    text = appendName(text, filenameMap[relativePath].name, filenameMap[relativePath].line, filenameMap[relativePath].col);
+                }
+
+                return text;
+            }
+        }
+
+        function appendName(str, name, line, col) {
+            var start = getIndex(str, line, col);
+            var defstart = str.indexOf('(', start);
+            return str.substring(0, defstart + 1) + "'" + name + '\', ' + str.substring(defstart + 1);
+        }
+
+        function getIndex(str, line, col) {
+            var curr, index, lastIndex;
+            if (line === 1) {
+                return col;
+            }
+            curr = 1;
+            index = 0;
+            lastIndex = -1;
+            while (~(index = str.indexOf('\n', index))) {
+                lastIndex = index;
+                index++;
+                if (line === ++curr) {
+                    break;
+                }
+            }
+            return lastIndex + col;
+        }
     <% } else if (isUnit) { %>
         requirejs.config(config);
 
+        var deps = config.deps;
         delete config.deps;
-        require(['umd-core/depsLoader', 'umd-core/path-browserify'], function(depsLoader, pathBrowserify) {
+        require(['umd-core/src/depsLoader', 'umd-core/src/path-browserify'], function(depsLoader, pathBrowserify) {
             window.depsLoader = depsLoader;
             window.pathBrowserify = pathBrowserify;
 
@@ -134,7 +162,7 @@ switch(root.type) {
         });
     <% } else if (isMain) { %>
         requirejs.config(config);
-        require(['initialize'], function() {});
+        require(['initialize']);
     <% } else if (isMainDev) { %>
         requirejs.config(config);
         define(config.deps, function() {

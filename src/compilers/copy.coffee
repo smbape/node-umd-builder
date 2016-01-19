@@ -1,4 +1,3 @@
-
 log4js = global.log4js || (global.log4js = require('log4js'))
 logger = log4js.getLogger 'copy'
 
@@ -8,7 +7,7 @@ sysPath = require 'path'
 semLib = require 'sem-lib'
 _ = require 'lodash'
 
-builder = require('../../').builder
+builder = require '../builder'
 
 # 4 parallel copies at most
 copySem = semLib.semCreate Math.pow(2, 2), true
@@ -48,7 +47,7 @@ copyFile = (plugin, src, dst, next)->
     debounce(plugin, src, dst, next)()
     return
 
-module.exports = class AmdCompiler
+module.exports = class CopyCompiler
     brunchPlugin: true
     type: 'copy'
     typePattern: /^(?!(?:javascript|stylesheet|html)$)/

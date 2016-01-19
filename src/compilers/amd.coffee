@@ -7,7 +7,7 @@ UglifyJSOptimizer = require 'uglify-js-brunch'
 anymatch = require 'anymatch'
 JsHinter = require './jshinter'
 
-builder = require('../../').builder
+builder = require '../builder'
 writeData = require '../writeData'
 methodParser = require('../../utils/method-parser')
 parse = methodParser.parse
@@ -128,22 +128,14 @@ ngModuleFactoryProxy = (modulePath, head, body)->
 reactFactoryProxy = (modulePath, head, declaration, args, body)->
     """
     #{head}
-    deps.unshift({amd: 'react-bundle'});
+    deps.unshift({amd: 'react', common: '!React'}, {amd: 'bundle-react-0', common: '!ReactDOM'});
     
-    function factory(require, React) {
+    function factory(require, React, ReactDOM) {
         /*jshint validthis: true */
-        var ReactDOM;
-        if (React) {
-            ReactDOM = React[1];
-            React = React[0];
-        } else {
-            React = window.React;
-            ReactDOM = window.ReactDOM;
-        }
 
         #{declaration}#{args.join(', ')}#{body}
 
-        return freact.apply(this, Array.prototype.slice.call(arguments, 2));
+        return freact.apply(this, Array.prototype.slice.call(arguments, 3));
     }
     """
 
@@ -174,7 +166,6 @@ module.exports = class AmdCompiler
         self.paths = self.paths or builder.getConfig().paths
 
         umdData = comData = data
-        # console.log path
         
         if not @isIgnored params.path
             [locals, name, args, head, declaration, body] = res = parse data
