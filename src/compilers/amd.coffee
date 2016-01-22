@@ -175,6 +175,10 @@ module.exports = class AmdCompiler
                 switch name
                     when 'factory'
                         if 'require' isnt args[0]
+                            # remove any require variable
+                            while (index = args.indexOf('require')) isnt -1
+                                args[index] = 'undefined'
+
                             args.unshift 'require'
                             data = "#{head}#{declaration}#{args.join(', ')}#{body}"
                     when 'freact'

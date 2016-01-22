@@ -7,7 +7,8 @@ assert.equals = (actual, expected)->
     return
 
 describe 'method-parser', ->
-    parse = require('../../utils/method-parser').parse
+    methodParser = require('../../utils/method-parser')
+    parse = methodParser.parse
     NG_FNS = [
         'usable'
         'run'
@@ -34,106 +35,106 @@ describe 'method-parser', ->
 
     it 'should parse empty', ->
         str = ''
-        parsed = parse(str)
-        assert.strictEqual parsed[0], undefined
-        assert.strictEqual parsed[1], undefined
-        assert.strictEqual parsed[2], undefined
+        [locals, name, args, head, declaration, body] = parse(str)
+        assert.strictEqual locals, undefined
+        assert.strictEqual name, undefined
+        assert.strictEqual args, undefined
         return
 
     it 'should parse locals', ->
         str = '/* locals = a, b, c */'
-        parsed = parse(str)
-        assert.strictEqual parsed[0], 'a, b, c'
-        assert.strictEqual parsed[1], undefined
-        assert.strictEqual parsed[2], undefined
+        [locals, name, args, head, declaration, body] = parse(str)
+        assert.strictEqual locals, 'a, b, c'
+        assert.strictEqual name, undefined
+        assert.strictEqual args, undefined
         return
 
     it 'should parse hoisted function', ->
         for fn in ALL_FNS
             str = "function #{fn}() {}"
-            parsed = parse(str)
-            assert.strictEqual parsed[0], undefined
-            assert.strictEqual parsed[1], fn
-            assert.equals parsed[2], []
+            [locals, name, args, head, declaration, body] = parse(str)
+            assert.strictEqual locals, undefined
+            assert.strictEqual name, fn
+            assert.equals args, []
         return
 
     it 'should parse hoisted function with args', ->
         for fn in ALL_FNS
             str = "function #{fn}(a, b, c) {}"
-            parsed = parse(str)
-            assert.strictEqual parsed[0], undefined
-            assert.strictEqual parsed[1], fn
-            assert.equals parsed[2], ['a', 'b', 'c']
+            [locals, name, args, head, declaration, body] = parse(str)
+            assert.strictEqual locals, undefined
+            assert.strictEqual name, fn
+            assert.equals args, ['a', 'b', 'c']
         return
 
     it 'should parse variable function', ->
         for fn in ALL_FNS
             str = "#{fn} = function() {}"
-            parsed = parse(str)
-            assert.strictEqual parsed[0], undefined
-            assert.strictEqual parsed[1], fn
-            assert.equals parsed[2], []
+            [locals, name, args, head, declaration, body] = parse(str)
+            assert.strictEqual locals, undefined
+            assert.strictEqual name, fn
+            assert.equals args, []
         return
 
     it 'should parse variable function with args', ->
         for fn in ALL_FNS
             str = "#{fn} = function (a, b, c) {}"
-            parsed = parse(str)
-            assert.strictEqual parsed[0], undefined
-            assert.strictEqual parsed[1], fn
-            assert.equals parsed[2], ['a', 'b', 'c']
+            [locals, name, args, head, declaration, body] = parse(str)
+            assert.strictEqual locals, undefined
+            assert.strictEqual name, fn
+            assert.equals args, ['a', 'b', 'c']
         return
 
     it 'should avoid scoped', ->
         str = '{/* locals = a, b, c */}'
-        parsed = parse(str)
-        assert.strictEqual parsed[0], undefined
-        assert.strictEqual parsed[1], undefined
-        assert.strictEqual parsed[2], undefined
+        [locals, name, args, head, declaration, body] = parse(str)
+        assert.strictEqual locals, undefined
+        assert.strictEqual name, undefined
+        assert.strictEqual args, undefined
 
         str = '{/* locals = a, b, c */}/* locals = c, d, b */'
-        parsed = parse(str)
-        assert.strictEqual parsed[0], 'c, d, b'
-        assert.strictEqual parsed[1], undefined
-        assert.strictEqual parsed[2], undefined
+        [locals, name, args, head, declaration, body] = parse(str)
+        assert.strictEqual locals, 'c, d, b'
+        assert.strictEqual name, undefined
+        assert.strictEqual args, undefined
 
         for fn in ALL_FNS
             str = "{function factory(a, b, c) {}} function #{fn}(c, d, b){}"
-            parsed = parse(str)
-            assert.strictEqual parsed[0], undefined
-            assert.strictEqual parsed[1], fn
-            assert.equals parsed[2], ['c', 'd', 'b']
+            [locals, name, args, head, declaration, body] = parse(str)
+            assert.strictEqual locals, undefined
+            assert.strictEqual name, fn
+            assert.equals args, ['c', 'd', 'b']
         return
 
     it 'should take first declared function', ->
         for fn in ALL_FNS
             str = "function #{fn}(c, d, b){} {function factory(a, b, c) {}} function ngmodule(c, d, b){}"
-            parsed = parse(str)
-            assert.strictEqual parsed[0], undefined
-            assert.strictEqual parsed[1], fn
-            assert.equals parsed[2], ['c', 'd', 'b']
+            [locals, name, args, head, declaration, body] = parse(str)
+            assert.strictEqual locals, undefined
+            assert.strictEqual name, fn
+            assert.equals args, ['c', 'd', 'b']
         return
 
     it 'should skip comments', ->
         for fn in ALL_FNS
 
             str = "//function ngfactory(c, d, b){} {function factory(a, b, c) {}} \nfunction #{fn}(c, d, b){}"
-            parsed = parse(str)
-            assert.strictEqual parsed[0], undefined
-            assert.strictEqual parsed[1], fn
-            assert.equals parsed[2], ['c', 'd', 'b']
+            [locals, name, args, head, declaration, body] = parse(str)
+            assert.strictEqual locals, undefined
+            assert.strictEqual name, fn
+            assert.equals args, ['c', 'd', 'b']
 
             str = "/* function ngfactory(c, d, b){} {function factory(a, b, c) {}} */function #{fn}(c, d, b){}"
-            parsed = parse(str)
-            assert.strictEqual parsed[0], undefined
-            assert.strictEqual parsed[1], fn
-            assert.equals parsed[2], ['c', 'd', 'b']
+            [locals, name, args, head, declaration, body] = parse(str)
+            assert.strictEqual locals, undefined
+            assert.strictEqual name, fn
+            assert.equals args, ['c', 'd', 'b']
 
             str = "/* function ngfactory(c, d, b){} {function factory(a, b, c) {}} */function #{fn}(c/* fido */, d, b){}"
-            parsed = parse(str)
-            assert.strictEqual parsed[0], undefined
-            assert.strictEqual parsed[1], fn
-            assert.equals parsed[2], ['c', 'd', 'b']
+            [locals, name, args, head, declaration, body] = parse(str)
+            assert.strictEqual locals, undefined
+            assert.strictEqual name, fn
+            assert.equals args, ['c', 'd', 'b']
 
         return
 
@@ -147,10 +148,10 @@ describe 'method-parser', ->
             /* locals = a, b, c */
 
             """
-            parsed = parse(str)
-            assert.strictEqual parsed[0], undefined
-            assert.strictEqual parsed[1], fn
-            assert.equals parsed[2], ['c', 'd', 'b']
+            [locals, name, args, head, declaration, body] = parse(str)
+            assert.strictEqual locals, undefined
+            assert.strictEqual name, fn
+            assert.equals args, ['c', 'd', 'b']
 
         return
 
@@ -166,10 +167,10 @@ describe 'method-parser', ->
             /* locals = a, b, c */
 
             """
-            parsed = parse(str)
-            assert.strictEqual parsed[0], undefined
-            assert.strictEqual parsed[1], fn
-            assert.equals parsed[2], ['c', 'd', 'b']
+            [locals, name, args, head, declaration, body] = parse(str)
+            assert.strictEqual locals, undefined
+            assert.strictEqual name, fn
+            assert.equals args, ['c', 'd', 'b']
 
     it 'should omit quote', ->
         for fn in ALL_FNS
@@ -188,31 +189,34 @@ describe 'method-parser', ->
             /* locals = a, b, c */
 
             """
-            parsed = parse(str)
-            assert.strictEqual parsed[0], undefined
-            assert.strictEqual parsed[1], fn
-            assert.equals parsed[2], ['c', 'd', 'b']
+            [locals, name, args, head, declaration, body] = parse(str)
+            assert.strictEqual locals, undefined
+            assert.strictEqual name, fn
+            assert.equals args, ['c', 'd', 'b']
 
+        return
+
+    it 'should parse various files', ->
         fs = require 'fs'
-        parsed = parse fs.readFileSync(__dirname + '/../stuff/angular-sanitize.js').toString()
-        assert.strictEqual parsed[0], undefined
-        assert.strictEqual parsed[1], undefined
-        assert.strictEqual parsed[2], undefined
+        [locals, name, args, head, declaration, body] = parse fs.readFileSync(__dirname + '/../stuff/angular-sanitize.js').toString()
+        assert.strictEqual locals, undefined
+        assert.strictEqual name, undefined
+        assert.strictEqual args, undefined
 
-        parsed = parse fs.readFileSync(__dirname + '/../stuff/angular-sanitize.js').toString()
-        assert.strictEqual parsed[0], undefined
-        assert.strictEqual parsed[1], undefined
-        assert.strictEqual parsed[2], undefined
+        [locals, name, args, head, declaration, body] = parse fs.readFileSync(__dirname + '/../stuff/jquery.js').toString()
+        assert.strictEqual locals, undefined
+        assert.strictEqual name, undefined
+        assert.strictEqual args, undefined
 
-        parsed = parse fs.readFileSync(__dirname + '/../stuff/jquery.js').toString()
-        assert.strictEqual parsed[0], undefined
-        assert.strictEqual parsed[1], undefined
-        assert.strictEqual parsed[2], undefined
+        [locals, name, args, head, declaration, body] = parse fs.readFileSync(__dirname + '/../stuff/respond.src.js').toString()
+        assert.strictEqual locals, undefined
+        assert.strictEqual name, undefined
+        assert.strictEqual args, undefined
 
-        parsed = parse fs.readFileSync(__dirname + '/../stuff/HomeController.js').toString()
-        assert.strictEqual parsed[0], 'AbstractController'
-        assert.strictEqual parsed[1], 'ngcontroller'
-        assert.equals parsed[2], []
+        [locals, name, args, head, declaration, body] = parse fs.readFileSync(__dirname + '/../stuff/HomeController.js').toString()
+        assert.strictEqual locals, 'AbstractController'
+        assert.strictEqual name, 'ngcontroller'
+        assert.equals args, []
         return
 
     it 'should parse freact', ->
@@ -232,8 +236,42 @@ describe 'method-parser', ->
             ReactDOM.render(React.createElement(CommentBox, null), document.getElementById('content'));
         }
         """
-        parsed = parse(str)
-        assert.strictEqual parsed[0], undefined
-        assert.strictEqual parsed[1], 'freact'
-        assert.equals parsed[2], []
+        [locals, name, args, head, declaration, body] = parse(str)
+        assert.strictEqual locals, undefined
+        assert.strictEqual name, 'freact'
+        assert.equals args, []
+        return
+
+    it 'should add arguments', ->
+        str = """
+        var deps, factory,
+          hasProp = {}.hasOwnProperty;
+
+        deps = ['umd-core/src/views/BackboneView'];
+
+        factory = function (BackboneView) {
+            return Tutorial1View;
+
+          })(BackboneView);
+        };
+        """
+        [locals, name, args, head, declaration, body] = parse(str)
+        args.unshift 'require'
+        actual = "#{head}#{declaration}#{args.join(', ')}#{body}"
+
+        expected = """
+        var deps, factory,
+          hasProp = {}.hasOwnProperty;
+
+        deps = ['umd-core/src/views/BackboneView'];
+
+        factory = function (require, BackboneView) {
+            return Tutorial1View;
+
+          })(BackboneView);
+        };
+        """
+
+        assert.strictEqual actual, expected
+
         return

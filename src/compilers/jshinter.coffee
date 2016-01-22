@@ -6,6 +6,7 @@ fs = require('fs')
 sysPath = require('path')
 chalk = require('chalk')
 pluralize = require('pluralize')
+anymatch = require('anymatch')
 minimatch = require('minimatch')
 _ = require('lodash')
 mkdirp = require('mkdirp')
@@ -28,13 +29,18 @@ module.exports = class JsHinter
             console.warn "Warning: config.jshint is deprecated, please move it to config.plugins.jshint"
 
         cfg = config?.plugins?.jshint ? config?.jshint ? {}
-        {@options, @globals, @warnOnly, @reporterOptions, @overrides} = cfg
+        {options, @globals, @warnOnly, @reporterOptions, @overrides} = cfg
 
-        # pattern property is used to determine if it is also a compiler
-        @jshintPattern = new RegExp(cfg.pattern ? ///^app.*$///)
+        if cfg.ignore
+            @isIgnored = anymatch(cfg.ignore)
+        else if config.conventions and config.conventions.vendor
+            @isIgnored = config.conventions.vendor
+        else
+            @isIgnored = anymatch(/^(bower_components|vendor)/)
+
         @reporter = if cfg.reporter? then require(require(cfg.reporter))
 
-        unless @options
+        unless options
             filename = sysPath.join process.cwd(), ".jshintrc"
 
             # read settings from .jshintrc file if exists
@@ -43,19 +49,21 @@ module.exports = class JsHinter
 
                 if stats.isFile()
                     buff = fs.readFileSync filename
-                    @options = JSON.parse removeComments buff.toString()
-                    {@globals, @overrides} = @options
-                    delete @options.globals
-                    delete @options.overrides
+                    options = JSON.parse removeComments buff.toString()
+                    {@globals, @overrides} = options
+                    delete options.globals
+                    delete options.overrides
             catch e
                 e = e.toString().replace "Error: ENOENT, ", ""
                 console.warn ".jshintrc parsing error: #{e}. jshint will run with default options."
+
+        @options = options
 
     lint: (params, next)->
         {data, path, map} = params
 
         # check if it is a file to lint
-        if not @jshintPattern.test path
+        if @isIgnored path
             return next null
 
         config = _.clone @options

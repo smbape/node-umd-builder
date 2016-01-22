@@ -20,7 +20,15 @@ function BabelCompiler(config) {
     }, this);
 
     this.options.sourceMap = !!config.sourceMaps;
-    this.isIgnored = options.ignore ? anymatch(options.ignore) : config.conventions && config.conventions.vendor ? config.conventions.vendor : anymatch(/^(bower_components|vendor)/);
+
+    if (options.ignore) {
+        this.isIgnored = anymatch(options.ignore);
+    } else if (config.conventions && config.conventions.vendor) {
+        this.isIgnored = config.conventions.vendor;   
+    } else {
+        this.isIgnored = anymatch(/^(bower_components|vendor)/);
+    }
+    
     if (this.options.pattern) {
         this.pattern = this.options.pattern;
         delete this.options.pattern;

@@ -63,7 +63,7 @@ var SYMBOLS = {
     LINE_COMMENT: '//',
     BLOCK_COMMENT_START: '/*',
     BLOCK_COMMENT_END: '*/',
-    REGEXP_QUOTE_BEGIN: /([,\{\}\;\=\(\+\-\!\&\|])[^\S\n]*\/(?!\/)/,
+    REGEXP_QUOTE_BEGIN: /([\,\{\}\;\=\(\+\-\!\&\|\:])[^\S\n]*\/(?!\/)/,
     REGEXP_QUOTE_END: '/',
     SINGLE_QUOTE: "'",
     DOUBLE_QUOTE: '"',
@@ -199,8 +199,9 @@ function _parse(str, tokenizer) {
                     case STATES.block_commenting:
                         return;
                     default:
+                        // console.log('single_quoting');
                         state = STATES.single_quoting;
-                        quoting_start = line + ' col ' + (index - col);
+                        quoting_start = 'line ' + line + ' col ' + (index - col + 1);
                         return;
                 }
                 /* falls through */
@@ -215,8 +216,9 @@ function _parse(str, tokenizer) {
                     case STATES.block_commenting:
                         return;
                     default:
+                        // console.log('double_quoting');
                         state = STATES.double_quoting;
-                        quoting_start = line + ' col ' + (index - col);
+                        quoting_start = 'line ' + line + ' col ' + (index - col + 1);
                         return;
                 }
                 /* falls through */
@@ -259,9 +261,9 @@ function _parse(str, tokenizer) {
                         return;
                     default:
                         if (/^\s*$/.test(str.substring(col, index)) /* begining of line */ || 'string' === typeof regexp_quote) {
-                            // console.log('RegExp');
+                            // console.log('regexp_quoting');
                             state = STATES.regexp_quoting;
-                            quoting_start = line + ' col ' + (index - col);
+                            quoting_start = 'line ' + line + ' col ' + (index - col + 1);
                         }
                         return;
                 }
@@ -272,7 +274,7 @@ function _parse(str, tokenizer) {
                         case STATES.single_quoting:
                         case STATES.double_quoting:
                         case STATES.regexp_quoting:
-                            var msg = 'quoting started at ' + quoting_start + ' not ended and found a new line at ' + line + ' col ' + (index - col);
+                            var msg = 'quoting ' + state + ' started at ' + quoting_start + ' not ended and found a new line at ' + line + ' col ' + (index - col + 1);
                             throw msg;
                         case STATES.line_commenting:
                             state = STATES.initial;
@@ -293,8 +295,9 @@ function _parse(str, tokenizer) {
                         case STATES.line_commenting:
                             return;
                         default:
+                            // console.log('regexp_quoting', index);
                             state = STATES.regexp_quoting;
-                            quoting_start = line + ' col ' + (index - col);
+                            quoting_start = 'line ' + line + ' col ' + (index - col + 1);
                             return;
                     }
                 } else if (scope === 0) {
@@ -313,10 +316,11 @@ function _parse(str, tokenizer) {
                         var fnText = str.substring(index, lastIndex);
                         name = name1 || name2;
                         if (args1 || args2) {
-                            var argIndex = fnText.indexOf(args1 || args2);
+                            args = (args1 || args2).trim()
+                            var argIndex = fnText.indexOf(args);
                             // args within parenthesis
-                            pos = [index, index + argIndex + 1, index + argIndex + (args1 || args2).length - 1, lastIndex];
-                            args = annotate("function " + (args1 || args2));
+                            pos = [index, index + argIndex + 1, index + argIndex + args.length - 1, lastIndex];
+                            args = annotate("function " + args);
                         } else {
                             args = [];
                             pos = [index, index, index, lastIndex];

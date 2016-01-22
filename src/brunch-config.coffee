@@ -126,6 +126,7 @@ matcher = (include, exclude) ->
 
 exports.logger = logger
 exports.matcher = matcher
+exports.isVendor = matcher ['bower_components/', 'components/', 'vendor/']
 
 # https://github.com/brunch/brunch/blob/stable/docs/config.md
 config = exports.config =
@@ -185,7 +186,7 @@ config = exports.config =
         javascripts:
             joinTo:
                 'javascripts/app.js': matcher ['app/node_modules/']
-                'javascripts/vendor.js': matcher ['bower_components/', 'components/', 'vendor/'], ['vendor/require.js$', 'vendor/modernizr-custom.js$']
+                'javascripts/vendor.js': matcher ['bower_components/', 'components/', 'vendor/'], ['vendor/html5shiv.js$', 'vendor/require.js$', 'vendor/modernizr-custom.js$', 'vendor/respond.src.js$']
 
         stylesheets:
             joinTo:
@@ -239,7 +240,7 @@ config = exports.config =
             if hasOwn.call cache, path
                 return cache[path]
 
-            res = cache[path] = config.files.javascripts.joinTo[sysPath.normalize('javascripts/vendor.js')].test path
+            res = cache[path] = exports.isVendor.test path
             return res if not res
 
             if m = /^bower_components[\/\\]([^\/\\]+)/.exec(path)
