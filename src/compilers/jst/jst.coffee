@@ -18,11 +18,16 @@ module.exports = class JstCompiler
             options = _.extend {}, @options, sourceURL: @nameCleaner path
             template = _.template(data, options).source
 
+            strict = if options.strict
+                "'use strict';"
+            else
+                ''
+
             data = """
-    function factory(require) {
-        'use strict';
-        return #{template};
-    }
+                function factory(require) {
+                    #{strict}
+                    return #{template};
+                }
             """
             next null, {data, path, map}
         catch e

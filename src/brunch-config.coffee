@@ -142,7 +142,7 @@ config = exports.config =
         require('./compilers/amd')
         require('./compilers/copy')
         require('./compilers/esprima')
-        require('./compilers/jst/jst-server-html')
+        require('./compilers/jst/jst')
         require('./compilers/markdown')
         require('./compilers/relativecss')
         require('./compilers/stylus')
@@ -211,6 +211,7 @@ config = exports.config =
             escape: /<%-([\s\S]+?)%>/g # default value
             interpolate: /<%=([\s\S]+?)%>/g # default value
             evaluate: /<%([\s\S]+?)%>/g # default value
+            strict: true
 
     initialize: (config, done)->
         builder.buildBower config, ->
