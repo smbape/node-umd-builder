@@ -142,7 +142,6 @@ config = exports.config =
         require('./compilers/amd')
         require('./compilers/copy')
         require('./compilers/esprima')
-        require('./compilers/jst/jst')
         require('./compilers/relativecss')
         require('./compilers/stylus')
     ]
