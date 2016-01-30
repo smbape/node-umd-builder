@@ -37,6 +37,7 @@ debounce = (plugin, src, dst, next)->
                 readable = fs.createReadStream src
                 writable = fs.createWriteStream dst
                 readable.pipe writable
+                writable.on 'error', done
                 writable.on 'finish', done
                 return
             return
