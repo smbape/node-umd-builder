@@ -116,7 +116,8 @@ buildBower = (options, done)->
         # http://requirejs.org/docs/api.html#config-deps
         deps: []
 
-    _.extend config, options.requirejs
+    # options is immutable, thats why deep is required
+    config = _.defaultsDeep {}, options.requirejs, config
 
     count = 0
 
