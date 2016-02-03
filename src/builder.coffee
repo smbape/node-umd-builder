@@ -433,25 +433,26 @@ _compileIndex = (path, options)->
     configPaths = options._c.paths
     srcpath = sysPath.resolve(configPaths.CLIENT_ASSETS_PATH, path)
     source = fs.readFileSync srcpath, 'utf8'
+    tplOpts =
+        require: require
+        __filename: srcpath
+        __dirname: sysPath.dirname srcpath
+        optimize: !!options._c.optimizer
 
     try
         template = _.template source
 
         destFileSingle = sysPath.resolve configPaths.PUBLIC_PATH, 'index.single.html'
-        fs.writeFileSync destFileSingle, template
-            require: require
-            __filename: srcpath
-            __dirname: sysPath.dirname srcpath
+        fs.writeFileSync destFileSingle, template _.defaults
             single: true
             resource: 'app'
+        , tplOpts
 
         destFileClassic = sysPath.resolve configPaths.PUBLIC_PATH, 'index.classic.html'
-        fs.writeFileSync destFileClassic, template
-            require: require
-            __filename: srcpath
-            __dirname: sysPath.dirname srcpath
+        fs.writeFileSync destFileClassic, template _.defaults
             single: false
             resource: 'web'
+        , tplOpts
 
         logger.info 'compiled index file'
     catch e
