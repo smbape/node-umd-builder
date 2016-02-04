@@ -15,7 +15,7 @@ function BabelCompiler(config) {
 
     this.options = {};
     Object.keys(options).forEach(function(key) {
-        if (key === 'sourceMap' || key === 'ignore') return;
+        if (key === 'sourceMap' || key === 'ignore' || key === 'pretransform') return;
         this.options[key] = options[key];
     }, this);
 
@@ -24,11 +24,11 @@ function BabelCompiler(config) {
     if (options.ignore) {
         this.isIgnored = anymatch(options.ignore);
     } else if (config.conventions && config.conventions.vendor) {
-        this.isIgnored = config.conventions.vendor;   
+        this.isIgnored = config.conventions.vendor;
     } else {
         this.isIgnored = anymatch(/^(bower_components|vendor)/);
     }
-    
+
     if (this.options.pattern) {
         this.pattern = this.options.pattern;
         delete this.options.pattern;
@@ -54,6 +54,7 @@ function BabelCompiler(config) {
         console.warn(".babelrc parsing error: " + e + ". babel will run with default options.");
     }
 
+    this.pretransform = Array.isArray(options.pretransform) ? options.pretransform : null;
 }
 
 BabelCompiler.prototype.brunchPlugin = true;
@@ -62,10 +63,21 @@ BabelCompiler.prototype.completer = true;
 
 BabelCompiler.prototype.compile = function(params, callback) {
     if (this.isIgnored(params.path)) return callback(null, params);
-    this.options.filename = params.path;
-    var compiled;
+    var options = _.defaults({
+        filename: params.path
+    }, this.options);
+    var compiled, transform;
+
+    compiled = params.data;
+    if (this.pretransform) {
+        for (var i = 0, len = this.pretransform.length; i < len; i++) {
+            transform = this.pretransform[i];
+            compiled = transform(compiled, options);
+        }
+    }
+
     try {
-        compiled = babel.transform(params.data, this.options);
+        compiled = babel.transform(compiled, options);
     } catch (err) {
         return callback(err);
     }
