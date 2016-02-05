@@ -69,14 +69,14 @@ BabelCompiler.prototype.compile = function(params, callback) {
     var compiled, transform;
 
     compiled = params.data;
-    if (this.pretransform) {
-        for (var i = 0, len = this.pretransform.length; i < len; i++) {
-            transform = this.pretransform[i];
-            compiled = transform(compiled, options);
-        }
-    }
-
     try {
+        if (this.pretransform) {
+            for (var i = 0, len = this.pretransform.length; i < len; i++) {
+                transform = this.pretransform[i];
+                compiled = transform(compiled, options);
+            }
+        }
+
         compiled = babel.transform(compiled, options);
     } catch (err) {
         return callback(err);

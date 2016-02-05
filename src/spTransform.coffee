@@ -97,12 +97,14 @@ lookupTransforms = (ast, transformations, stack = [], memo = {level: 0, flattern
 fnTransform =
     spClick: (str, transformations, start, end)->
         str.substring(0, start) + 'onClick' + str.substring(end)
+
     spClickValue: (str, transformations, start, end, memo)->
         left = "{ (function(event) "
         right = ").bind(this) }"
         str = str.substring(0, start) + left + str.substring(start, end) + right + str.substring(end)
         shiftTransform transformations, start, end, left.length + right.length, left.length, null, null, memo
         str
+
     spRepeat: (str, transformations, start, end, memo, node)->
         value = node.value.value
         ast = babylon.parse(value).program
@@ -121,6 +123,9 @@ fnTransform =
 
         left = "_.map(#{obj}, function(#{args}) {return ("
         right = ")}.bind(this))"
+
+        # left = "(function(__obj){(__obj.map || _.map).call(__obj, __obj, function(#{args}) {return ("
+        # right = ")}.bind(this)).call(this, #{obj})"
 
         if not memo.infn and memo.level > 1
             left = '{ ' + left
