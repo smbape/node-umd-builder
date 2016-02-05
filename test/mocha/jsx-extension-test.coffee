@@ -90,6 +90,17 @@ describe 'jsx extension', ->
         </button>)}.bind(this))"""
         assertStrictEqual code, expected
 
+        code = """<div>
+            <button spRepeat="locale in locales"/>
+            <button spRepeat="locale in locales"/>
+        </div>"""
+
+        expected = """<div>
+            { _.map(locales, function(locale) {return (<button />)}.bind(this)) }
+            { _.map(locales, function(locale) {return (<button />)}.bind(this)) }
+        </div>"""
+        assertStrictEqual code, expected
+
         return
 
     it 'should transform nested spRepeat', ->

@@ -25,7 +25,7 @@ shiftRange = (prevStart, prevEnd, start, end, offset, leftoffset, middle, righto
                 prevEnd += rightoffset
         else
             prevStart += leftoffset
-            prevEnd += rightoffset
+            prevEnd += leftoffset
 
     return [prevStart, prevEnd]
 
@@ -101,7 +101,7 @@ fnTransform =
         left = "{ (function(event) "
         right = ").bind(this) }"
         str = str.substring(0, start) + left + str.substring(start, end) + right + str.substring(end)
-        shiftTransform transformations, start, end, left.length + right.length, left.length, null, left.length, memo
+        shiftTransform transformations, start, end, left.length + right.length, left.length, null, null, memo
         str
     spRepeat: (str, transformations, start, end, memo, node)->
         value = node.value.value
@@ -126,16 +126,41 @@ fnTransform =
             left = '{ ' + left
             right = right + ' }'
 
+        # console.log 'spRepeat before', str
         str = str.substring(0, start) + left + toRepeat + right + str.substring(end)
+        # console.log 'spRepeat after', str
 
         # attribute has been removed
         leftoffset = left.length
         rightoffset = leftoffset - node.end + node.start
+        offset = rightoffset + right.length
         middle = node.start
 
-        shiftTransform transformations, start, end, leftoffset + right.length, leftoffset, middle, rightoffset, memo
+        # console.log {
+        #     leftoffset
+        #     rightoffset
+        #     nstart: node.start
+        #     nend: node.end
+        #     middle
+        #     name: transformations[0][0]
+        #     start: transformations[0][1]
+        #     end: transformations[0][2]
+        #     snode: transformations[0][4].start
+        #     enode: transformations[0][4].end
+        # }
 
-        # console.log 'spRepeat', str
+        shiftTransform transformations, start, end, offset, leftoffset, middle, rightoffset, memo
+
+        # console.log {
+        #     leftoffset
+        #     rightoffset
+        #     middle
+        #     name: transformations[0][0]
+        #     start: transformations[0][1]
+        #     end: transformations[0][2]
+        #     snode: transformations[0][4].start
+        #     enode: transformations[0][4].end
+        # }
 
         str
 
@@ -152,15 +177,18 @@ fnTransform =
 
         # console.log 'spShow before', str
         str = str.substring(0, start) + left + toDisplay + right + str.substring(end)
+        # console.log 'spShow after', str
 
         # attribute has been removed
         leftoffset = left.length
         rightoffset = leftoffset - node.end + node.start
+        offset = rightoffset + right.length
         middle = node.start
 
         # console.log {
         #     leftoffset
         #     rightoffset
+        #     middle
         #     name: transformations[0][0]
         #     start: transformations[0][1]
         #     end: transformations[0][2]
@@ -168,14 +196,14 @@ fnTransform =
         #     enode: transformations[0][4].end
         # }
 
-        shiftTransform transformations, start, end, leftoffset + right.length, leftoffset, middle, rightoffset, memo, ([name, start, end, memo])->
+        shiftTransform transformations, start, end, offset, leftoffset, middle, rightoffset, memo, ([name, start, end, memo])->
             memo.infn = true
             return
 
-        # console.log 'spShow after', str
         # console.log {
         #     leftoffset
         #     rightoffset
+        #     middle
         #     name: transformations[0][0]
         #     start: transformations[0][1]
         #     end: transformations[0][2]
