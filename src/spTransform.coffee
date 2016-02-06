@@ -58,28 +58,29 @@ lookupTransforms = (ast, transformations, stack = [], memo = {level: 0, flattern
                 when 'JSXAttribute'
                     if ast.name.type is 'JSXIdentifier'
                         switch ast.name.name
-                            when 'spClick'
-                                if ast.value.type is 'JSXExpressionContainer'
-                                    start = ast.name.start
-                                    middle = ast.name.end
-                                    end = ast.value.end
-
-                                    transformations.push ['spClick', ast.name.start, ast.name.end, _.clone(memo)]
-                                    transformations.push ['spClickValue',  ast.value.start,  ast.value.end, _.clone(memo)]
-                                else
-                                    throw new Error "spClick attribute at #{ast.start}, #{ast.end} expects a javascript expression"
                             when 'spRepeat'
                                 if ast.value.type is 'StringLiteral'
                                     expression = stack[stack.length - 3]
                                     transformations.push ['spRepeat',  expression.start,  expression.end, _.clone(memo), ast]
                                 else
-                                    throw new Error "spRepeat attribute at #{ast.start}, #{ast.end} expects a string literal as value"
+                                    throw new Error "#{ast.name.name} attribute at #{ast.start}, #{ast.end} expects a string literal as value"
                             when 'spShow'
                                 if ast.value.type is 'JSXExpressionContainer'
                                     expression = stack[stack.length - 3]
                                     transformations.push ['spShow',  expression.start,  expression.end, _.clone(memo), ast]
                                 else
-                                    throw new Error "spShow attribute at #{ast.start}, #{ast.end} expects a javascript expression"
+                                    throw new Error "#{ast.name.name} attribute at #{ast.start}, #{ast.end} expects a javascript expression"
+                            else
+                                if hasOwn.call fnTransform, ast.name.name
+                                    if ast.value.type is 'JSXExpressionContainer'
+                                        start = ast.name.start
+                                        middle = ast.name.end
+                                        end = ast.value.end
+
+                                        transformations.push [ast.name.name, ast.name.start, ast.name.end, _.clone(memo)]
+                                        transformations.push [ast.name.name + 'Value',  ast.value.start,  ast.value.end, _.clone(memo)]
+                                    else
+                                        throw new Error "#{ast.name.name} attribute at #{ast.start}, #{ast.end} expects a javascript expression"
 
                 when 'JSXElement'
                     isJsxElement = true
@@ -95,16 +96,6 @@ lookupTransforms = (ast, transformations, stack = [], memo = {level: 0, flattern
     return
 
 fnTransform =
-    spClick: (str, transformations, start, end)->
-        str.substring(0, start) + 'onClick' + str.substring(end)
-
-    spClickValue: (str, transformations, start, end, memo)->
-        left = "{ (function(event) "
-        right = ").bind(this) }"
-        str = str.substring(0, start) + left + str.substring(start, end) + right + str.substring(end)
-        shiftTransform transformations, start, end, left.length + right.length, left.length, null, null, memo
-        str
-
     spRepeat: (str, transformations, start, end, memo, node)->
         value = node.value.value
         ast = babylon.parse(value).program
@@ -217,6 +208,69 @@ fnTransform =
         # }
 
         str
+
+do ->
+    delegateEvents = [
+        'blur'
+        'change'
+        'click'
+        'drag'
+        'drop'
+        'focus'
+        'input'
+        'load'
+        'mouseenter'
+        'mouseleave'
+        'mousemove'
+        'propertychange'
+        'reset'
+        'scroll'
+        'submit'
+
+        'abort'
+        'canplay'
+        'canplaythrough'
+        'durationchange'
+        'emptied'
+        'encrypted'
+        'ended'
+        'error'
+        'loadeddata'
+        'loadedmetadata'
+        'loadstart'
+        'pause'
+        'play'
+        'playing'
+        'progress'
+        'ratechange'
+        'seeked'
+        'seeking'
+        'stalled'
+        'suspend'
+        'timeupdate'
+        'volumechange'
+        'waiting'
+    ]
+
+    delegate = (type)->
+        type = type[0].toUpperCase() + type.substring(1)
+
+        fnTransform['sp' + type] = (str, transformations, start, end)->
+            str.substring(0, start) + 'on' + type + str.substring(end)
+
+        fnTransform['sp' + type + 'Value'] = (str, transformations, start, end, memo)->
+            left = "{ (function(event) "
+            right = ").bind(this) }"
+            str = str.substring(0, start) + left + str.substring(start, end) + right + str.substring(end)
+            shiftTransform transformations, start, end, left.length + right.length, left.length, null, null, memo
+            str      
+        return
+
+
+    for evt in delegateEvents
+        delegate evt
+
+    return
 
 parse = (str)->
     babylon.parse str, plugins: [
