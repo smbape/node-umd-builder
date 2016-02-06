@@ -1,6 +1,9 @@
 /* jshint node: true */
 'use strict';
 
+var log4js = global.log4js || (global.log4js = require('log4js')),
+    logger = log4js.getLogger('babel');
+
 var babel = require('babel-core');
 var anymatch = require('anymatch');
 var removeComments = require('../../utils/remove-comments');
@@ -79,6 +82,7 @@ BabelCompiler.prototype.compile = function(params, callback) {
 
         compiled = babel.transform(compiled, options);
     } catch (err) {
+        logger.error(err.message);
         return callback(err);
     }
     var result = {

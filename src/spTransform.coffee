@@ -1,6 +1,8 @@
 babylon = require('babylon')
+escodegen = require('escodegen')
 _ = require 'lodash'
 hasOwn = {}.hasOwnProperty
+isDedugEnabled = false
 
 shiftRange = (prevStart, prevEnd, start, end, offset, leftoffset, middle, rightoffset)->
     if prevEnd > end
@@ -43,6 +45,10 @@ shiftTransform = (transformations, start, end, offset, leftoffset, middle, right
 
     return
 
+hasAttriute = (name, attributes)->
+    attributes.some (node)->
+        node.name.name is name
+
 cid = 0
 lookupTransforms = (ast, transformations, stack = [], memo = {level: 0, flattern: []})->
     if Array.isArray ast
@@ -61,17 +67,24 @@ lookupTransforms = (ast, transformations, stack = [], memo = {level: 0, flattern
                             when 'spRepeat'
                                 if ast.value.type is 'StringLiteral'
                                     expression = stack[stack.length - 3]
-                                    transformations.push ['spRepeat',  expression.start,  expression.end, _.clone(memo), ast]
+                                    attributes = stack[stack.length - 1].map (node)-> node.name.name
+                                    transformations.push [ast.name.name,  expression.start,  expression.end, _.extend({expression, attributes}, memo), ast]
                                 else
                                     throw new Error "#{ast.name.name} attribute at #{ast.start}, #{ast.end} expects a string literal as value"
                             when 'spShow'
                                 if ast.value.type is 'JSXExpressionContainer'
                                     expression = stack[stack.length - 3]
-                                    transformations.push ['spShow',  expression.start,  expression.end, _.clone(memo), ast]
+                                    attributes = stack[stack.length - 1].map (node)-> node.name.name
+                                    transformations.push [ast.name.name,  expression.start,  expression.end, _.extend({expression, attributes}, memo), ast]
                                 else
                                     throw new Error "#{ast.name.name} attribute at #{ast.start}, #{ast.end} expects a javascript expression"
+                            when 'spModel'
+                                if ast.value.type is 'JSXExpressionContainer'
+                                    transformations.push [ast.name.name, ast.value.expression.start, ast.value.expression.end, _.clone(memo), ast.value.expression]
+                                else if ast.value.type isnt 'StringLiteral'
+                                    throw new Error "#{ast.name.name} attribute at #{ast.start}, #{ast.end} expects a string literal or a javascript expression"
                             else
-                                if hasOwn.call fnTransform, ast.name.name
+                                if hasOwn.call TRF_DICT, ast.name.name
                                     if ast.value.type is 'JSXExpressionContainer'
                                         start = ast.name.start
                                         middle = ast.name.end
@@ -95,7 +108,7 @@ lookupTransforms = (ast, transformations, stack = [], memo = {level: 0, flattern
     
     return
 
-fnTransform =
+TRF_DICT =
     spRepeat: (str, transformations, start, end, memo, node)->
         value = node.value.value
         ast = babylon.parse(value).program
@@ -117,48 +130,63 @@ fnTransform =
 
         # left = "(function(__obj){(__obj.map || _.map).call(__obj, __obj, function(#{args}) {return ("
         # right = ")}.bind(this)).call(this, #{obj})"
+        
+        if ~memo.attributes.indexOf('spShow')
+            left = left.substring(0, left.length - 1)
+            right = right.substring(1)
 
-        if not memo.infn and memo.level > 1
+        if memo.level > 1
             left = '{ ' + left
             right = right + ' }'
 
-        # console.log 'spRepeat before', str
-        str = str.substring(0, start) + left + toRepeat + right + str.substring(end)
-        # console.log 'spRepeat after', str
+        prefix = str.substring(0, start)
+        suffix = str.substring(end)
+
+        res = prefix + left + toRepeat + right + suffix
 
         # attribute has been removed
         leftoffset = left.length
+        middle = node.start
         rightoffset = leftoffset - node.end + node.start
         offset = rightoffset + right.length
-        middle = node.start
 
-        # console.log {
-        #     leftoffset
-        #     rightoffset
-        #     nstart: node.start
-        #     nend: node.end
-        #     middle
-        #     name: transformations[0][0]
-        #     start: transformations[0][1]
-        #     end: transformations[0][2]
-        #     snode: transformations[0][4].start
-        #     enode: transformations[0][4].end
-        # }
+        if isDedugEnabled
+            console.log {
+                name: 'spRepeat'
+                before: str
+                offset
+                leftoffset
+                rightoffset
+                trf: if transformations[0]
+                    name: transformations[0][0]
+                    start: transformations[0][1]
+                    end: transformations[0][2]
+                    snode: transformations[0][4]?.start
+                    enode: transformations[0][4]?.end
+                else
+                    null
+            }
 
         shiftTransform transformations, start, end, offset, leftoffset, middle, rightoffset, memo
 
-        # console.log {
-        #     leftoffset
-        #     rightoffset
-        #     middle
-        #     name: transformations[0][0]
-        #     start: transformations[0][1]
-        #     end: transformations[0][2]
-        #     snode: transformations[0][4].start
-        #     enode: transformations[0][4].end
-        # }
+        if isDedugEnabled
+            console.log {
+                name: 'spRepeat'
+                after: res
+                offset
+                leftoffset
+                rightoffset
+                trf: if transformations[0]
+                    name: transformations[0][0]
+                    start: transformations[0][1]
+                    end: transformations[0][2]
+                    snode: transformations[0][4]?.start
+                    enode: transformations[0][4]?.end
+                else
+                    null
+            }
 
-        str
+        res
 
     spShow: (str, transformations, start, end, memo, node)->
         condition = str.substring node.value.expression.start, node.value.expression.end
@@ -167,13 +195,11 @@ fnTransform =
         left = "(#{condition} ? "
         right = " : '')"
 
-        if not memo.infn and memo.level > 1
+        if memo.attributes.indexOf('spRepeat') is -1 and memo.level > 1
             left = '{ ' + left
             right = right + ' }'
 
-        # console.log 'spShow before', str
-        str = str.substring(0, start) + left + toDisplay + right + str.substring(end)
-        # console.log 'spShow after', str
+        res = str.substring(0, start) + left + toDisplay + right + str.substring(end)
 
         # attribute has been removed
         leftoffset = left.length
@@ -181,33 +207,112 @@ fnTransform =
         offset = rightoffset + right.length
         middle = node.start
 
-        # console.log {
-        #     leftoffset
-        #     rightoffset
-        #     middle
-        #     name: transformations[0][0]
-        #     start: transformations[0][1]
-        #     end: transformations[0][2]
-        #     snode: transformations[0][4].start
-        #     enode: transformations[0][4].end
-        # }
+        if isDedugEnabled
+            console.log {
+                name: 'spShow'
+                before: str
+                offset
+                leftoffset
+                rightoffset
+                trf: if transformations[0]
+                    name: transformations[0][0]
+                    start: transformations[0][1]
+                    end: transformations[0][2]
+                    snode: transformations[0][4]?.start
+                    enode: transformations[0][4]?.end
+                else
+                    null
+            }
 
         shiftTransform transformations, start, end, offset, leftoffset, middle, rightoffset, memo, ([name, start, end, memo])->
             memo.infn = true
             return
 
-        # console.log {
-        #     leftoffset
-        #     rightoffset
-        #     middle
-        #     name: transformations[0][0]
-        #     start: transformations[0][1]
-        #     end: transformations[0][2]
-        #     snode: transformations[0][4].start
-        #     enode: transformations[0][4].end
-        # }
+        if isDedugEnabled
+            console.log {
+                name: 'spShow'
+                after: res
+                offset
+                leftoffset
+                rightoffset
+                trf: if transformations[0]
+                    name: transformations[0][0]
+                    start: transformations[0][1]
+                    end: transformations[0][2]
+                    snode: transformations[0][4]?.start
+                    enode: transformations[0][4]?.end
+                else
+                    null
+            }
 
-        str
+        res
+
+    spModel: (str, transformations, start, end, memo, expr)->
+        value = str.substring(start, end)
+        ast = babylon.parse(value).program
+
+        if ast.body.length is 1 and ast.body[0].type is 'ExpressionStatement'
+            switch ast.body[0].expression.type
+                when 'MemberExpression'
+                    {object, property} = ast.body[0].expression
+
+                    property.end -= property.start
+                    property.start = 0
+
+                    object = escodegen.generate object
+                    property = escodegen.generate property
+                when 'ArrayExpression'
+                    return str
+                else
+                    throw new Error "spModel attribute must be an ExpressionStatement at (#{expr.start}:#{expr.end}) with a MemberExpression or an ArrayExpression"
+        else
+            throw new Error "spModel attribute at (#{expr.start}:#{expr.end}) must be an ExpressionStatement"
+
+        value = "[#{object}, '#{property.replace(/'/g, "\\'")}']"
+        res = str.substring(0, start) + value + str.substring(end)
+
+        offset = value.length - end + start
+        leftoffset = offset
+        middle = null
+        rightoffset = null
+
+        if isDedugEnabled
+            console.log {
+                name: 'spModel'
+                before: str
+                offset
+                leftoffset
+                rightoffset
+                trf: if transformations[0]
+                    name: transformations[0][0]
+                    start: transformations[0][1]
+                    end: transformations[0][2]
+                    snode: transformations[0][4]?.start
+                    enode: transformations[0][4]?.end
+                else
+                    null
+            }
+
+        shiftTransform transformations, start, end, offset, leftoffset, null, null, memo
+
+        if isDedugEnabled
+            console.log {
+                name: 'spModel'
+                after: res
+                offset
+                leftoffset
+                rightoffset
+                trf: if transformations[0]
+                    name: transformations[0][0]
+                    start: transformations[0][1]
+                    end: transformations[0][2]
+                    snode: transformations[0][4]?.start
+                    enode: transformations[0][4]?.end
+                else
+                    null
+            }
+
+        res
 
 do ->
     delegateEvents = [
@@ -255,15 +360,56 @@ do ->
     delegate = (type)->
         type = type[0].toUpperCase() + type.substring(1)
 
-        fnTransform['sp' + type] = (str, transformations, start, end)->
+        TRF_DICT['sp' + type] = (str, transformations, start, end)->
             str.substring(0, start) + 'on' + type + str.substring(end)
 
-        fnTransform['sp' + type + 'Value'] = (str, transformations, start, end, memo)->
+        TRF_DICT['sp' + type + 'Value'] = (str, transformations, start, end, memo)->
             left = "{ (function(event) "
             right = ").bind(this) }"
-            str = str.substring(0, start) + left + str.substring(start, end) + right + str.substring(end)
-            shiftTransform transformations, start, end, left.length + right.length, left.length, null, null, memo
-            str      
+            res = str.substring(0, start) + left + str.substring(start, end) + right + str.substring(end)
+
+            offset = left.length + right.length
+            leftoffset = left.length
+            middle = null
+            rightoffset = null
+
+            if isDedugEnabled
+                console.log {
+                    name: 'sp' + type
+                    before: str
+                    offset
+                    leftoffset
+                    rightoffset
+                    trf: if transformations[0]
+                        name: transformations[0][0]
+                        start: transformations[0][1]
+                        end: transformations[0][2]
+                        snode: transformations[0][4]?.start
+                        enode: transformations[0][4]?.end
+                    else
+                        ''
+                }
+
+            shiftTransform transformations, start, end, offset, leftoffset, middle, rightoffset, memo
+
+            if isDedugEnabled
+                console.log {
+                    name: 'sp' + type
+                    after: res
+                    offset
+                    leftoffset
+                    rightoffset
+                    trf: if transformations[0]
+                        name: transformations[0][0]
+                        start: transformations[0][1]
+                        end: transformations[0][2]
+                        snode: transformations[0][4]?.start
+                        enode: transformations[0][4]?.end
+                    else
+                        ''
+                }
+
+            res
         return
 
 
@@ -283,21 +429,28 @@ transform = (str, options)->
     # console.log JSON.stringify ast, null, 4
     transformations = []
     lookupTransforms ast, transformations
+    priorities =
+        spShow: []
+        spRepeat: []
 
-    # put condition transforms first
     _trf = []
     for trf in transformations
-        if trf[0] is 'spShow'
-            _trf.push trf
-        else
-            _trf.unshift trf
-    transformations = _trf
+        switch trf[0]
+            when 'spShow'
+                priorities.spShow.push trf
+            when 'spRepeat'
+                priorities.spRepeat.push trf
+            else
+                _trf.push trf
+
+    # spRepeat, spShow, others
+    transformations = _trf.concat priorities.spShow, priorities.spRepeat
 
     while trf = transformations.pop()
         name = trf.shift()
         trf.splice 0, 0, str, transformations
-        if hasOwn.call fnTransform, name
-            str = fnTransform[name].apply null, trf
+        if hasOwn.call TRF_DICT, name
+            str = TRF_DICT[name].apply null, trf
     str
 
 module.exports = transform
