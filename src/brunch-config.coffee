@@ -128,7 +128,7 @@ exports.logger = logger
 exports.matcher = matcher
 exports.isVendor = matcher ['bower_components/', 'components/', 'vendor/']
 
-# https://github.com/brunch/brunch/blob/stable/docs/config.md
+# https://github.com/brunch/brunch/blob/master/docs/config.md
 config = exports.config =
 
     # TODO : take from compilers
@@ -233,7 +233,7 @@ config = exports.config =
             /bower.json/
             /component.json/
             /package.json/
-            /vendor[\\/](node|j?ruby-.*|bundle)[\\/]/
+            /vendor[\\/](?:node|j?ruby-.*|bundle)[\\/]/
         ]
         vendor: (path)->
             if hasOwn.call cache, path
@@ -248,3 +248,16 @@ config = exports.config =
                     return cache[path] = cache[folder]
 
             return res
+
+    overrides:
+        production:
+            conventions:
+                ignored: [
+                    /[\\/]\./
+                    /[\\/]_/
+                    /bower.json/
+                    /component.json/
+                    /package.json/
+                    /vendor[\\/](?:node|j?ruby-.*|bundle)[\\/]/
+                    /\btest\b/
+                ]

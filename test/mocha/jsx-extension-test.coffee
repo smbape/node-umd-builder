@@ -5,6 +5,16 @@ assertStrictEqual = (code, expected)->
     assert.strictEqual spTransform(expected), expected
     return
 
+# code = """<ModelListener model={model} events="validated:translated" onEvent={function(isModel, model, invalidAttrs) { return (
+#     <div spRepeat="(message, attr) in invalidAttrs">{message}</div>
+# )}} />"""
+# babylon = require('babylon')
+# parse = (str)->
+#     babylon.parse str, plugins: ['jsx', 'flow']
+
+# console.log JSON.stringify parse(code).program.body[0], null, 2
+# console.log spTransform(code)
+
 describe 'jsx extension', ->
     delegateEvents = [
         'blur'
@@ -406,6 +416,25 @@ describe 'jsx extension', ->
         </button>)}.bind(this))"""
         assertStrictEqual code, expected
 
+        return
+
+    it 'should respect in function', ->
+        code = """<ModelListener model={model} events="validated:translated" onEvent={function(isModel, model, invalidAttrs) { return (
+            <div spRepeat="(message, attr) in invalidAttrs">{message}</div>
+        )}} />"""
+        expected = """<ModelListener model={model} events="validated:translated" onEvent={function(isModel, model, invalidAttrs) { return (
+            _.map(invalidAttrs, function(message, attr) {return (<div >{message}</div>)}.bind(this))
+        )}} />"""
+        assertStrictEqual code, expected
+
+        code = """<ModelListener model={model} events="validated:translated" onEvent={function(isModel, model, invalidAttrs) { return (
+            <div spShow={invalidAttrs.password}>{invalidAttrs.password[0]}</div>
+        )}} />"""
+        expected = """<ModelListener model={model} events="validated:translated" onEvent={function(isModel, model, invalidAttrs) { return (
+            (invalidAttrs.password ? <div >{invalidAttrs.password[0]}</div> : '')
+        )}} />"""
+        assertStrictEqual code, expected
+    
         return
 
     return

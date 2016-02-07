@@ -31,8 +31,8 @@ shiftRange = (prevStart, prevEnd, start, end, offset, leftoffset, middle, righto
 
     return [prevStart, prevEnd]
 
-shiftTransform = (transformations, start, end, offset, leftoffset, middle, rightoffset, memo, callback = ->)->
-    for node in memo.flattern
+shiftTransform = (transformations, start, end, offset, leftoffset, middle, rightoffset, state, callback = ->)->
+    for node in state.flattern
         [newStart, newEnd] = shiftRange node.start, node.end, start, end, offset, leftoffset, middle, rightoffset
         node.start = newStart
         node.end = newEnd
@@ -50,68 +50,92 @@ hasAttriute = (name, attributes)->
         node.name.name is name
 
 cid = 0
-lookupTransforms = (ast, transformations, stack = [], memo = {level: 0, flattern: []})->
+lookupTransforms = (ast, transformations, state = {level: 0, flattern: [], infn: false}, astStack = [], stateStack = [])->
+    delete state.attribute
     if Array.isArray ast
-        stack.push ast
+        astStack.push ast
+        stateStack.push _.clone(state)
         for iast in ast
-            lookupTransforms iast, transformations, stack, memo
-        stack.pop()
+            lookupTransforms iast, transformations, state, astStack, stateStack
+        stateStack.pop()
+        astStack.pop()
     else if _.isObject ast
         if hasOwn.call(ast, 'type')
             ast.cid = ++cid
-            memo.flattern.push ast
+            state.flattern.push ast
             switch ast.type
                 when 'JSXAttribute'
+                    infn = stateStack[stateStack.length - 4].infn
+                    attribute = state.attribute = ast.name.name
                     if ast.name.type is 'JSXIdentifier'
-                        switch ast.name.name
+                        switch attribute
                             when 'spRepeat'
+                                # console.log stateStack.map (state, index)->
+                                #     index: index
+                                #     attribute: state.attribute
+                                #     level: state.level
+                                #     infn: state.infn
+
                                 if ast.value.type is 'StringLiteral'
-                                    expression = stack[stack.length - 3]
-                                    attributes = stack[stack.length - 1].map (node)-> node.name.name
-                                    transformations.push [ast.name.name,  expression.start,  expression.end, _.extend({expression, attributes}, memo), ast]
+                                    expression = astStack[astStack.length - 3]
+                                    attributes = astStack[astStack.length - 1].map (node)-> node.name.name
+                                    transformations.push [attribute, expression.start, expression.end, _.defaults({attribute, infn, expression, attributes}, state), ast]
                                 else
-                                    throw new Error "#{ast.name.name} attribute at #{ast.start}, #{ast.end} expects a string literal as value"
+                                    throw new Error "#{attribute} attribute at #{ast.start}, #{ast.end} expects a string literal as value"
                             when 'spShow'
                                 if ast.value.type is 'JSXExpressionContainer'
-                                    expression = stack[stack.length - 3]
-                                    attributes = stack[stack.length - 1].map (node)-> node.name.name
-                                    transformations.push [ast.name.name,  expression.start,  expression.end, _.extend({expression, attributes}, memo), ast]
+                                    expression = astStack[astStack.length - 3]
+                                    attributes = astStack[astStack.length - 1].map (node)-> node.name.name
+                                    transformations.push [attribute, expression.start, expression.end, _.defaults({attribute, infn, expression, attributes}, state), ast]
                                 else
-                                    throw new Error "#{ast.name.name} attribute at #{ast.start}, #{ast.end} expects a javascript expression"
+                                    throw new Error "#{attribute} attribute at #{ast.start}, #{ast.end} expects a javascript expression"
                             when 'spModel'
                                 if ast.value.type is 'JSXExpressionContainer'
-                                    transformations.push [ast.name.name, ast.value.expression.start, ast.value.expression.end, _.clone(memo), ast.value.expression]
+                                    transformations.push [attribute, ast.value.expression.start, ast.value.expression.end, _.defaults({attribute, infn}, state), ast.value.expression]
                                 else if ast.value.type isnt 'StringLiteral'
-                                    throw new Error "#{ast.name.name} attribute at #{ast.start}, #{ast.end} expects a string literal or a javascript expression"
+                                    throw new Error "#{attribute} attribute at #{ast.start}, #{ast.end} expects a string literal or a javascript expression"
                             else
-                                if hasOwn.call TRF_DICT, ast.name.name
+                                if hasOwn.call TRF_DICT, attribute
                                     if ast.value.type is 'JSXExpressionContainer'
                                         start = ast.name.start
                                         middle = ast.name.end
                                         end = ast.value.end
 
-                                        transformations.push [ast.name.name, ast.name.start, ast.name.end, _.clone(memo)]
-                                        transformations.push [ast.name.name + 'Value',  ast.value.start,  ast.value.end, _.clone(memo)]
+                                        transformations.push [attribute, ast.name.start, ast.name.end, _.defaults({attribute, infn}, state)]
+                                        transformations.push [attribute + 'Value', ast.value.start, ast.value.end, _.defaults({attribute, infn}, state)]
                                     else
-                                        throw new Error "#{ast.name.name} attribute at #{ast.start}, #{ast.end} expects a javascript expression"
+                                        throw new Error "#{attribute} attribute at #{ast.start}, #{ast.end} expects a javascript expression"
+
+                when 'FunctionExpression'
+                    prevInfn = state.infn
+                    state.infn = true
 
                 when 'JSXElement'
-                    isJsxElement = true
-                    ++memo.level
+                    ++state.level
+                    prevInfn = state.infn
+                    state.infn = false
 
-
-        stack.push ast
+        astStack.push ast
+        stateStack.push _.clone(state)
         for own prop of ast
-            lookupTransforms ast[prop], transformations, stack, memo
-        stack.pop()
-        memo.level-- if isJsxElement
-    
+            lookupTransforms ast[prop], transformations, state, astStack, stateStack
+        stateStack.pop()
+        astStack.pop()
+
+        switch ast.type
+            when 'FunctionExpression'
+                state.infn = prevInfn
+
+            when 'JSXElement'
+                --state.level
+                state.infn = prevInfn
+
     return
 
 TRF_DICT =
-    spRepeat: (str, transformations, start, end, memo, node)->
+    spRepeat: (str, transformations, start, end, state, node)->
         value = node.value.value
-        ast = babylon.parse(value).program
+        ast = parse(value).program
         if ast.body.length isnt 1 or
         'ExpressionStatement' isnt ast.body[0].type or
         'BinaryExpression' isnt ast.body[0].expression.type or
@@ -131,11 +155,11 @@ TRF_DICT =
         # left = "(function(__obj){(__obj.map || _.map).call(__obj, __obj, function(#{args}) {return ("
         # right = ")}.bind(this)).call(this, #{obj})"
         
-        if ~memo.attributes.indexOf('spShow')
+        if ~state.attributes.indexOf('spShow')
             left = left.substring(0, left.length - 1)
             right = right.substring(1)
 
-        if memo.level > 1
+        if not state.infn and state.level > 1
             left = '{ ' + left
             right = right + ' }'
 
@@ -167,7 +191,7 @@ TRF_DICT =
                     null
             }
 
-        shiftTransform transformations, start, end, offset, leftoffset, middle, rightoffset, memo
+        shiftTransform transformations, start, end, offset, leftoffset, middle, rightoffset, state
 
         if isDedugEnabled
             console.log {
@@ -188,14 +212,14 @@ TRF_DICT =
 
         res
 
-    spShow: (str, transformations, start, end, memo, node)->
+    spShow: (str, transformations, start, end, state, node)->
         condition = str.substring node.value.expression.start, node.value.expression.end
         toDisplay = str.substring(start, node.start) + str.substring(node.end, end)
 
         left = "(#{condition} ? "
         right = " : '')"
 
-        if memo.attributes.indexOf('spRepeat') is -1 and memo.level > 1
+        if not state.infn and state.level > 1 and state.attributes.indexOf('spRepeat') is -1
             left = '{ ' + left
             right = right + ' }'
 
@@ -224,8 +248,8 @@ TRF_DICT =
                     null
             }
 
-        shiftTransform transformations, start, end, offset, leftoffset, middle, rightoffset, memo, ([name, start, end, memo])->
-            memo.infn = true
+        shiftTransform transformations, start, end, offset, leftoffset, middle, rightoffset, state, ([name, start, end, state])->
+            state.infn = true
             return
 
         if isDedugEnabled
@@ -247,9 +271,9 @@ TRF_DICT =
 
         res
 
-    spModel: (str, transformations, start, end, memo, expr)->
+    spModel: (str, transformations, start, end, state, expr)->
         value = str.substring(start, end)
-        ast = babylon.parse(value).program
+        ast = parse(value).program
 
         if ast.body.length is 1 and ast.body[0].type is 'ExpressionStatement'
             switch ast.body[0].expression.type
@@ -293,7 +317,7 @@ TRF_DICT =
                     null
             }
 
-        shiftTransform transformations, start, end, offset, leftoffset, null, null, memo
+        shiftTransform transformations, start, end, offset, leftoffset, null, null, state
 
         if isDedugEnabled
             console.log {
@@ -363,7 +387,7 @@ do ->
         TRF_DICT['sp' + type] = (str, transformations, start, end)->
             str.substring(0, start) + 'on' + type + str.substring(end)
 
-        TRF_DICT['sp' + type + 'Value'] = (str, transformations, start, end, memo)->
+        TRF_DICT['sp' + type + 'Value'] = (str, transformations, start, end, state)->
             left = "{ (function(event) "
             right = ").bind(this) }"
             res = str.substring(0, start) + left + str.substring(start, end) + right + str.substring(end)
@@ -390,7 +414,7 @@ do ->
                         ''
                 }
 
-            shiftTransform transformations, start, end, offset, leftoffset, middle, rightoffset, memo
+            shiftTransform transformations, start, end, offset, leftoffset, middle, rightoffset, state
 
             if isDedugEnabled
                 console.log {
@@ -419,10 +443,7 @@ do ->
     return
 
 parse = (str)->
-    babylon.parse str, plugins: [
-        'jsx'
-        'flow'
-    ]
+    babylon.parse str, plugins: ['jsx', 'flow']
 
 transform = (str, options)->
     ast = parse str
