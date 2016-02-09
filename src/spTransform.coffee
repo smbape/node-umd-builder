@@ -177,6 +177,8 @@ TRF_DICT =
         if isDedugEnabled
             console.log {
                 name: 'spRepeat'
+                level: state.level
+                infn: state.infn
                 before: str
                 offset
                 leftoffset
@@ -234,6 +236,8 @@ TRF_DICT =
         if isDedugEnabled
             console.log {
                 name: 'spShow'
+                level: state.level
+                infn: state.infn
                 before: str
                 offset
                 leftoffset
@@ -248,9 +252,7 @@ TRF_DICT =
                     null
             }
 
-        shiftTransform transformations, start, end, offset, leftoffset, middle, rightoffset, state, ([name, start, end, state])->
-            state.infn = true
-            return
+        shiftTransform transformations, start, end, offset, leftoffset, middle, rightoffset, state
 
         if isDedugEnabled
             console.log {
@@ -303,6 +305,8 @@ TRF_DICT =
         if isDedugEnabled
             console.log {
                 name: 'spModel'
+                level: state.level
+                infn: state.infn
                 before: str
                 offset
                 leftoffset

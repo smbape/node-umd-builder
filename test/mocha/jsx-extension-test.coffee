@@ -5,15 +5,20 @@ assertStrictEqual = (code, expected)->
     assert.strictEqual spTransform(expected), expected
     return
 
-# code = """<ModelListener model={model} events="validated:translated" onEvent={function(isModel, model, invalidAttrs) { return (
-#     <div spRepeat="(message, attr) in invalidAttrs">{message}</div>
-# )}} />"""
+# code = """
+# <div>
+#     <div spShow={user.invalidAttrs.postalCode} className="error-messages"></div>
+#     <div spShow={user.invalidAttrs.email} className="error-messages"></div>
+# </div>
+# """
 # babylon = require('babylon')
 # parse = (str)->
 #     babylon.parse str, plugins: ['jsx', 'flow']
 
-# console.log JSON.stringify parse(code).program.body[0], null, 2
+# # console.log JSON.stringify parse(code).program.body[0], null, 2
 # console.log spTransform(code)
+
+# return
 
 describe 'jsx extension', ->
     delegateEvents = [
@@ -218,6 +223,19 @@ describe 'jsx extension', ->
         expected = """(some(condition) ? <button /> : '')"""
         assertStrictEqual code, expected
 
+        code = """
+        <div>
+            <div spShow={user.invalidAttrs.postalCode} className="error-messages"></div>
+            <div spShow={user.invalidAttrs.email} className="error-messages"></div>
+        </div>
+        """
+        expected = """
+        <div>
+            { (user.invalidAttrs.postalCode ? <div  className="error-messages"></div> : '') }
+            { (user.invalidAttrs.email ? <div  className="error-messages"></div> : '') }
+        </div>
+        """
+        assertStrictEqual code, expected
         return
 
     it 'should transform spModel', ->
