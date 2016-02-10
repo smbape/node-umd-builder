@@ -6,16 +6,17 @@ assertStrictEqual = (code, expected)->
     return
 
 # code = """
-# <div>
-#     <div spShow={user.invalidAttrs.postalCode} className="error-messages"></div>
-#     <div spShow={user.invalidAttrs.email} className="error-messages"></div>
-# </div>
+# <InputText input={{'select': 
+#     <option spRepeat="(state, index) in states" value={state.abbrev} key={index}>
+#         {state.abbrev}
+#     </option>
+# }} className="col-md-6" spModel={user.state} label={i18n.t('label.state')} />
 # """
 # babylon = require('babylon')
 # parse = (str)->
 #     babylon.parse str, plugins: ['jsx', 'flow']
 
-# # console.log JSON.stringify parse(code).program.body[0], null, 2
+# # console.log JSON.stringify parse(code).program.body[0], null, 4
 # console.log spTransform(code)
 
 # return
@@ -436,7 +437,7 @@ describe 'jsx extension', ->
 
         return
 
-    it 'should respect in function', ->
+    it 'should respect in section', ->
         code = """<ModelListener model={model} events="validated:translated" onEvent={function(isModel, model, invalidAttrs) { return (
             <div spRepeat="(message, attr) in invalidAttrs">{message}</div>
         )}} />"""
@@ -452,7 +453,38 @@ describe 'jsx extension', ->
             (invalidAttrs.password ? <div >{invalidAttrs.password[0]}</div> : '')
         )}} />"""
         assertStrictEqual code, expected
-    
+
+        code = """
+        <InputText input={{'select':
+            <option spRepeat="(state, index) in states" value={state.abbrev} key={index}>
+                {state.abbrev}
+            </option>
+        }} className="col-md-6" spModel={user.state} label={i18n.t('label.state')} />
+        """ 
+        expected = """
+        <InputText input={{'select':
+            _.map(states, function(state, index) {return (<option  value={state.abbrev} key={index}>
+                {state.abbrev}
+            </option>)}.bind(this))
+        }} className="col-md-6" spModel={[user, 'state']} label={i18n.t('label.state')} />
+        """
+        assertStrictEqual code, expected
+
+        code = """
+        <InputText input={['select',
+            <option spRepeat="(state, index) in states" value={state.abbrev} key={index}>
+                {state.abbrev}
+            </option>
+        ]} className="col-md-6" spModel={user.state} label={i18n.t('label.state')} />
+        """ 
+        expected = """
+        <InputText input={['select',
+            _.map(states, function(state, index) {return (<option  value={state.abbrev} key={index}>
+                {state.abbrev}
+            </option>)}.bind(this))
+        ]} className="col-md-6" spModel={[user, 'state']} label={i18n.t('label.state')} />
+        """
+        assertStrictEqual code, expected
         return
 
     return

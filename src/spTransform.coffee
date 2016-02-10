@@ -49,8 +49,10 @@ hasAttriute = (name, attributes)->
     attributes.some (node)->
         node.name.name is name
 
+PLAIN_SECTIONS = ['ObjectProperty', 'FunctionExpression', 'ArrayExpression']
+
 cid = 0
-lookupTransforms = (ast, transformations, state = {level: 0, flattern: [], infn: false}, astStack = [], stateStack = [])->
+lookupTransforms = (ast, transformations, state = {level: 0, flattern: []}, astStack = [], stateStack = [])->
     delete state.attribute
     if Array.isArray ast
         astStack.push ast
@@ -65,33 +67,28 @@ lookupTransforms = (ast, transformations, state = {level: 0, flattern: [], infn:
             state.flattern.push ast
             switch ast.type
                 when 'JSXAttribute'
-                    infn = stateStack[stateStack.length - 4].infn
+                    section = stateStack[stateStack.length - 4].section
                     attribute = state.attribute = ast.name.name
+                    currState = _.defaults {section}, state
                     if ast.name.type is 'JSXIdentifier'
                         switch attribute
                             when 'spRepeat'
-                                # console.log stateStack.map (state, index)->
-                                #     index: index
-                                #     attribute: state.attribute
-                                #     level: state.level
-                                #     infn: state.infn
-
                                 if ast.value.type is 'StringLiteral'
-                                    expression = astStack[astStack.length - 3]
-                                    attributes = astStack[astStack.length - 1].map (node)-> node.name.name
-                                    transformations.push [attribute, expression.start, expression.end, _.defaults({attribute, infn, expression, attributes}, state), ast]
+                                    expression = currState.expression = astStack[astStack.length - 3]
+                                    attributes = currState.attributes = astStack[astStack.length - 1].map (node)-> node.name.name
+                                    transformations.push [attribute, expression.start, expression.end, currState, ast]
                                 else
                                     throw new Error "#{attribute} attribute at #{ast.start}, #{ast.end} expects a string literal as value"
                             when 'spShow'
                                 if ast.value.type is 'JSXExpressionContainer'
-                                    expression = astStack[astStack.length - 3]
-                                    attributes = astStack[astStack.length - 1].map (node)-> node.name.name
-                                    transformations.push [attribute, expression.start, expression.end, _.defaults({attribute, infn, expression, attributes}, state), ast]
+                                    expression = currState.expression = astStack[astStack.length - 3]
+                                    attributes = currState.attributes = astStack[astStack.length - 1].map (node)-> node.name.name
+                                    transformations.push [attribute, expression.start, expression.end, currState, ast]
                                 else
                                     throw new Error "#{attribute} attribute at #{ast.start}, #{ast.end} expects a javascript expression"
                             when 'spModel'
                                 if ast.value.type is 'JSXExpressionContainer'
-                                    transformations.push [attribute, ast.value.expression.start, ast.value.expression.end, _.defaults({attribute, infn}, state), ast.value.expression]
+                                    transformations.push [attribute, ast.value.expression.start, ast.value.expression.end, currState, ast.value.expression]
                                 else if ast.value.type isnt 'StringLiteral'
                                     throw new Error "#{attribute} attribute at #{ast.start}, #{ast.end} expects a string literal or a javascript expression"
                             else
@@ -101,19 +98,19 @@ lookupTransforms = (ast, transformations, state = {level: 0, flattern: [], infn:
                                         middle = ast.name.end
                                         end = ast.value.end
 
-                                        transformations.push [attribute, ast.name.start, ast.name.end, _.defaults({attribute, infn}, state)]
-                                        transformations.push [attribute + 'Value', ast.value.start, ast.value.end, _.defaults({attribute, infn}, state)]
+                                        transformations.push [attribute, ast.name.start, ast.name.end, currState]
+                                        transformations.push [attribute + 'Value', ast.value.start, ast.value.end, currState]
                                     else
                                         throw new Error "#{attribute} attribute at #{ast.start}, #{ast.end} expects a javascript expression"
 
-                when 'FunctionExpression'
-                    prevInfn = state.infn
-                    state.infn = true
+                when 'ObjectProperty', 'ArrayExpression', 'FunctionExpression'
+                    prevSection = state.section
+                    state.section = ast.type
 
                 when 'JSXElement'
+                    prevSection = state.section
+                    state.section = ast.type
                     ++state.level
-                    prevInfn = state.infn
-                    state.infn = false
 
         astStack.push ast
         stateStack.push _.clone(state)
@@ -123,12 +120,12 @@ lookupTransforms = (ast, transformations, state = {level: 0, flattern: [], infn:
         astStack.pop()
 
         switch ast.type
-            when 'FunctionExpression'
-                state.infn = prevInfn
+            when 'ObjectProperty', 'ArrayExpression', 'FunctionExpression'
+                state.section = prevSection
 
             when 'JSXElement'
+                state.section = prevSection
                 --state.level
-                state.infn = prevInfn
 
     return
 
@@ -159,7 +156,7 @@ TRF_DICT =
             left = left.substring(0, left.length - 1)
             right = right.substring(1)
 
-        if not state.infn and state.level > 1
+        if state.section not in PLAIN_SECTIONS and not state.inArray and state.level > 1
             left = '{ ' + left
             right = right + ' }'
 
@@ -178,7 +175,7 @@ TRF_DICT =
             console.log {
                 name: 'spRepeat'
                 level: state.level
-                infn: state.infn
+                section: state.section
                 before: str
                 offset
                 leftoffset
@@ -221,7 +218,7 @@ TRF_DICT =
         left = "(#{condition} ? "
         right = " : '')"
 
-        if not state.infn and state.level > 1 and state.attributes.indexOf('spRepeat') is -1
+        if state.section not in PLAIN_SECTIONS and not state.inArray and state.level > 1 and state.attributes.indexOf('spRepeat') is -1
             left = '{ ' + left
             right = right + ' }'
 
@@ -237,7 +234,7 @@ TRF_DICT =
             console.log {
                 name: 'spShow'
                 level: state.level
-                infn: state.infn
+                section: state.section
                 before: str
                 offset
                 leftoffset
@@ -306,7 +303,7 @@ TRF_DICT =
             console.log {
                 name: 'spModel'
                 level: state.level
-                infn: state.infn
+                section: state.section
                 before: str
                 offset
                 leftoffset
