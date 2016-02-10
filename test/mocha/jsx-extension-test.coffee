@@ -6,7 +6,7 @@ assertStrictEqual = (code, expected)->
     return
 
 # code = """
-# <InputText input={{'select': 
+# <InputText input={{'select':
 #     <option spRepeat="(state, index) in states" value={state.abbrev} key={index}>
 #         {state.abbrev}
 #     </option>
@@ -437,7 +437,7 @@ describe 'jsx extension', ->
 
         return
 
-    it 'should respect in section', ->
+    it 'should respect in expression', ->
         code = """<ModelListener model={model} events="validated:translated" onEvent={function(isModel, model, invalidAttrs) { return (
             <div spRepeat="(message, attr) in invalidAttrs">{message}</div>
         )}} />"""
@@ -485,6 +485,23 @@ describe 'jsx extension', ->
         ]} className="col-md-6" spModel={[user, 'state']} label={i18n.t('label.state')} />
         """
         assertStrictEqual code, expected
+
+        code = """
+        <select>
+            {(<option spRepeat="(state, index) in states" value={state.abbrev} key={index}>
+                {state.abbrev}
+            </option>)}
+        </select>
+        """
+        expected = """
+        <select>
+            {(_.map(states, function(state, index) {return (<option  value={state.abbrev} key={index}>
+                {state.abbrev}
+            </option>)}.bind(this)))}
+        </select>
+        """
+        assertStrictEqual code, expected
+
         return
 
     return

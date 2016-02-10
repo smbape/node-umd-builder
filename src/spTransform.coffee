@@ -49,8 +49,7 @@ hasAttriute = (name, attributes)->
     attributes.some (node)->
         node.name.name is name
 
-PLAIN_SECTIONS = ['ObjectProperty', 'FunctionExpression', 'ArrayExpression']
-
+EXPRESSION_REG = /Expression/
 cid = 0
 lookupTransforms = (ast, transformations, state = {level: 0, flattern: []}, astStack = [], stateStack = [])->
     delete state.attribute
@@ -67,9 +66,12 @@ lookupTransforms = (ast, transformations, state = {level: 0, flattern: []}, astS
             state.flattern.push ast
             switch ast.type
                 when 'JSXAttribute'
-                    section = stateStack[stateStack.length - 4].section
+                    if isDedugEnabled
+                        console.log 'start', {type: ast.type, start: ast.start, end: ast.end, level: state.level}
+
+                    inExpression = stateStack[stateStack.length - 4].inExpression
                     attribute = state.attribute = ast.name.name
-                    currState = _.defaults {section}, state
+                    currState = _.defaults {inExpression}, state
                     if ast.name.type is 'JSXIdentifier'
                         switch attribute
                             when 'spRepeat'
@@ -103,14 +105,20 @@ lookupTransforms = (ast, transformations, state = {level: 0, flattern: []}, astS
                                     else
                                         throw new Error "#{attribute} attribute at #{ast.start}, #{ast.end} expects a javascript expression"
 
-                when 'ObjectProperty', 'ArrayExpression', 'FunctionExpression'
-                    prevSection = state.section
-                    state.section = ast.type
-
                 when 'JSXElement'
-                    prevSection = state.section
-                    state.section = ast.type
+                    if isDedugEnabled
+                        console.log 'start', {type: ast.type, start: ast.start, end: ast.end, level: state.level}
+
+                    prevInExpression = state.inExpression
+                    inExpression = state.inExpression = false
                     ++state.level
+                else
+                    if EXPRESSION_REG.test ast.type
+                        if isDedugEnabled
+                            console.log 'start', {type: ast.type, start: ast.start, end: ast.end, level: state.level}
+
+                        prevInExpression = state.inExpression
+                        inExpression = state.inExpression = true
 
         astStack.push ast
         stateStack.push _.clone(state)
@@ -119,13 +127,15 @@ lookupTransforms = (ast, transformations, state = {level: 0, flattern: []}, astS
         stateStack.pop()
         astStack.pop()
 
-        switch ast.type
-            when 'ObjectProperty', 'ArrayExpression', 'FunctionExpression'
-                state.section = prevSection
-
-            when 'JSXElement'
-                state.section = prevSection
-                --state.level
+        if inExpression
+            if isDedugEnabled
+                console.log 'end', {type: ast.type, start: ast.start, end: ast.end, level: state.level}
+            state.inExpression = prevInExpression
+        else if ast.type is 'JSXElement'
+            if isDedugEnabled
+                console.log 'end', {type: ast.type, start: ast.start, end: ast.end, level: state.level}
+            state.inExpression = prevInExpression
+            --state.level
 
     return
 
@@ -156,7 +166,7 @@ TRF_DICT =
             left = left.substring(0, left.length - 1)
             right = right.substring(1)
 
-        if state.section not in PLAIN_SECTIONS and not state.inArray and state.level > 1
+        if not state.inExpression and state.level > 1
             left = '{ ' + left
             right = right + ' }'
 
@@ -174,8 +184,10 @@ TRF_DICT =
         if isDedugEnabled
             console.log {
                 name: 'spRepeat'
+                start
+                end
                 level: state.level
-                section: state.section
+                inExpression: state.inExpression
                 before: str
                 offset
                 leftoffset
@@ -195,6 +207,10 @@ TRF_DICT =
         if isDedugEnabled
             console.log {
                 name: 'spRepeat'
+                start
+                end
+                level: state.level
+                inExpression: state.inExpression
                 after: res
                 offset
                 leftoffset
@@ -218,7 +234,7 @@ TRF_DICT =
         left = "(#{condition} ? "
         right = " : '')"
 
-        if state.section not in PLAIN_SECTIONS and not state.inArray and state.level > 1 and state.attributes.indexOf('spRepeat') is -1
+        if not state.inExpression and state.level > 1 and state.attributes.indexOf('spRepeat') is -1
             left = '{ ' + left
             right = right + ' }'
 
@@ -233,8 +249,10 @@ TRF_DICT =
         if isDedugEnabled
             console.log {
                 name: 'spShow'
+                start
+                end
                 level: state.level
-                section: state.section
+                inExpression: state.inExpression
                 before: str
                 offset
                 leftoffset
@@ -254,6 +272,10 @@ TRF_DICT =
         if isDedugEnabled
             console.log {
                 name: 'spShow'
+                start
+                end
+                level: state.level
+                inExpression: state.inExpression
                 after: res
                 offset
                 leftoffset
@@ -302,8 +324,10 @@ TRF_DICT =
         if isDedugEnabled
             console.log {
                 name: 'spModel'
+                start
+                end
                 level: state.level
-                section: state.section
+                inExpression: state.inExpression
                 before: str
                 offset
                 leftoffset
@@ -323,6 +347,10 @@ TRF_DICT =
         if isDedugEnabled
             console.log {
                 name: 'spModel'
+                start
+                end
+                level: state.level
+                inExpression: state.inExpression
                 after: res
                 offset
                 leftoffset
@@ -420,6 +448,10 @@ do ->
             if isDedugEnabled
                 console.log {
                     name: 'sp' + type
+                    start
+                    end
+                    level: state.level
+                    inExpression: state.inExpression
                     after: res
                     offset
                     leftoffset
