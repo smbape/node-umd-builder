@@ -1,19 +1,15 @@
---- a/log4js.js	Sun Jul 26 13:38:20 2015
-+++ b/log4js.js	Mon Aug 17 19:44:01 2015
-@@ -441,7 +441,15 @@
-     function(shutdownFn, done) {
-       shutdownFn(done);
-     },
--		cb
-+    function() {
-+      if (configState.timerId) {
-+        clearInterval(configState.timerId);
-+        delete configState.timerId;
-+      }
-+      if ('function' === typeof cb) {
-+        cb.apply(null, arguments);
-+      }
-+    }
-   );
- }
+--- node_modules/log4js/lib/log4js.js.orig	2016-02-12 16:42:33.461550500 +0100
++++ node_modules/log4js/lib/log4js.new.js	2016-02-12 16:45:57.437899400 +0100
+@@ -428,6 +428,12 @@
+   // not being able to be drained because of run-away log writes.
+   loggerModule.disableAllLogWrites();
  
++  // clear timer
++  if (configState.timerId) {
++    clearInterval(configState.timerId);
++    delete configState.timerId;
++  }
++
+   // Call each of the shutdown functions in parallel
+   var completed = 0;
+   var error;

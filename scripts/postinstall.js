@@ -113,7 +113,7 @@ function install(tasks, config, done) {
             'brunch-1.8.x-anymatch_feature',
             'brunch-1.8.x-completer_feature',
             'brunch-1.8.x-config_compiler_feature',
-            'brunch-1.8.x-init_feature'
+            'brunch-1.8.x-init_feature',
             'brunch-1.8.x-module_not_found_inaccuracy_fix'
         ],
         filePatches = [
@@ -178,15 +178,34 @@ function patchSeries(patches, config, done) {
         var file, patch;
         if (err === 0 && ++i < _len) {
             file = sysPath.relative(projectRoot, sysPath.join(projectRoot, patches[i][0]));
-            patch = sysPath.relative(projectRoot, sysPath.join(patchesFolder, patches[i][1]));
-            anyspawn.spawn('patch ' + anyspawn.quoteArg(file) + ' < ' + anyspawn.quoteArg(patch), {
-                cwd: projectRoot,
-                stdio: 'inherit'
-            }, iterate);
+            locateModuleFile(file, projectRoot, function(err, file) {
+                if (err) {
+                    return done(err);
+                }
+                patch = sysPath.relative(projectRoot, sysPath.join(patchesFolder, patches[i][1]));
+                anyspawn.spawn('patch ' + anyspawn.quoteArg(file) + ' < ' + anyspawn.quoteArg(patch), {
+                    cwd: projectRoot,
+                    stdio: 'inherit'
+                }, iterate);
+            });
         } else {
             done(err);
         }
     }
+}
+
+function locateModuleFile(file, root, cb) {
+    var filepath = sysPath.join(root, file),
+        newRoot;
+    fs.exists(filepath, function(exists) {
+        if (exists) {
+            cb(null, filepath);
+        } else if ((newRoot = sysPath.dirname(root)) !== root) {
+            locateModuleFile(file, newRoot, cb);
+        } else {
+            cb(new Error('Unable to find file'));
+        }
+    });
 }
 
 function emptyFn() {}
