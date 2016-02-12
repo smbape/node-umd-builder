@@ -5,7 +5,7 @@
 var assert = require('assert');
 var Plugin = require('../../src/compilers/babel');
 
-describe('Plugin', function() {
+describe('babel compiler', function() {
   var plugin;
   this.timeout(10000);
 
