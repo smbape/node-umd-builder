@@ -65,6 +65,8 @@ describe 'jsx extension', ->
     ]
 
     it 'should transform sp[event]', ->
+        @timeout 3000
+
         for type in delegateEvents
             type = type[0].toUpperCase() + type.substring(1)
 

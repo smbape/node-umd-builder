@@ -6,9 +6,7 @@
   "scripts": {
     "prepublish": "node scripts/prepublish.js",
     "postinstall": "node scripts/postinstall.js",
-    "test": "node node_modules/mocha/bin/_mocha --full-trace --compilers coffee:coffee-script/register --require test/mocha/common.coffee test/mocha && node test/template.js",
-    "test-mocha": "node node_modules/mocha/bin/_mocha --full-trace --compilers coffee:coffee-script/register --require test/mocha/common.coffee test/mocha",
-    "test-template": "[ ! -d 'node_modules/lodash/node_modules/qunitjs' ] && (cd node_modules/lodash; npm install); node test/template.js"
+    "test": "node node_modules/mocha/bin/_mocha --full-trace --compilers coffee:coffee-script/register --require test/mocha/common.coffee test/mocha"
   },
   "repository": {
     "type": "git",
@@ -43,7 +41,7 @@
     "highlight.js": "^8.8.0",
     "js-beautify": "^1.6.2",
     "jshint": "^2.9.1",
-    "lodash": "git+https://github.com/lodash/lodash.git#a20ad60f13e38eb4f1aa00c38a565fd8a6602c7f",
+    "lodash": "^4.3.0",
     "log4js": "^0.6.31",
     "marked": "^0.3.5",
     "minimatch": "^3.0.0",
@@ -56,6 +54,7 @@
     "stylus": "^0.53.0",
     "uglify-js-brunch": "^1.7.8",
     "umd-wrapper": "^0.1.0",
+    "username": "^2.0.0",
     "which": "^1.2.4"
   },
   "devDependencies": {

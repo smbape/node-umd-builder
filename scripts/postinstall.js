@@ -8,6 +8,7 @@ var fs = require('fs'),
     which = require('which'),
     anyspawn = require('anyspawn'),
     new_branch = '__umd_features__',
+    username = require('username').sync(),
     push = Array.prototype.push,
     slice = Array.prototype.slice;
 
@@ -32,9 +33,7 @@ function setup(projectRoot, done) {
         },
         projectModules = config.project.modules = sysPath.join(projectRoot, 'node_modules'),
         projectBrunch = config.project.brunch = sysPath.join(projectModules, 'brunch'),
-        projectLodash = config.project.lodash = sysPath.join(projectModules, 'lodash'),
         patchesFolder = config.patches.folder = sysPath.join(projectRoot, 'patches'),
-        username = require('username').sync(),
         is_new_branch = new RegExp('\\*\\s+' + new_branch + '(?:\\n|$)'),
         has_new_branch = new RegExp('(?:^|\n)' + new_branch + '(?:\\n|$)');
 
@@ -122,7 +121,6 @@ function install(tasks, config, done) {
             ['node_modules/requirejs/bin/r.js', 'rjs-2.1.22.patch']
         ],
         projectBrunch = config.project.brunch,
-        projectLodash = config.project.lodash,
         projectRoot = config.project.root,
         patchesFolder = config.patches.folder,
         patchFile;
@@ -146,9 +144,6 @@ function install(tasks, config, done) {
     }
 
     push.apply(tasks, [
-        ['npm install --production', {
-            cwd: projectLodash
-        }],
         ['npm install --production', {
             cwd: projectBrunch
         }]
