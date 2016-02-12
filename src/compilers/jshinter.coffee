@@ -5,7 +5,6 @@ JSHINT = require('jshint').JSHINT
 fs = require('fs')
 sysPath = require('path')
 chalk = require('chalk')
-pluralize = require('pluralize')
 anymatch = require('anymatch')
 minimatch = require('minimatch')
 _ = require('lodash')
@@ -104,7 +103,7 @@ module.exports = class JsHinter
                         #{pad error.line.toString(), 7} | col: #{error.character} | #{chalk.bold error.reason}
                         """
 
-            errorMsg.unshift "JSHint detected #{errors.length} #{pluralize 'problem', errors.length}:"
+            errorMsg.unshift "JSHint detected #{errors.length} problem#{if errors.length > 1 then 's' else ''}:"
             errorMsg.push '\n'
 
             msg = errorMsg.join '\n'
