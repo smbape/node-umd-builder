@@ -128,7 +128,7 @@ exports.logger = logger
 exports.matcher = matcher
 exports.isVendor = matcher ['bower_components/', 'components/', 'vendor/']
 
-# https://github.com/brunch/brunch/blob/master/docs/config.md
+# https://github.com/brunch/brunch/blob/1.8.5/docs/config.md
 config = exports.config =
 
     # TODO : take from compilers
