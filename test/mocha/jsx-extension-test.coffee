@@ -6,11 +6,9 @@ assertStrictEqual = (code, expected)->
     return
 
 # code = """
-# <InputText input={{'select':
-#     <option spRepeat="(state, index) in states" value={state.abbrev} key={index}>
-#         {state.abbrev}
-#     </option>
-# }} className="col-md-6" spModel={user.state} label={i18n.t('label.state')} />
+# <button type="submit" className="mdl-button mdl-js-button mdl-button--raised" >
+#     {i18n.t('send')}
+# </button>
 # """
 # babylon = require('babylon')
 # parse = (str)->
@@ -505,5 +503,22 @@ describe 'jsx extension', ->
         assertStrictEqual code, expected
 
         return
+
+    it 'should transform item with className mdl-', ->
+        code = """
+        <button type="submit" className="mdl-button mdl-js-button mdl-button--raised" >
+            {i18n.t('send')}
+        </button>
+        """
+        expected = """
+        <Mdl tagName="button" type="submit" className="mdl-button mdl-js-button mdl-button--raised" >
+            {i18n.t('send')}
+        </Mdl>
+        """
+        assertStrictEqual code, expected
+
+        code = """<span className="mdl-button mdl-js-button mdl-button--raised" />"""
+        expected = """<Mdl tagName="span" className="mdl-button mdl-js-button mdl-button--raised" />"""
+        assertStrictEqual code, expected
 
     return

@@ -82,7 +82,7 @@ BabelCompiler.prototype.compile = function(params, callback) {
 
         compiled = babel.transform(compiled, options);
     } catch (err) {
-        logger.error(err.message);
+        logger.error(err.message, err.stack);
         return callback(err);
     }
     var result = {

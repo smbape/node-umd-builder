@@ -3,14 +3,14 @@
 'use strict';
 
 var assert = require('assert');
-var Plugin = require('../../src/compilers/babel');
+var BabelCompiler = require('../../src/compilers/babel');
 
 describe('babel compiler', function() {
   var plugin;
   this.timeout(10000);
 
   beforeEach(function() {
-    plugin = new Plugin({});
+    plugin = new BabelCompiler({});
   });
 
   it('should be an object', function() {
@@ -24,7 +24,7 @@ describe('babel compiler', function() {
   it('should do nothing for no preset', function (done) {
     var content = 'var c = {};\nvar { a, b } = c;';
 
-    plugin = new Plugin({ plugins: { babel: { presets: [] }}});
+    plugin = new BabelCompiler({ plugins: { babel: { presets: [] }}});
     plugin.compile({data: content, path: 'file.js'}, function (error, result) {
       assert(!error);
       assert(result.data.indexOf(content) !== -1);
@@ -47,7 +47,7 @@ describe('babel compiler', function() {
     var content = 'var c = () => process.env.NODE_ENV;';
     var expected = '"use strict";\n\nvar c = function c() {\n  return undefined;\n};';
 
-    plugin = new Plugin({ plugins: { babel: { plugins: ['transform-node-env-inline'] }}});
+    plugin = new BabelCompiler({ plugins: { babel: { plugins: ['transform-node-env-inline'] }}});
     plugin.compile({data: content, path: 'file.js'}, function(error, result) {
       assert(!error);
       assert(result.data.indexOf(expected) !== -1);
@@ -56,14 +56,14 @@ describe('babel compiler', function() {
   });
 
   describe('custom file extensions & patterns', function() {
-    var basicPlugin = new Plugin({
+    var basicPlugin = new BabelCompiler({
       plugins: {
         babel: {
           pattern: /\.(babel|es6|jsx)$/
         }
       }
     });
-    var sourceMapPlugin = new Plugin({
+    var sourceMapPlugin = new BabelCompiler({
       plugins: {
         babel: {
           pattern: /\.(babel|es6|jsx)$/,
@@ -94,7 +94,7 @@ describe('babel compiler', function() {
 
 
   it('should produce source maps', function(done) {
-    plugin = new Plugin({sourceMaps: true});
+    plugin = new BabelCompiler({sourceMaps: true});
 
     var content = 'let a = 1';
 

@@ -31,7 +31,28 @@ shiftRange = (prevStart, prevEnd, start, end, offset, leftoffset, middle, righto
 
     return [prevStart, prevEnd]
 
-shiftTransform = (transformations, start, end, offset, leftoffset, middle, rightoffset, state, callback = ->)->
+shiftTransform = ([name, str, res], transformations, start, end, offset, leftoffset, middle, rightoffset, state)->
+    if isDedugEnabled
+        console.log {
+            name: name
+            start
+            end
+            level: state.level
+            inExpression: state.inExpression
+            before: str
+            offset
+            leftoffset
+            rightoffset
+            trf: if transformations[0]
+                name: transformations[0][0]
+                start: transformations[0][1]
+                end: transformations[0][2]
+                snode: transformations[0][4]?.start
+                enode: transformations[0][4]?.end
+            else
+                null
+        }
+
     for node in state.flattern
         [newStart, newEnd] = shiftRange node.start, node.end, start, end, offset, leftoffset, middle, rightoffset
         node.start = newStart
@@ -41,9 +62,42 @@ shiftTransform = (transformations, start, end, offset, leftoffset, middle, right
         [newStart, newEnd] = shiftRange transformation[1], transformation[2], start, end, offset, leftoffset, middle, rightoffset
         transformation[1] = newStart
         transformation[2] = newEnd
-        callback(transformation)
+
+    if isDedugEnabled
+        console.log {
+            name: name
+            start
+            end
+            level: state.level
+            inExpression: state.inExpression
+            after: res
+            offset
+            leftoffset
+            rightoffset
+            trf: if transformations[0]
+                name: transformations[0][0]
+                start: transformations[0][1]
+                end: transformations[0][2]
+                snode: transformations[0][4]?.start
+                enode: transformations[0][4]?.end
+            else
+                null
+        }
 
     return
+
+strReplace = (name, str, replace, start, end, transformations, state)->
+    res = str.substring(0, start) + replace + str.substring(end)
+
+    offset = replace.length - end + start
+    leftoffset = offset
+    middle = null
+    rightoffset = null
+
+    shiftTransform [name, str, res], transformations, start, end, offset, leftoffset, null, null, state
+
+    res
+
 
 hasAttriute = (name, attributes)->
     attributes.some (node)->
@@ -112,6 +166,17 @@ lookupTransforms = (ast, transformations, state = {level: 0, flattern: []}, astS
                     prevInExpression = state.inExpression
                     inExpression = state.inExpression = false
                     ++state.level
+
+                when 'JSXOpeningElement'
+                    if ast.attributes and /[a-z]/.test(ast.name.name[0])
+                        attributes = ast.attributes.filter (node)-> node.name?.name is 'className'
+                        if attributes.length
+                            value = attributes[attributes.length - 1].value
+                            if value.type is 'StringLiteral' and /(?:^|\s)mdl-/.test value.value
+                                transformations.push ['mdlOpen', ast.name.start, ast.name.end, state]
+                                if not ast.selfClosing
+                                    closingElement = astStack[astStack.length - 1].closingElement.name
+                                    transformations.push ['mdlClose', closingElement.start, closingElement.end, state]
                 else
                     if EXPRESSION_REG.test ast.type
                         if isDedugEnabled
@@ -140,7 +205,7 @@ lookupTransforms = (ast, transformations, state = {level: 0, flattern: []}, astS
     return
 
 TRF_DICT =
-    spRepeat: (str, transformations, start, end, state, node)->
+    spRepeat: (str, options, transformations, start, end, state, node)->
         value = node.value.value
         ast = parse(value).program
         if ast.body.length isnt 1 or
@@ -156,12 +221,9 @@ TRF_DICT =
         {start: _start, end: _end} = ast.body[0].expression.right
         obj = value.substring _start, _end
 
-        left = "_.map(#{obj}, function(#{args}) {return ("
+        left = options.map + "(#{obj}, function(#{args}) {return ("
         right = ")}.bind(this))"
 
-        # left = "(function(__obj){(__obj.map || _.map).call(__obj, __obj, function(#{args}) {return ("
-        # right = ")}.bind(this)).call(this, #{obj})"
-        
         if ~state.attributes.indexOf('spShow')
             left = left.substring(0, left.length - 1)
             right = right.substring(1)
@@ -181,53 +243,11 @@ TRF_DICT =
         rightoffset = leftoffset - node.end + node.start
         offset = rightoffset + right.length
 
-        if isDedugEnabled
-            console.log {
-                name: 'spRepeat'
-                start
-                end
-                level: state.level
-                inExpression: state.inExpression
-                before: str
-                offset
-                leftoffset
-                rightoffset
-                trf: if transformations[0]
-                    name: transformations[0][0]
-                    start: transformations[0][1]
-                    end: transformations[0][2]
-                    snode: transformations[0][4]?.start
-                    enode: transformations[0][4]?.end
-                else
-                    null
-            }
-
-        shiftTransform transformations, start, end, offset, leftoffset, middle, rightoffset, state
-
-        if isDedugEnabled
-            console.log {
-                name: 'spRepeat'
-                start
-                end
-                level: state.level
-                inExpression: state.inExpression
-                after: res
-                offset
-                leftoffset
-                rightoffset
-                trf: if transformations[0]
-                    name: transformations[0][0]
-                    start: transformations[0][1]
-                    end: transformations[0][2]
-                    snode: transformations[0][4]?.start
-                    enode: transformations[0][4]?.end
-                else
-                    null
-            }
+        shiftTransform ['spRepeat', str, res], transformations, start, end, offset, leftoffset, middle, rightoffset, state
 
         res
 
-    spShow: (str, transformations, start, end, state, node)->
+    spShow: (str, options, transformations, start, end, state, node)->
         condition = str.substring node.value.expression.start, node.value.expression.end
         toDisplay = str.substring(start, node.start) + str.substring(node.end, end)
 
@@ -246,53 +266,11 @@ TRF_DICT =
         offset = rightoffset + right.length
         middle = node.start
 
-        if isDedugEnabled
-            console.log {
-                name: 'spShow'
-                start
-                end
-                level: state.level
-                inExpression: state.inExpression
-                before: str
-                offset
-                leftoffset
-                rightoffset
-                trf: if transformations[0]
-                    name: transformations[0][0]
-                    start: transformations[0][1]
-                    end: transformations[0][2]
-                    snode: transformations[0][4]?.start
-                    enode: transformations[0][4]?.end
-                else
-                    null
-            }
-
-        shiftTransform transformations, start, end, offset, leftoffset, middle, rightoffset, state
-
-        if isDedugEnabled
-            console.log {
-                name: 'spShow'
-                start
-                end
-                level: state.level
-                inExpression: state.inExpression
-                after: res
-                offset
-                leftoffset
-                rightoffset
-                trf: if transformations[0]
-                    name: transformations[0][0]
-                    start: transformations[0][1]
-                    end: transformations[0][2]
-                    snode: transformations[0][4]?.start
-                    enode: transformations[0][4]?.end
-                else
-                    null
-            }
+        shiftTransform ['spShow', str, res], transformations, start, end, offset, leftoffset, middle, rightoffset, state
 
         res
 
-    spModel: (str, transformations, start, end, state, expr)->
+    spModel: (str, options, transformations, start, end, state, expr)->
         value = str.substring(start, end)
         ast = parse(value).program
 
@@ -313,59 +291,16 @@ TRF_DICT =
         else
             throw new Error "spModel attribute at (#{expr.start}:#{expr.end}) must be an ExpressionStatement"
 
-        value = "[#{object}, '#{property.replace(/'/g, "\\'")}']"
-        res = str.substring(0, start) + value + str.substring(end)
+        replace = "[#{object}, '#{property.replace(/'/g, "\\'")}']"
+        return strReplace 'spModel', str, replace, start, end, transformations, state
 
-        offset = value.length - end + start
-        leftoffset = offset
-        middle = null
-        rightoffset = null
+    mdlOpen: (str, options, transformations, start, end, state)->
+        replace = "#{options.mdl} tagName=\"#{str.substring(start, end)}\""
+        return strReplace 'mdlOpen', str, replace, start, end, transformations, state
 
-        if isDedugEnabled
-            console.log {
-                name: 'spModel'
-                start
-                end
-                level: state.level
-                inExpression: state.inExpression
-                before: str
-                offset
-                leftoffset
-                rightoffset
-                trf: if transformations[0]
-                    name: transformations[0][0]
-                    start: transformations[0][1]
-                    end: transformations[0][2]
-                    snode: transformations[0][4]?.start
-                    enode: transformations[0][4]?.end
-                else
-                    null
-            }
-
-        shiftTransform transformations, start, end, offset, leftoffset, null, null, state
-
-        if isDedugEnabled
-            console.log {
-                name: 'spModel'
-                start
-                end
-                level: state.level
-                inExpression: state.inExpression
-                after: res
-                offset
-                leftoffset
-                rightoffset
-                trf: if transformations[0]
-                    name: transformations[0][0]
-                    start: transformations[0][1]
-                    end: transformations[0][2]
-                    snode: transformations[0][4]?.start
-                    enode: transformations[0][4]?.end
-                else
-                    null
-            }
-
-        res
+    mdlClose: (str, options, transformations, start, end, state)->
+        replace = "#{options.mdl}"
+        return strReplace 'mdlClose', str, replace, start, end, transformations, state
 
 do ->
     delegateEvents = [
@@ -413,10 +348,10 @@ do ->
     delegate = (type)->
         type = type[0].toUpperCase() + type.substring(1)
 
-        TRF_DICT['sp' + type] = (str, transformations, start, end)->
+        TRF_DICT['sp' + type] = (str, options, transformations, start, end)->
             str.substring(0, start) + 'on' + type + str.substring(end)
 
-        TRF_DICT['sp' + type + 'Value'] = (str, transformations, start, end, state)->
+        TRF_DICT['sp' + type + 'Value'] = (str, options, transformations, start, end, state)->
             left = "{ (function(event) "
             right = ").bind(this) }"
             res = str.substring(0, start) + left + str.substring(start, end) + right + str.substring(end)
@@ -426,45 +361,7 @@ do ->
             middle = null
             rightoffset = null
 
-            if isDedugEnabled
-                console.log {
-                    name: 'sp' + type
-                    before: str
-                    offset
-                    leftoffset
-                    rightoffset
-                    trf: if transformations[0]
-                        name: transformations[0][0]
-                        start: transformations[0][1]
-                        end: transformations[0][2]
-                        snode: transformations[0][4]?.start
-                        enode: transformations[0][4]?.end
-                    else
-                        ''
-                }
-
-            shiftTransform transformations, start, end, offset, leftoffset, middle, rightoffset, state
-
-            if isDedugEnabled
-                console.log {
-                    name: 'sp' + type
-                    start
-                    end
-                    level: state.level
-                    inExpression: state.inExpression
-                    after: res
-                    offset
-                    leftoffset
-                    rightoffset
-                    trf: if transformations[0]
-                        name: transformations[0][0]
-                        start: transformations[0][1]
-                        end: transformations[0][2]
-                        snode: transformations[0][4]?.start
-                        enode: transformations[0][4]?.end
-                    else
-                        ''
-                }
+            shiftTransform ['sp' + type, str, res], transformations, start, end, offset, leftoffset, middle, rightoffset, state
 
             res
         return
@@ -479,6 +376,11 @@ parse = (str)->
     babylon.parse str, plugins: ['jsx', 'flow']
 
 transform = (str, options)->
+    options = _.extend {
+        map: '_.map',
+        mdl: 'Mdl'
+    }, options
+
     ast = parse str
     # console.log JSON.stringify ast, null, 4
     transformations = []
@@ -502,7 +404,7 @@ transform = (str, options)->
 
     while trf = transformations.pop()
         name = trf.shift()
-        trf.splice 0, 0, str, transformations
+        trf.splice 0, 0, str, options, transformations
         if hasOwn.call TRF_DICT, name
             str = TRF_DICT[name].apply null, trf
     str
