@@ -67,8 +67,11 @@ BabelCompiler.prototype.completer = true;
 BabelCompiler.prototype.compile = function(params, callback) {
     if (this.isIgnored(params.path)) return callback(null, params);
     var options = _.defaults({
-        filename: params.path
+        filename: params.path,
+        sourceMaps: !!params.map,
+        inputSourceMap: params.map ? JSON.parse(params.map.toString()) : undefined
     }, this.options);
+
     var compiled, transform;
 
     compiled = params.data;

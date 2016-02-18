@@ -33,7 +33,7 @@ debounce = (plugin, src, dst, next)->
                 return done(err) if err
                 _src = sysPath.relative plugin.paths.APPLICATION_PATH, src
                 _dst = sysPath.relative plugin.paths.APPLICATION_PATH, dst
-                logger.info "\n    #{_src}\n    #{_dst}"
+                logger.debug "\n    #{_src}\n    #{_dst}"
                 readable = fs.createReadStream src
                 writable = fs.createWriteStream dst
                 readable.pipe writable

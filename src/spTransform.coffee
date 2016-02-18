@@ -372,8 +372,8 @@ do ->
 
     return
 
-parse = (str)->
-    babylon.parse str, plugins: ['jsx', 'flow']
+parse = (str, options)->
+    babylon.parse str, _.extend {plugins: ['jsx', 'flow']}, options
 
 transform = (str, options)->
     options = _.extend {
@@ -381,7 +381,7 @@ transform = (str, options)->
         mdl: 'Mdl'
     }, options
 
-    ast = parse str
+    ast = parse str, options
     # console.log JSON.stringify ast, null, 4
     transformations = []
     lookupTransforms ast, transformations
