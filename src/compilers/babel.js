@@ -67,26 +67,32 @@ BabelCompiler.prototype.completer = true;
 BabelCompiler.prototype.compile = function(params, callback) {
     if (this.isIgnored(params.path)) return callback(null, params);
     var options = _.defaults({
+        // inputSourceMap: params.map ? JSON.parse(params.map.toString()) : undefined,
         filename: params.path
     }, this.options);
 
     var compiled, transform, toptions;
 
     compiled = params.data;
-    try {
-        if (this.pretransform) {
-            for (var i = 0, len = this.pretransform.length; i < len; i++) {
-                transform = this.pretransform[i];
-                if (Array.isArray(transform)) {
-                    toptions = _.extend({}, options, transform[1]);
-                    transform = transform[0];
-                } else {
-                    toptions = options;
-                }
+
+    if (this.pretransform) {
+        for (var i = 0, len = this.pretransform.length; i < len; i++) {
+            transform = this.pretransform[i];
+            if (Array.isArray(transform)) {
+                toptions = _.extend({}, options, transform[1]);
+                transform = transform[0];
+            } else {
+                toptions = options;
+            }
+            try {
                 compiled = transform(compiled, toptions);
+            } catch (err) {
+                logger.error(err.message, err.stack);
             }
         }
+    }
 
+    try {
         compiled = babel.transform(compiled, options);
     } catch (err) {
         logger.error(err.message, err.stack);
