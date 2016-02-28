@@ -1,10 +1,10 @@
-umd = require 'umd-wrapper'
+_ = require 'lodash'
 marked = require 'marked'
 hljs = require 'highlight.js'
 languages = hljs.listLanguages()
 
 defaultOptions =
-    renderer: new marked.Renderer()
+    # renderer: new marked.Renderer()
     langPrefix: 'hljs lang-'
     highlight: (code, lang) ->
         if lang is 'auto' or languages.indexOf(lang) is -1
@@ -20,15 +20,25 @@ module.exports = class MarkdownCompiler
     constructor: (config = {})->
         @sourceMaps = !!config.sourceMaps
         options = config.plugins and config.plugins.markdown or {}
-        for prop of defaultOptions
-            options[prop] = defaultOptions[prop] if not options[prop]
-        marked.setOptions options
+        @options = _.extend {}, options, defaultOptions
 
     compile: (params, next)->
         {data, path, map} = params
 
-        data = umd JSON.stringify marked data
-        data = "(function(){ #{data} }());"
+        data = JSON.stringify marked data, @options
+
+        data = """(function() {
+            var __templateData = #{data};
+            if (typeof define === 'function' && define.amd) {
+                define([], function() {
+                    return __templateData;
+                });
+            } else if (typeof module === 'object' && module && module.exports) {
+                module.exports = __templateData;
+            } else {
+                return __templateData;
+            }
+        })();"""
 
         next null, {data, path, map}
         return

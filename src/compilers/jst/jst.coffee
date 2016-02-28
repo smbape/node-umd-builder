@@ -1,4 +1,3 @@
-sysPath = require 'path'
 _ = require 'lodash'
 _.template = require './template'
 

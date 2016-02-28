@@ -274,7 +274,7 @@ function template(string, options, otherOptions) {
         isEvaluating,
         index = 0,
         interpolate = options.interpolate || reNoMatch,
-        source = "__p[__p.length] = '";
+        source = ["__p[__p.length] = '"];
 
     // Compile the regexp to match each delimiter.
     var reDelimiters = RegExp(
@@ -292,20 +292,20 @@ function template(string, options, otherOptions) {
         interpolateValue || (interpolateValue = esTemplateValue);
 
         // Escape characters that can't be included in string literals.
-        source += string.slice(index, offset).replace(reUnescapedString, escapeStringChar);
+        source.push(string.slice(index, offset).replace(reUnescapedString, escapeStringChar));
 
         if (!ignoreValue) {
             // Replace delimiters with snippets.
             if (escapeValue) {
                 isEscaping = true;
-                source += "' +\n__e(" + escapeValue + ") +\n'";
+                source.push("' +\n__e(" + escapeValue + ") +\n'");
             }
             if (evaluateValue) {
                 isEvaluating = true;
-                source += "';\n" + evaluateValue + ";\n__p[__p.length] = '";
+                source.push("';\n" + evaluateValue + ";\n__p[__p.length] = '");
             }
             if (interpolateValue) {
-                source += "' +\n((__t = (" + interpolateValue + ")) == null ? '' : __t) +\n'";
+                source.push("' +\n((__t = (" + interpolateValue + ")) == null ? '' : __t) +\n'");
             }
         }
 
@@ -316,7 +316,8 @@ function template(string, options, otherOptions) {
         return match;
     });
 
-    source += "';\n";
+    source.push("';\n");
+    source = source.join('');
 
     // If `variable` is not specified wrap a with-statement around the generated
     // code to add the data object to the top of the scope chain.
