@@ -252,7 +252,7 @@ TRF_DICT =
         toDisplay = str.substring(start, node.start) + str.substring(node.end, end)
 
         left = "(#{condition} ? "
-        right = " : '')"
+        right = " : void 0)"
 
         if not state.inExpression and state.level > 1 and state.attributes.indexOf('spRepeat') is -1
             left = '{ ' + left
