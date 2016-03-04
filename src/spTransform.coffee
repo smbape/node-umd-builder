@@ -168,7 +168,7 @@ lookupTransforms = (ast, transformations, state = {level: 0, flattern: []}, astS
                     ++state.level
 
                 when 'JSXOpeningElement'
-                    if ast.attributes and /[a-z]/.test(ast.name.name[0])
+                    if ast.attributes and ast.name?.name and /[a-z]/.test(ast.name.name[0])
                         attributes = ast.attributes.filter (node)-> node.name?.name is 'className'
                         if attributes.length
                             value = attributes[attributes.length - 1].value
