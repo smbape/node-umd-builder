@@ -69,32 +69,32 @@ describe 'jsx extension', ->
             type = type[0].toUpperCase() + type.substring(1)
 
             code = """<button sp#{type}={ this.changeLanguage(event, lng) } />"""
-            expected = """<button on#{type}={ (function(event) { this.changeLanguage(event, lng) }).bind(this) } />"""
+            expected = """<button on#{type}={ (function(event, domID, originalEvent) { this.changeLanguage(event, lng) }).bind(this) } />"""
             assertStrictEqual code, expected
 
             code = """<button type="button" sp#{type}={ this.changeLanguage(event, lng) } className="btn btn-default">
                 { i18n.t('name', {lng: locale}) }
             </button>"""
-            expected = """<button type="button" on#{type}={ (function(event) { this.changeLanguage(event, lng) }).bind(this) } className="btn btn-default">
+            expected = """<button type="button" on#{type}={ (function(event, domID, originalEvent) { this.changeLanguage(event, lng) }).bind(this) } className="btn btn-default">
                 { i18n.t('name', {lng: locale}) }
             </button>"""
 
             code = """<button type="button" className="btn btn-default" sp#{type}={ this.changeLanguage(event, lng) }>
                 { i18n.t('name', {lng: locale}) }
             </button>"""
-            expected = """<button type="button" className="btn btn-default" on#{type}={ (function(event) { this.changeLanguage(event, lng) }).bind(this) }>
+            expected = """<button type="button" className="btn btn-default" on#{type}={ (function(event, domID, originalEvent) { this.changeLanguage(event, lng) }).bind(this) }>
                 { i18n.t('name', {lng: locale}) }
             </button>"""
 
             code = """<button sp#{type}={ this.changeLanguage(event, lng) } />"""
-            expected = """<button on#{type}={ (function(event) { this.changeLanguage(event, lng) }).bind(this) } />"""
+            expected = """<button on#{type}={ (function(event, domID, originalEvent) { this.changeLanguage(event, lng) }).bind(this) } />"""
             assertStrictEqual code, expected
 
             code = """<button type="button" className="btn btn-default" sp#{type}={ this.changeLanguage(event, lng) }>
                 {/* some comment */}
                 { i18n.t('name', {lng: locale}) }
             </button>"""
-            expected = """<button type="button" className="btn btn-default" on#{type}={ (function(event) { this.changeLanguage(event, lng) }).bind(this) }>
+            expected = """<button type="button" className="btn btn-default" on#{type}={ (function(event, domID, originalEvent) { this.changeLanguage(event, lng) }).bind(this) }>
                 {/* some comment */}
                 { i18n.t('name', {lng: locale}) }
             </button>"""
@@ -104,7 +104,7 @@ describe 'jsx extension', ->
               return <button sp#{type}={ this.changeLanguage(event, lng) } />;
             };"""
             expected = """freact = function() {
-              return <button on#{type}={ (function(event) { this.changeLanguage(event, lng) }).bind(this) } />;
+              return <button on#{type}={ (function(event, domID, originalEvent) { this.changeLanguage(event, lng) }).bind(this) } />;
             };"""
             assertStrictEqual code, expected
 
@@ -119,10 +119,10 @@ describe 'jsx extension', ->
                 { i18n.t('name', {lng: locale}) }
                 <button sp#{type}={ this.changeLanguage(event, lng) } />
             </button>"""
-            expected = """<button type="button" className="btn btn-default" on#{type}={ (function(event) { this.changeLanguage(event, lng) }).bind(this) }>
+            expected = """<button type="button" className="btn btn-default" on#{type}={ (function(event, domID, originalEvent) { this.changeLanguage(event, lng) }).bind(this) }>
                 {/* some comment */}
                 { i18n.t('name', {lng: locale}) }
-                <button on#{type}={ (function(event) { this.changeLanguage(event, lng) }).bind(this) } />
+                <button on#{type}={ (function(event, domID, originalEvent) { this.changeLanguage(event, lng) }).bind(this) } />
             </button>"""
             assertStrictEqual code, expected
 
@@ -133,7 +133,7 @@ describe 'jsx extension', ->
             type = type[0].toUpperCase() + type.substring(1)
 
             code = """<button spRepeat="(locale, lng) in locales" sp#{type}={ this.changeLanguage(event, lng) } />"""
-            expected = """_.map(locales, function(locale, lng) {return (<button  on#{type}={ (function(event) { this.changeLanguage(event, lng) }).bind(this) } />)}.bind(this))"""
+            expected = """_.map(locales, function(locale, lng) {return (<button  on#{type}={ (function(event, domID, originalEvent) { this.changeLanguage(event, lng) }).bind(this) } />)}.bind(this))"""
             assertStrictEqual code, expected
         return
 
@@ -147,7 +147,7 @@ describe 'jsx extension', ->
             </button>"""
             expected = """_.map(locales, function(locale, lng) {return (<button  type="button" className="btn btn-default">
                 { i18n.t('name', {lng: locale}) }
-                { _.map(locales, function(locale, lng) {return (<button  on#{type}={ (function(event) { this.changeLanguage(event, lng) }).bind(this) } />)}.bind(this)) }
+                { _.map(locales, function(locale, lng) {return (<button  on#{type}={ (function(event, domID, originalEvent) { this.changeLanguage(event, lng) }).bind(this) } />)}.bind(this)) }
             </button>)}.bind(this))"""
             assertStrictEqual code, expected
 
@@ -159,7 +159,7 @@ describe 'jsx extension', ->
             expected = """var freact;
 
             freact = function() {
-              return _.map(locales, function(lng) {return (<button  on#{type}={ (function(event) { this.changeLanguage(event, lng) }).bind(this) } />)}.bind(this));
+              return _.map(locales, function(lng) {return (<button  on#{type}={ (function(event, domID, originalEvent) { this.changeLanguage(event, lng) }).bind(this) } />)}.bind(this));
             };"""
             assertStrictEqual code, expected
         return
@@ -249,32 +249,32 @@ describe 'jsx extension', ->
     it 'should transform nested spClick + spRepeat + spShow + spModel', ->
         # spClick, spRepeat
         code = """<button spClick={ this.changeLanguage(event, lng) } spRepeat="locale in locales"/>"""
-        expected = """_.map(locales, function(locale) {return (<button onClick={ (function(event) { this.changeLanguage(event, lng) }).bind(this) } />)}.bind(this))"""
+        expected = """_.map(locales, function(locale) {return (<button onClick={ (function(event, domID, originalEvent) { this.changeLanguage(event, lng) }).bind(this) } />)}.bind(this))"""
         assertStrictEqual code, expected
 
         # spRepeat, spClick
         code = """<button spRepeat="locale in locales" spClick={ this.changeLanguage(event, lng) }/>"""
-        expected = """_.map(locales, function(locale) {return (<button  onClick={ (function(event) { this.changeLanguage(event, lng) }).bind(this) }/>)}.bind(this))"""
+        expected = """_.map(locales, function(locale) {return (<button  onClick={ (function(event, domID, originalEvent) { this.changeLanguage(event, lng) }).bind(this) }/>)}.bind(this))"""
         assertStrictEqual code, expected
 
         # spClick, spShow
         code = """<button spClick={ this.changeLanguage(event, lng) } spShow={condition}/>"""
-        expected = """(condition ? <button onClick={ (function(event) { this.changeLanguage(event, lng) }).bind(this) } /> : void 0)"""
+        expected = """(condition ? <button onClick={ (function(event, domID, originalEvent) { this.changeLanguage(event, lng) }).bind(this) } /> : void 0)"""
         assertStrictEqual code, expected
 
         # spShow, spClick
         code = """<button spShow={condition} spClick={ this.changeLanguage(event, lng) }/>"""
-        expected = """(condition ? <button  onClick={ (function(event) { this.changeLanguage(event, lng) }).bind(this) }/> : void 0)"""
+        expected = """(condition ? <button  onClick={ (function(event, domID, originalEvent) { this.changeLanguage(event, lng) }).bind(this) }/> : void 0)"""
         assertStrictEqual code, expected
 
         # spClick, spModel
         code = """<button spClick={ this.changeLanguage(event, lng) } spModel={this.model.property}/>"""
-        expected = """<button onClick={ (function(event) { this.changeLanguage(event, lng) }).bind(this) } spModel={[this.model, 'property']}/>"""
+        expected = """<button onClick={ (function(event, domID, originalEvent) { this.changeLanguage(event, lng) }).bind(this) } spModel={[this.model, 'property']}/>"""
         assertStrictEqual code, expected
 
         # spModel, spClick
         code = """<button spModel={this.model.property} spClick={ this.changeLanguage(event, lng) }/>"""
-        expected = """<button spModel={[this.model, 'property']} onClick={ (function(event) { this.changeLanguage(event, lng) }).bind(this) }/>"""
+        expected = """<button spModel={[this.model, 'property']} onClick={ (function(event, domID, originalEvent) { this.changeLanguage(event, lng) }).bind(this) }/>"""
         assertStrictEqual code, expected
         
         # spRepeat, spShow
@@ -309,92 +309,92 @@ describe 'jsx extension', ->
 
         # spClick, spRepeat, spShow
         code = """<button spClick={ this.changeLanguage(event, lng) } spRepeat="locale in locales" spShow={condition}/>"""
-        expected = """_.map(locales, function(locale) {return (condition ? <button onClick={ (function(event) { this.changeLanguage(event, lng) }).bind(this) }  /> : void 0)}.bind(this))"""
+        expected = """_.map(locales, function(locale) {return (condition ? <button onClick={ (function(event, domID, originalEvent) { this.changeLanguage(event, lng) }).bind(this) }  /> : void 0)}.bind(this))"""
         assertStrictEqual code, expected
 
         # spClick, spShow, spRepeat
         code = """<button spClick={ this.changeLanguage(event, lng) } spShow={condition} spRepeat="locale in locales"/>"""
-        expected = """_.map(locales, function(locale) {return (condition ? <button onClick={ (function(event) { this.changeLanguage(event, lng) }).bind(this) }  /> : void 0)}.bind(this))"""
+        expected = """_.map(locales, function(locale) {return (condition ? <button onClick={ (function(event, domID, originalEvent) { this.changeLanguage(event, lng) }).bind(this) }  /> : void 0)}.bind(this))"""
         assertStrictEqual code, expected
 
         # spRepeat, spClick, spShow
         code = """<button spRepeat="locale in locales" spClick={ this.changeLanguage(event, lng) } spShow={condition}/>"""
-        expected = """_.map(locales, function(locale) {return (condition ? <button  onClick={ (function(event) { this.changeLanguage(event, lng) }).bind(this) } /> : void 0)}.bind(this))"""
+        expected = """_.map(locales, function(locale) {return (condition ? <button  onClick={ (function(event, domID, originalEvent) { this.changeLanguage(event, lng) }).bind(this) } /> : void 0)}.bind(this))"""
         assertStrictEqual code, expected
 
         # spRepeat, spShow, spClick
         code = """<button spRepeat="locale in locales" spShow={condition} spClick={ this.changeLanguage(event, lng) }/>"""
-        expected = """_.map(locales, function(locale) {return (condition ? <button   onClick={ (function(event) { this.changeLanguage(event, lng) }).bind(this) }/> : void 0)}.bind(this))"""
+        expected = """_.map(locales, function(locale) {return (condition ? <button   onClick={ (function(event, domID, originalEvent) { this.changeLanguage(event, lng) }).bind(this) }/> : void 0)}.bind(this))"""
         assertStrictEqual code, expected
 
         # spShow, spRepeat, spClick
         code = """<button spShow={condition} spRepeat="locale in locales" spClick={ this.changeLanguage(event, lng) }/>"""
-        expected = """_.map(locales, function(locale) {return (condition ? <button   onClick={ (function(event) { this.changeLanguage(event, lng) }).bind(this) }/> : void 0)}.bind(this))"""
+        expected = """_.map(locales, function(locale) {return (condition ? <button   onClick={ (function(event, domID, originalEvent) { this.changeLanguage(event, lng) }).bind(this) }/> : void 0)}.bind(this))"""
         assertStrictEqual code, expected
 
         # spShow, spClick, spRepeat
         code = """<button spShow={condition} spClick={ this.changeLanguage(event, lng) } spRepeat="locale in locales"/>"""
-        expected = """_.map(locales, function(locale) {return (condition ? <button  onClick={ (function(event) { this.changeLanguage(event, lng) }).bind(this) } /> : void 0)}.bind(this))"""
+        expected = """_.map(locales, function(locale) {return (condition ? <button  onClick={ (function(event, domID, originalEvent) { this.changeLanguage(event, lng) }).bind(this) } /> : void 0)}.bind(this))"""
         assertStrictEqual code, expected
         
         # spClick, spRepeat, spModel
         code = """<button spClick={ this.changeLanguage(event, lng) } spRepeat="locale in locales" spModel={this.model.property}/>"""
-        expected = """_.map(locales, function(locale) {return (<button onClick={ (function(event) { this.changeLanguage(event, lng) }).bind(this) }  spModel={[this.model, 'property']}/>)}.bind(this))"""
+        expected = """_.map(locales, function(locale) {return (<button onClick={ (function(event, domID, originalEvent) { this.changeLanguage(event, lng) }).bind(this) }  spModel={[this.model, 'property']}/>)}.bind(this))"""
         assertStrictEqual code, expected
 
         # spClick, spModel, spRepeat
         code = """<button spClick={ this.changeLanguage(event, lng) } spModel={this.model.property} spRepeat="locale in locales"/>"""
-        expected = """_.map(locales, function(locale) {return (<button onClick={ (function(event) { this.changeLanguage(event, lng) }).bind(this) } spModel={[this.model, 'property']} />)}.bind(this))"""
+        expected = """_.map(locales, function(locale) {return (<button onClick={ (function(event, domID, originalEvent) { this.changeLanguage(event, lng) }).bind(this) } spModel={[this.model, 'property']} />)}.bind(this))"""
         assertStrictEqual code, expected
         
         # spRepeat, spClick, spModel
         code = """<button spClick={ this.changeLanguage(event, lng) } spRepeat="locale in locales" spModel={this.model.property}/>"""
-        expected = """_.map(locales, function(locale) {return (<button onClick={ (function(event) { this.changeLanguage(event, lng) }).bind(this) }  spModel={[this.model, 'property']}/>)}.bind(this))"""
+        expected = """_.map(locales, function(locale) {return (<button onClick={ (function(event, domID, originalEvent) { this.changeLanguage(event, lng) }).bind(this) }  spModel={[this.model, 'property']}/>)}.bind(this))"""
         assertStrictEqual code, expected
 
         # spRepeat, spModel, spClick
         code = """<button spRepeat="locale in locales" spModel={this.model.property} spClick={ this.changeLanguage(event, lng) }/>"""
-        expected = """_.map(locales, function(locale) {return (<button  spModel={[this.model, 'property']} onClick={ (function(event) { this.changeLanguage(event, lng) }).bind(this) }/>)}.bind(this))"""
+        expected = """_.map(locales, function(locale) {return (<button  spModel={[this.model, 'property']} onClick={ (function(event, domID, originalEvent) { this.changeLanguage(event, lng) }).bind(this) }/>)}.bind(this))"""
         assertStrictEqual code, expected
 
         # spModel, spRepeat, spClick
         code = """<button spModel={this.model.property} spRepeat="locale in locales" spClick={ this.changeLanguage(event, lng) }/>"""
-        expected = """_.map(locales, function(locale) {return (<button spModel={[this.model, 'property']}  onClick={ (function(event) { this.changeLanguage(event, lng) }).bind(this) }/>)}.bind(this))"""
+        expected = """_.map(locales, function(locale) {return (<button spModel={[this.model, 'property']}  onClick={ (function(event, domID, originalEvent) { this.changeLanguage(event, lng) }).bind(this) }/>)}.bind(this))"""
         assertStrictEqual code, expected
         
         # spModel, spClick, spRepeat
         code = """<button spModel={this.model.property} spClick={ this.changeLanguage(event, lng) } spRepeat="locale in locales"/>"""
-        expected = """_.map(locales, function(locale) {return (<button spModel={[this.model, 'property']} onClick={ (function(event) { this.changeLanguage(event, lng) }).bind(this) } />)}.bind(this))"""
+        expected = """_.map(locales, function(locale) {return (<button spModel={[this.model, 'property']} onClick={ (function(event, domID, originalEvent) { this.changeLanguage(event, lng) }).bind(this) } />)}.bind(this))"""
         assertStrictEqual code, expected
         
         # spClick, spShow, spModel
         code = """<button spClick={ this.changeLanguage(event, lng) } spShow={condition} spModel={this.model.property}/>"""
-        expected = """(condition ? <button onClick={ (function(event) { this.changeLanguage(event, lng) }).bind(this) }  spModel={[this.model, 'property']}/> : void 0)"""
+        expected = """(condition ? <button onClick={ (function(event, domID, originalEvent) { this.changeLanguage(event, lng) }).bind(this) }  spModel={[this.model, 'property']}/> : void 0)"""
         assertStrictEqual code, expected
 
         # spClick, spModel, spShow
         code = """<button spClick={ this.changeLanguage(event, lng) } spModel={this.model.property} spShow={condition}/>"""
-        expected = """(condition ? <button onClick={ (function(event) { this.changeLanguage(event, lng) }).bind(this) } spModel={[this.model, 'property']} /> : void 0)"""
+        expected = """(condition ? <button onClick={ (function(event, domID, originalEvent) { this.changeLanguage(event, lng) }).bind(this) } spModel={[this.model, 'property']} /> : void 0)"""
         assertStrictEqual code, expected
 
         # spShow, spClick, spModel
         code = """<button spShow={condition} spClick={ this.changeLanguage(event, lng) } spModel={this.model.property}/>"""
-        expected = """(condition ? <button  onClick={ (function(event) { this.changeLanguage(event, lng) }).bind(this) } spModel={[this.model, 'property']}/> : void 0)"""
+        expected = """(condition ? <button  onClick={ (function(event, domID, originalEvent) { this.changeLanguage(event, lng) }).bind(this) } spModel={[this.model, 'property']}/> : void 0)"""
         assertStrictEqual code, expected
 
         # spShow, spModel, spClick
         code = """<button spShow={condition} spModel={this.model.property} spClick={ this.changeLanguage(event, lng) }/>"""
-        expected = """(condition ? <button  spModel={[this.model, 'property']} onClick={ (function(event) { this.changeLanguage(event, lng) }).bind(this) }/> : void 0)"""
+        expected = """(condition ? <button  spModel={[this.model, 'property']} onClick={ (function(event, domID, originalEvent) { this.changeLanguage(event, lng) }).bind(this) }/> : void 0)"""
         assertStrictEqual code, expected
 
         # spModel, spShow, spClick
         code = """<button spModel={this.model.property} spShow={condition} spClick={ this.changeLanguage(event, lng) }/>"""
-        expected = """(condition ? <button spModel={[this.model, 'property']}  onClick={ (function(event) { this.changeLanguage(event, lng) }).bind(this) }/> : void 0)"""
+        expected = """(condition ? <button spModel={[this.model, 'property']}  onClick={ (function(event, domID, originalEvent) { this.changeLanguage(event, lng) }).bind(this) }/> : void 0)"""
         assertStrictEqual code, expected
 
         # spModel, spClick, spShow
         code = """<button spModel={this.model.property} spClick={ this.changeLanguage(event, lng) } spShow={condition}/>"""
-        expected = """(condition ? <button spModel={[this.model, 'property']} onClick={ (function(event) { this.changeLanguage(event, lng) }).bind(this) } /> : void 0)"""
+        expected = """(condition ? <button spModel={[this.model, 'property']} onClick={ (function(event, domID, originalEvent) { this.changeLanguage(event, lng) }).bind(this) } /> : void 0)"""
         assertStrictEqual code, expected
 
         # spClick, spRepeat, spShow, spModel
@@ -431,7 +431,7 @@ describe 'jsx extension', ->
         </button>"""
         expected = """_.map(locales, function(locale, lng) {return (<button  type="button" className="btn btn-default">
             { i18n.t('name', {lng: locale}) }
-            { _.map(locales, function(locale) {return (condition ? <button   onClick={ (function(event) { this.changeLanguage(event, lng) }).bind(this) }/> : void 0)}.bind(this)) }
+            { _.map(locales, function(locale) {return (condition ? <button   onClick={ (function(event, domID, originalEvent) { this.changeLanguage(event, lng) }).bind(this) }/> : void 0)}.bind(this)) }
         </button>)}.bind(this))"""
         assertStrictEqual code, expected
 

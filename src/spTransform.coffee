@@ -356,7 +356,7 @@ do ->
             str.substring(0, start) + 'on' + type + str.substring(end)
 
         TRF_DICT['sp' + type + 'Value'] = (str, options, transformations, start, end, state)->
-            left = "{ (function(event) "
+            left = "{ (function(event, domID, originalEvent) "
             right = ").bind(this) }"
             res = str.substring(0, start) + left + str.substring(start, end) + right + str.substring(end)
 
