@@ -295,13 +295,13 @@ TRF_DICT =
         return strReplace 'spModel', str, replace, start, end, transformations, state
 
     mdlOpen: (str, options, transformations, start, end, state)->
-        if options.transformations?.mdl is false
+        if options.transformations?.mdl isnt true
             return str
         replace = "#{options.mdl} tagName=\"#{str.substring(start, end)}\""
         return strReplace 'mdlOpen', str, replace, start, end, transformations, state
 
     mdlClose: (str, options, transformations, start, end, state)->
-        if options.transformations?.mdl is false
+        if options.transformations?.mdl isnt true
             return str
         replace = "#{options.mdl}"
         return strReplace 'mdlClose', str, replace, start, end, transformations, state

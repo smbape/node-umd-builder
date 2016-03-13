@@ -11,17 +11,17 @@ cache = {}
 
 # Light glob to regexp
 processSpecial = do ->
-    sep = '[\\/\\\\]'
-    nsep = '[^\\/\\\\]'
-    mnsep = nsep + '*'
-    star = '\\*'
-    mstar = '\\*{2,}'
+    sep = '[\\/\\\\]' # separation
+    nsep = '[^\\/\\\\]' # not separation
+    mnsep = nsep + '*' # multiple not separation
+    star = '\\*' # star
+    mstar = '\\*{2,}' # multiple star
     specialPattern = new RegExp '(?:' + [
-        # 1 # /**$ => /**: everything
-        # 1 # ioio/**$ => /**: everything
+        # 1.1 # /**$ => /**: everything
+        # 1.2 # ioio/**$ => /**: everything
         '(' + sep + mstar + '$)'
 
-        # 2 # ouiuo/**/iuuo => /**/: sep, (everything, sep) or nothing
+        # 2 # ouiuo/**/iuuo => /**/?: sep, (everything, sep) or nothing
         '(' + sep + mstar + sep + ')'
 
         # 3 # ioio/**fodpo => /**: sep, everything
@@ -202,7 +202,7 @@ config = exports.config =
         jshint:
             warnOnly: true
         jst:
-            # _.template uses with when not variable is given. Since with is not recommended on MDN, I prefer not to use it
+            # _.template uses with when no variable is given. Since with is not recommended on MDN, I prefer not to use it
             # https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/with
             variable: 'root'
             ignore: /<%--([\s\S]+?)--%>/g # added for comments within templates
