@@ -23,20 +23,33 @@ module.exports = class MarkdownCompiler
 
     constructor: (config = {})->
         @sourceMaps = !!config.sourceMaps
-        options = config.plugins and config.plugins.markdown or {}
-        for prop of defaultOptions
-            options[prop] = defaultOptions[prop] if not options[prop]
-        marked.setOptions options
+        options = config?.plugins?.markdown or {}
+        @options = _.extend {}, options, defaultOptions
+        {@overrides} = @options
+        delete @options.overrides
         @amdDestination = config.modules.amdDestination
 
     compile: (params, next)->
-        self = @
         {data, path, map} = params
-        self.paths = self.paths or builder.getConfig().paths
 
-        dst = sysPath.join self.paths.PUBLIC_PATH, self.amdDestination(path) + '.html'
-        # escape every curly braces to avoid interpretation by angular
-        writeData marked(data).replace(/(\{|\}){2}/g, "{{ '\\$1\\$1' }}"), dst, (err)->
+        options = _.clone @options
+        if @overrides
+            _.each @overrides, (override, pattern) ->
+                if minimatch sysPath.normalize(path), pattern, {nocase: true, matchBase: true}
+                    _.extend options, override
+                return
+
+        @paths = @paths or builder.getConfig().paths
+
+        dst = sysPath.join @paths.PUBLIC_PATH, @amdDestination(path) + '.html'
+
+        if options.angular
+            # escape every curly braces to avoid interpretation by angular
+            data = marked(data, options).replace(/(\{|\}){2}/g, "{{ '\\$1\\$1' }}")
+        else
+            data = marked(data, options)
+
+        writeData data, dst, (err)->
             return next(err) if err
             next err, params
             return

@@ -65,9 +65,10 @@ module.exports = class JsHinter
         if @isIgnored path
             return next null
 
-        config = _.clone @options
+        config = @options
         globals = _.clone @globals
         if @overrides
+            config = _.clone @options
             _.each @overrides, (options, pattern) ->
                 if minimatch sysPath.normalize(path), pattern, {nocase: true, matchBase: true}
                     if options.globals

@@ -168,7 +168,10 @@ module.exports = class AmdCompiler
         umdData = comData = data
         
         if not @isIgnored params.path
-            [locals, name, args, head, declaration, body] = res = parse data
+            try
+                [locals, name, args, head, declaration, body] = res = parse data
+            catch err
+                logger.error err
 
             if name
                 modulePath = self.nameCleaner path

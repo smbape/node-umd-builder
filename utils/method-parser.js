@@ -275,7 +275,7 @@ function _parse(str, tokenizer) {
                         case STATES.double_quoting:
                         case STATES.regexp_quoting:
                             var msg = 'quoting ' + state + ' started at ' + quoting_start + ' not ended and found a new line at ' + line + ' col ' + (index - col + 1);
-                            throw msg;
+                            throw new Error(msg);
                         case STATES.line_commenting:
                             state = STATES.initial;
                             /* falls through */

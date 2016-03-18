@@ -281,7 +281,7 @@ function template(string, options, otherOptions) {
         (options.ignore || reNoMatch).source + '|' +
         (options.escape || reNoMatch).source + '|' +
         interpolate.source + '|' +
-        (interpolate.source === reInterpolate.source ? reEsTemplate : reNoMatch).source + '|' +
+        (options.esInterpolate !== false && interpolate.source === reInterpolate.source ? reEsTemplate : reNoMatch).source + '|' +
         (options.evaluate || reNoMatch).source + '|$', 'g');
 
     // Use a sourceURL for easier debugging.

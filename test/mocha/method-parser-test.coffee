@@ -1,14 +1,23 @@
 _ = require 'lodash'
 
 util = require 'util'
+_.template = require('../../src/compilers/jst/template')
+fs = require 'fs'
+methodParser = require('../../utils/method-parser')
+parse = methodParser.parse
+_.template fs.readFileSync(__dirname + '/../stuff/step4.html').toString(),
+    ignore: /\{\{--([\s\S]+?)--\}\}/g
+    escape: /\{\{-([\s\S]+?)\}\}/g
+    interpolate: /\{\{=([\s\S]+?)\}\}/g
+    evaluate: /\{\{([\s\S]+?)\}\}/g
+
+return
 
 assert.equals = (actual, expected)->
     assert _.isEqual(actual, expected), "expected #{util.inspect actual} to equal #{util.inspect expected}"
     return
 
 describe 'method-parser', ->
-    methodParser = require('../../utils/method-parser')
-    parse = methodParser.parse
     NG_FNS = [
         'usable'
         'run'
@@ -197,7 +206,6 @@ describe 'method-parser', ->
         return
 
     it 'should parse various files', ->
-        fs = require 'fs'
         [locals, name, args, head, declaration, body] = parse fs.readFileSync(__dirname + '/../stuff/angular-sanitize.js').toString()
         assert.strictEqual locals, undefined
         assert.strictEqual name, undefined
@@ -209,6 +217,11 @@ describe 'method-parser', ->
         assert.strictEqual args, undefined
 
         [locals, name, args, head, declaration, body] = parse fs.readFileSync(__dirname + '/../stuff/respond.src.js').toString()
+        assert.strictEqual locals, undefined
+        assert.strictEqual name, undefined
+        assert.strictEqual args, undefined
+
+        [locals, name, args, head, declaration, body] = parse fs.readFileSync(__dirname + '/../stuff/step4.html').toString()
         assert.strictEqual locals, undefined
         assert.strictEqual name, undefined
         assert.strictEqual args, undefined

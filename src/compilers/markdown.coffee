@@ -1,4 +1,7 @@
 _ = require 'lodash'
+JstCompiler = require './jst/jst'
+sysPath = require('path')
+minimatch = require('minimatch')
 marked = require 'marked'
 hljs = require 'highlight.js'
 languages = hljs.listLanguages()
@@ -19,26 +22,59 @@ module.exports = class MarkdownCompiler
 
     constructor: (config = {})->
         @sourceMaps = !!config.sourceMaps
-        options = config.plugins and config.plugins.markdown or {}
+        options = config?.plugins?.markdown or {}
         @options = _.extend {}, options, defaultOptions
+        {@overrides} = @options
+        delete @options.overrides
+
+        @jstCompiler = new JstCompiler config
 
     compile: (params, next)->
         {data, path, map} = params
 
-        data = JSON.stringify marked data, @options
+        options = _.clone @options
+        if @overrides
+            _.each @overrides, (override, pattern) ->
+                if minimatch sysPath.normalize(path), pattern, {nocase: true, matchBase: true}
+                    _.extend options, override
+                return
 
-        data = """(function() {
-            var __templateData = #{data};
-            if (typeof define === 'function' && define.amd) {
-                define([], function() {
+        if options.jst
+            delete options.jst
+
+            jstOptions = @jstCompiler.getOptions path
+            holders = []
+
+            {ignore, escape, interpolate, evaluate} = jstOptions
+            placeholderFinder = new RegExp '(?:' + ignore.source + '|' + escape.source + '|' + interpolate.source + '|' + evaluate.source + ')', 'g'
+            holder = /@@@/g
+            holderStr = holder.source
+            data = data.replace placeholderFinder, (match)->
+                holders.push match
+                holderStr
+
+            index = 0
+            data = marked(data, options).replace holder, ->
+                holders[index++]
+
+            @jstCompiler.compile {data, path, map}, next
+
+        else
+            data = JSON.stringify marked(data, options)
+
+            data = """(function() {
+                var __templateData = #{data};
+                if (typeof define === 'function' && define.amd) {
+                    define([], function() {
+                        return __templateData;
+                    });
+                } else if (typeof module === 'object' && module && module.exports) {
+                    module.exports = __templateData;
+                } else {
                     return __templateData;
-                });
-            } else if (typeof module === 'object' && module && module.exports) {
-                module.exports = __templateData;
-            } else {
-                return __templateData;
-            }
-        })();"""
+                }
+            })();"""
 
-        next null, {data, path, map}
+            next null, {data, params, map}
+
         return
