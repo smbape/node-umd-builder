@@ -1,6 +1,6 @@
 {
   "name": "umd-builder",
-  "version": "1.0.7",
+  "version": "2.0.0",
   "description": "Build modular client application with support of commonjs, requirejs and nodejs without duplicating source code",
   "main": "index.js",
   "scripts": {
