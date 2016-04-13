@@ -444,14 +444,12 @@ _compileIndex = (path, options)->
 
         destFileSingle = sysPath.resolve configPaths.PUBLIC_PATH, 'index.single.html'
         fs.writeFileSync destFileSingle, template _.defaults
-            single: true
-            resource: 'app'
+            build: 'app'
         , tplOpts
 
         destFileClassic = sysPath.resolve configPaths.PUBLIC_PATH, 'index.classic.html'
         fs.writeFileSync destFileClassic, template _.defaults
-            single: false
-            resource: 'web'
+            build: 'web'
         , tplOpts
 
         logger.info 'compiled index file'
