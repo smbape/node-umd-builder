@@ -31,7 +31,7 @@ processSpecial = do ->
         # 4.2 # **/iofid => **/: everything, sep
         # 4.3 # fiodu**/iofid => **/: everything, sep
         '(' + mstar + sep + ')'
-        
+
         # 5.1 # ** => **: everything
         # 5.2 # iido** => **: everything
         # 5.3 # **opoio => **: everything

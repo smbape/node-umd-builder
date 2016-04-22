@@ -11,7 +11,7 @@ writeData = (data, dst, done)->
             writeSem.semGive()
             done(err)
             return
-        
+
         mkdirp sysPath.dirname(dst), (err)->
             return next(err) if err
             writeStream = fs.createWriteStream dst

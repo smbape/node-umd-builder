@@ -55,7 +55,7 @@ RelativeCSS.prototype.compile = function(params, callback) {
         //     }
         // };
         // minified = new CleanCSS(options).minify(minified);
-        
+
         minified = new CleanCSS(options).minify(data);
         if (minified.errors.length > 0) {
             error = minified.errors;

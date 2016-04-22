@@ -156,7 +156,7 @@ buildBower = (options, done)->
         give()
 
         return
-        
+
     return 
 
 _processComponent = (component, config, options, done)->
@@ -455,7 +455,7 @@ _compileIndex = (path, options)->
         logger.info 'compiled index file'
     catch e
         logger.error e
-    
+
 buildClient = (config, options, extra, next)->
     if extra.watcher
         watcher = extra.watcher
@@ -485,7 +485,7 @@ buildClient = (config, options, extra, next)->
                     if err and (err.code isnt 'EEXIST' or err.path isnt srcpath)
                         logger.error(err)
                     return
-        
+
         command = process.argv[2]
         if command is 'watch' or command is 'w'
             watchClientFiles options, next

@@ -54,7 +54,7 @@ module.exports = class CopyCompiler
     typePattern: /^(?!(?:javascript|stylesheet|html)$)/
     typeUndefined: true
     completer: true
-    
+
     constructor: (config = {})->
         @amdDestination = config.modules.amdDestination
 
