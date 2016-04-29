@@ -160,7 +160,7 @@ function processPackage(type, pkg, callback) {
                 type: pkg.type,
                 umd: pkg.umd,
                 exports: pkg.exports,
-                ignored: pkg.ignored,
+                ignore: pkg.ignore,
                 paths: pkg.paths,
                 repo: sysPath.basename(path),
                 files: files,

@@ -6,6 +6,8 @@ marked = require 'marked'
 hljs = require 'highlight.js'
 languages = hljs.listLanguages()
 
+SPECIAL_CHAR_REG = new RegExp '([' + '\\/^$.|?*+()[]{}'.split('').join('\\') + '])', 'g'
+
 defaultOptions =
     # renderer: new marked.Renderer()
     langPrefix: 'hljs lang-'
@@ -39,7 +41,17 @@ module.exports = class MarkdownCompiler
                     _.extend options, override
                 return
 
-        if options.jst
+        if 'boolean' is typeof options.jst
+            options.jst = on: true
+
+        if options.jst?.on
+            if options.jst.holder
+                holderStr = options.jst.holder
+                holder = new RegExp holderStr.replace(SPECIAL_CHAR_REG, '\\$1'), 'g'
+            else
+                holder = /@@@/g
+                holderStr = holder.source
+
             delete options.jst
 
             jstOptions = @jstCompiler.getOptions path
@@ -47,8 +59,6 @@ module.exports = class MarkdownCompiler
 
             {ignore, escape, interpolate, evaluate} = jstOptions
             placeholderFinder = new RegExp '(?:' + ignore.source + '|' + escape.source + '|' + interpolate.source + '|' + evaluate.source + ')', 'g'
-            holder = /@@@/g
-            holderStr = holder.source
             data = data.replace placeholderFinder, (match)->
                 holders.push match
                 holderStr

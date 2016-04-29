@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<!-- saved from url=(0044)http://127.0.0.1:3330/web/fr/home/home/step4 -->
+<html class=" history"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="description" content="">
+        <meta name="author" content="Stéphane Mbape">
+        <link rel="shortcut icon" href="http://127.0.0.1:3330/favicon.ico">
+        <link rel="icon" type="image/x-icon" href="http://127.0.0.1:3330/favicon.ico">
+        <title>Étape 4 - Tutorial</title>
+        <link rel="stylesheet" href="./step4_files/app.css">
+        <link rel="stylesheet" href="./step4_files/icon">
+        <link rel="stylesheet" href="./step4_files/material.blue_grey-blue.min.css"> 
+        <script type="text/javascript" src="http://gc.kis.scr.kaspersky-labs.com/1B74BD89-2A22-4B93-B451-1C9E1052A0EC/main.js" charset="UTF-8"></script><script type="text/javascript" src="./step4_files/modernizr-custom.js"></script>
+        
+            <script type="text/javascript" src="./step4_files/path-browserify.js" data-requiremodule="umd-core/src/path-browserify"></script>
+            <script type="text/javascript" src="./step4_files/depsLoader.js" data-requiremodule="umd-core/src/depsLoader"></script>
+        
+        <script type="text/javascript">
+            var appConfig = {baseUrl: '/', build: 'web', isProduction: false};
+            var optimizer = {};
+            (function() {
+                'use strict';
+
+                var timerInit = new Date().getTime(), lastDiff = 0;
+                appConfig.timerDiff = timerDiff;
+                appConfig.ready = ready;
+                appConfig.onRouteChangeSuccess = onRouteChangeSuccess;
+
+                document.addEventListener('start', onStart, false);
+                document.addEventListener('onRouteChangeSuccess', onRender, false);
+                
+                function onStart(evt) {
+                    document.removeEventListener('start', onStart);
+                    console.log('ready', timerDiff());
+                    // alert(timerDiff()[1]);
+                }
+
+                function onRender(evt) {
+                    document.removeEventListener('onRouteChangeSuccess', onRender);
+                    if (!window.rendered) {
+                        window.rendered = true;
+                        console.log('Initial onRouteChangeSuccess took', timerDiff());
+                        // alert(timerDiff()[1]);
+
+                         
+                        require('jquery')('head script[data-requiremodule]').each(function(index, element) {
+                            var config = optimizer[element.src];
+                            if (config) {
+                                config.name = element.getAttribute('data-requiremodule');
+                            }
+                        });
+                        var filenameMap = {}, config;
+                        var _ = require('lodash'),
+                            sysPath = pathBrowserify;
+                        for (var src in optimizer) {
+                            config = optimizer[src];
+                            config.deps = config.deps.slice();
+                            for (var i = 0, len = config.deps.length; i < len; i++) {
+                                if (_.isObject(config.deps[i])) {
+                                    config.deps[i] = config.deps[i].amd;
+                                }
+
+                                if (config.deps[i] && ~config.deps[i].indexOf('.')) {
+                                    config.deps[i] = sysPath.resolve(sysPath.dirname(config.filename), config.deps[i] + '.js');
+                                }
+                            }
+                            filenameMap[config.filename] = _.clone(config);
+                        }
+                        console.log('module.exports =', JSON.stringify(filenameMap, null, 4));
+                        
+                    }
+                    console.log('onRouteChangeSuccess');
+                }
+
+                function timerDiff() {
+                    var newDiff = new Date().getTime() - timerInit,
+                        addDiff = newDiff - lastDiff;
+                    lastDiff = newDiff;
+                    return ['+' + addDiff, newDiff];
+                }
+
+                function ready() {
+                    var evt = document.createEvent("Event");
+                    evt.initEvent('start', true, true);
+                    document.dispatchEvent(evt);
+                }
+
+                function onRouteChangeSuccess() {
+                    var evt = document.createEvent("Event");
+                    evt.initEvent('onRouteChangeSuccess', true, true);
+                    document.dispatchEvent(evt);
+                }
+
+            }());
+        </script>
+    <script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="/javascripts/main-dev.js" src="./step4_files/main-dev.js"></script><script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="lodash" src="./step4_files/lodash.js"></script><script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="jquery" src="./step4_files/jquery.js"></script><script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="react" src="./step4_files/react.min.js"></script><script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="i18next" src="./step4_files/index.js"></script><script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="backbone" src="./step4_files/backbone.js"></script><script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="qs" src="./step4_files/qs.js"></script><script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="jquery-touchswipe" src="./step4_files/jquery.touchSwipe.js"></script><script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="marked" src="./step4_files/marked.js"></script><script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="material-design-lite" src="./step4_files/material.js"></script><script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="moment" src="./step4_files/moment.js"></script><script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="jquery-mockjax" src="./step4_files/jquery.mockjax.js"></script><script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="socket.io-client" src="./step4_files/socket.io.js"></script><script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="bundle-react-0" src="./step4_files/react-dom.min.js"></script><script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="bootstrap" src="./step4_files/bootstrap.js"></script><script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="backbone.validation" src="./step4_files/backbone-validation.js"></script><script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="initialize" src="./step4_files/initialize.js"></script><script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="application" src="./step4_files/application.js"></script><script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="configs/Application" src="./step4_files/application(1).js"></script><script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="umd-core/src/common" src="./step4_files/common.js"></script><script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="umd-core/src/BasicBackboneApplication" src="./step4_files/BasicBackboneApplication.js"></script><script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="umd-core/src/internationalize" src="./step4_files/internationalize.js"></script><script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="umd-core/src/components/AbstractModelComponent" src="./step4_files/AbstractModelComponent.js"></script><script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="umd-core/src/validation/validation" src="./step4_files/validation.js"></script><script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="umd-core/src/validation/validators" src="./step4_files/validators.js"></script><script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="configs/AppRouter" src="./step4_files/AppRouter.js"></script><script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="configs/resources" src="./step4_files/resources.js"></script><script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="umd-core/src/eachSeries" src="./step4_files/eachSeries.js"></script><script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="umd-core/src/patch" src="./step4_files/patch.js"></script><script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="umd-core/src/BasicRouter" src="./step4_files/BasicRouter.js"></script><script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="umd-core/src/RouterEngine" src="./step4_files/RouterEngine.js"></script><script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="umd-core/src/resources" src="./step4_files/resources(1).js"></script><script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="umd-core/src/validation/resources" src="./step4_files/resources(2).js"></script><script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="umd-core/src/makeTwoWayBinbing" src="./step4_files/makeTwoWayBinbing.js"></script><script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="umd-core/src/GenericUtil" src="./step4_files/GenericUtil.js"></script><script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="umd-core/src/QueryString" src="./step4_files/QueryString.js"></script><script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="home/controllers/HomeController" src="./step4_files/HomeController.js"></script><script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="umd-core/src/ClientController" src="./step4_files/ClientController.js"></script><script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="umd-core/src/models/BackboneCollection" src="./step4_files/BackboneCollection.js"></script><script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="umd-core/src/views/ReactModelView" src="./step4_files/ReactModelView.js"></script><script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="umd-core/src/views/ReactCollectionView" src="./step4_files/ReactCollectionView.js"></script><script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="umd-core/src/components/InputText" src="./step4_files/InputText.js"></script><script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="umd-core/src/components/InputWithError" src="./step4_files/InputWithError.js"></script><script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="home/test/mock" src="./step4_files/mock.js"></script><style type="text/css">:root #content > #center > .dose > .dosesingle,
+:root #content > #right > .dose > .dosesingle
+{display:none !important;}</style><script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="home/views/home/IndexView" src="./step4_files/IndexView.js"></script><script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="home/templates/home/index" src="./step4_files/index(1).js"></script><script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="home/views/home/Step4View" src="./step4_files/Step4View.js"></script><script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="umd-core/src/components/ModelListener" src="./step4_files/ModelListener.js"></script><script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="umd-core/src/components/AutogrowTextarea" src="./step4_files/AutogrowTextarea.js"></script><script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="home/views/home/Step3View" src="./step4_files/Step3View.js"></script></head>
+    <body class="body">
+        
+            <script type="text/javascript">appConfig.build = 'web';</script>
+        
+
+        
+            <script type="text/javascript" src="./step4_files/require.js"></script>
+            <script type="text/javascript">
+                (function() {
+                    'use strict';
+
+                    var _define = window.define,
+                        _amd = depsLoader.amd,
+                        baseUrl = document.location.protocol + '//' + document.location.host + appConfig.baseUrl,
+                        stack;
+                
+                    define.amd = {jQuery: true};
+                    window.define = define;
+                    depsLoader.amd = amd;
+
+                    require([appConfig.baseUrl + '/../javascripts/main-dev.js']);
+
+                    function annotate(deps, stack, hasName) {
+                        var ref = getDefineLocation(stack),
+                            line = ref[0],
+                            col = ref[1],
+                            index = ref[2],
+                            lastIndex = ref[3];
+
+                        // 8 is the number of character from previous line end until new line trace begin
+                        // "\n     at "
+                        var trace = stack.substring(index + 8, lastIndex),
+                            filename = trace.substring(baseUrl.length);
+
+                        filename = filename.substring(0, filename.indexOf(':'));
+
+                        // skip files to not merge
+                        if ( filename === 'javascripts/main-dev.js' || ( !/(?:ClientController|ReactModelView|ReactCollectionView)\.js/.test(filename) && /(?:Controller|View)\.js$/.test(filename) ) ) {
+                            return;
+                        }
+
+                        var src = baseUrl + filename;
+
+                        optimizer[src] = {
+                            filename: filename,
+                            line: line,
+                            col: col,
+                            deps: deps,
+                            hasName: hasName
+                        };
+                    }
+
+                    function define(name, deps, callback) {
+                        switch (arguments.length) {
+                            case 1:
+                                annotate([], (new Error()).stack);
+                                break;
+                            case 2:
+                                annotate(name, (new Error()).stack);
+                                break;
+                            case 3:
+                                annotate(deps, (new Error()).stack, true);
+                                break;
+                        }
+
+                        _define.apply(this, arguments);
+                    }
+
+                    function amd(name, deps, callback, global) {
+                        if (arguments.length === 3) {
+                            annotate(name, (new Error()).stack);
+                        }
+
+                        window.define = _define;
+                        _amd.apply(this, arguments);
+                        window.define = define;
+                    }
+
+                    function getDefineLocation(stack, depth) {
+                        var col, curr, end, index, lastIndex, line, start;
+                        if (depth == null) {
+                            depth = 0;
+                        }
+                        if (depth < 0) {
+                            return;
+                        }
+
+                        //  goto the 3rd line
+                        index = stack.indexOf('\n');
+                        index = stack.indexOf('\n', index + 1);
+
+                        // get interested line
+                        while (index !== -1 && depth-- !== 0) {
+                            index = stack.indexOf('\n', index + 1);
+                        }
+
+                        // get end of interested line
+                        lastIndex = stack.indexOf('\n', index + 1);
+
+                        curr = col;
+                        if (stack.charAt(lastIndex - 1) === ')') {
+                            // define is in a named function
+                            // "- 7" to be consistent with "+ 8"
+                            index = stack.indexOf('(', index) - 7;
+                            --lastIndex;
+                        }
+
+                        start = lastIndex;
+                        end = start;
+                        while (start > index && stack[start] !== ':') {
+                            start--;
+                        }
+                        col = parseInt(stack.substring(start + 1, end));
+                        end = start--;
+                        while (start > index && stack[start] !== ':') {
+                            start--;
+                        }
+                        line = parseInt(stack.substring(start + 1, end));
+                        return [line, col, index, lastIndex];
+                    }
+                }());
+            </script>
+        
+    
+<div id="toolbar"><div class="clearfix" data-reactid=".0"><div class="pull-left" data-reactid=".0.0"><div class="languages btn-group" data-reactid=".0.0.0"><button type="button" class="btn btn-default" data-reactid=".0.0.0.$en">English</button><button type="button" class="btn btn-default" data-reactid=".0.0.0.$fr">Français</button></div></div><div class="pull-left" data-reactid=".0.1"><ul class="menu nav nav-pills" data-reactid=".0.1.0"><li data-reactid=".0.1.0.$0"><a href="http://127.0.0.1:3330/web/fr/home/home/index" data-reactid=".0.1.0.$0.0">Accueil</a></li><li data-reactid=".0.1.0.$1"><a href="http://127.0.0.1:3330/web/fr/home/home/step1" data-reactid=".0.1.0.$1.0">Étape 1</a></li><li data-reactid=".0.1.0.$2"><a href="http://127.0.0.1:3330/web/fr/home/home/step2" data-reactid=".0.1.0.$2.0">Étape 2</a></li><li data-reactid=".0.1.0.$3"><a href="http://127.0.0.1:3330/web/fr/home/home/step3" data-reactid=".0.1.0.$3.0">Étape 3</a></li><li data-reactid=".0.1.0.$4"><a href="http://127.0.0.1:3330/web/fr/home/home/step4" data-reactid=".0.1.0.$4.0">Étape 4</a></li><li data-reactid=".0.1.0.$5"><a href="http://127.0.0.1:3330/web/fr/home/home/step5" data-reactid=".0.1.0.$5.0">Étape 5</a></li><li data-reactid=".0.1.0.$6"><a href="http://127.0.0.1:3330/web/fr/chat/chat/chat" data-reactid=".0.1.0.$6.0">Socket.IO chat</a></li></ul></div></div></div>
+<div id="content"><form class="container" data-reactid=".5"><span data-reactid=".5.0"></span><div class="clearfix" data-reactid=".5.1"><span class="input col-md-6 input--has-value" data-reactid=".5.1.0"><input id="InputText_129" class="input__field" data-bind-attr="firstName" value="Solid" data-reactid=".5.1.0.0"><span class="input__bar" data-reactid=".5.1.0.2"></span><label class="input__label" for="InputText_129" data-reactid=".5.1.0.3"><span class="input__label-content" data-reactid=".5.1.0.3.0">Prénom</span></label></span><span class="input col-md-6 input--has-value" data-reactid=".5.1.1"><input id="InputText_131" class="input__field" data-bind-attr="lastName" value="SNAKE" data-reactid=".5.1.1.0"><span class="input__bar" data-reactid=".5.1.1.2"></span><label class="input__label" for="InputText_131" data-reactid=".5.1.1.3"><span class="input__label-content" data-reactid=".5.1.1.3.0">Nom</span></label></span></div><div class="clearfix" data-reactid=".5.2"><span class="input col-md-6 input--has-value" data-reactid=".5.2.0"><input id="InputText_133" class="input__field" data-bind-attr="title" value="Spy" data-reactid=".5.2.0.0"><span class="input__bar" data-reactid=".5.2.0.2"></span><label class="input__label" for="InputText_133" data-reactid=".5.2.0.3"><span class="input__label-content" data-reactid=".5.2.0.3.0">Titre</span></label></span><span class="input input--has-value col-md-6 input--invalid" data-reactid=".5.2.1"><input id="InputText_138" class="input__field" data-bind-attr="email" value="ipsum@loremcom" data-reactid=".5.2.1.0"><span class="input__bar" data-reactid=".5.2.1.2"></span><label class="input__label" for="InputText_138" data-reactid=".5.2.1.3"><span class="input__label-content" data-reactid=".5.2.1.3.0">Email</span></label><div class="error-messages" data-reactid=".5.2.1.5"><div class="error-message" data-reactid=".5.2.1.5.$0">Adresse email incorrect</div></div></span></div><div class="clearfix" data-reactid=".5.3"><span disabled="" class="input col-md-6 input--has-value" data-reactid=".5.3.0"><input id="InputText_140" class="input__field" data-bind-attr="company" value="Foxhound" data-reactid=".5.3.0.0"><span class="input__bar" data-reactid=".5.3.0.2"></span><label class="input__label" for="InputText_140" data-reactid=".5.3.0.3"><span class="input__label-content" data-reactid=".5.3.0.3.0">Entreprise (Désactivé)</span></label></span></div><div class="clearfix" data-reactid=".5.4"><span class="input col-md-6 input--has-value" data-reactid=".5.4.0"><input id="InputText_142" class="input__field" data-bind-attr="address" value="Right behind you" data-reactid=".5.4.0.0"><span class="input__bar" data-reactid=".5.4.0.2"></span><label class="input__label" for="InputText_142" data-reactid=".5.4.0.3"><span class="input__label-content" data-reactid=".5.4.0.3.0">Addresse</span></label></span></div><div class="clearfix" data-reactid=".5.5"><span class="input col-md-6" data-reactid=".5.5.0"><input id="InputText_144" class="input__field" data-bind-attr="city" data-reactid=".5.5.0.0"><span class="input__bar" data-reactid=".5.5.0.2"></span><label class="input__label" for="InputText_144" data-reactid=".5.5.0.3"><span class="input__label-content" data-reactid=".5.5.0.3.0">Ville</span></label></span><span class="input col-md-6 input--has-value" data-reactid=".5.5.1"><select id="InputText_146" class="input__field" data-reactid=".5.5.1.0"><option value="AL" data-reactid=".5.5.1.0.$0">AL</option><option value="AK" data-reactid=".5.5.1.0.$1">AK</option><option value="AZ" data-reactid=".5.5.1.0.$2">AZ</option><option value="AR" data-reactid=".5.5.1.0.$3">AR</option><option value="CA" data-reactid=".5.5.1.0.$4">CA</option><option value="CO" data-reactid=".5.5.1.0.$5">CO</option><option value="CT" data-reactid=".5.5.1.0.$6">CT</option><option value="DE" data-reactid=".5.5.1.0.$7">DE</option><option value="FL" data-reactid=".5.5.1.0.$8">FL</option><option value="GA" data-reactid=".5.5.1.0.$9">GA</option><option value="HI" data-reactid=".5.5.1.0.$10">HI</option><option value="ID" data-reactid=".5.5.1.0.$11">ID</option><option value="IL" data-reactid=".5.5.1.0.$12">IL</option><option value="IN" data-reactid=".5.5.1.0.$13">IN</option><option value="IA" data-reactid=".5.5.1.0.$14">IA</option><option value="KS" data-reactid=".5.5.1.0.$15">KS</option><option value="KY" data-reactid=".5.5.1.0.$16">KY</option><option value="LA" data-reactid=".5.5.1.0.$17">LA</option><option value="ME" data-reactid=".5.5.1.0.$18">ME</option><option value="MD" data-reactid=".5.5.1.0.$19">MD</option><option value="MA" data-reactid=".5.5.1.0.$20">MA</option><option value="MI" data-reactid=".5.5.1.0.$21">MI</option><option value="MN" data-reactid=".5.5.1.0.$22">MN</option><option value="MS" data-reactid=".5.5.1.0.$23">MS</option><option value="MO" data-reactid=".5.5.1.0.$24">MO</option><option value="MT" data-reactid=".5.5.1.0.$25">MT</option><option value="NE" data-reactid=".5.5.1.0.$26">NE</option><option value="NV" data-reactid=".5.5.1.0.$27">NV</option><option value="NH" data-reactid=".5.5.1.0.$28">NH</option><option value="NJ" data-reactid=".5.5.1.0.$29">NJ</option><option value="NM" data-reactid=".5.5.1.0.$30">NM</option><option value="NY" data-reactid=".5.5.1.0.$31">NY</option><option value="NC" data-reactid=".5.5.1.0.$32">NC</option><option value="ND" data-reactid=".5.5.1.0.$33">ND</option><option value="OH" data-reactid=".5.5.1.0.$34">OH</option><option value="OK" data-reactid=".5.5.1.0.$35">OK</option><option value="OR" data-reactid=".5.5.1.0.$36">OR</option><option value="PA" data-reactid=".5.5.1.0.$37">PA</option><option value="RI" data-reactid=".5.5.1.0.$38">RI</option><option value="SC" data-reactid=".5.5.1.0.$39">SC</option><option value="SD" data-reactid=".5.5.1.0.$40">SD</option><option value="TN" data-reactid=".5.5.1.0.$41">TN</option><option value="TX" data-reactid=".5.5.1.0.$42">TX</option><option value="UT" data-reactid=".5.5.1.0.$43">UT</option><option value="VT" data-reactid=".5.5.1.0.$44">VT</option><option value="VA" data-reactid=".5.5.1.0.$45">VA</option><option value="WA" data-reactid=".5.5.1.0.$46">WA</option><option value="WV" data-reactid=".5.5.1.0.$47">WV</option><option value="WI" data-reactid=".5.5.1.0.$48">WI</option><option value="WY" data-reactid=".5.5.1.0.$49">WY</option></select><span class="input__bar" data-reactid=".5.5.1.2"></span><label class="input__label" for="InputText_146" data-reactid=".5.5.1.3"><span class="input__label-content" data-reactid=".5.5.1.3.0">État</span></label></span><div class="clearfix" data-reactid=".5.5.2"><span class="input input--has-value col-md-6" data-reactid=".5.5.2.0"><input id="InputText_151" class="input__field" data-bind-attr="postalCode" value="54952" data-reactid=".5.5.2.0.0"><div class="char-count" data-reactid=".5.5.2.0.1"><span data-reactid=".5.5.2.0.1.0">5</span><span data-reactid=".5.5.2.0.1.1">/</span><span data-reactid=".5.5.2.0.1.2">5</span></div><span class="input__bar" data-reactid=".5.5.2.0.2"></span><label class="input__label" for="InputText_151" data-reactid=".5.5.2.0.3"><span class="input__label-content" data-reactid=".5.5.2.0.3.0">Code postal</span></label><div class="error-messages" data-reactid=".5.5.2.0.5"></div></span></div></div><div class="clearfix" data-reactid=".5.6"><span class="input input--has-value col-md-6" data-reactid=".5.6.0"><div class="textarea-container" data-reactid=".5.6.0.0"><textarea id="InputText_156" class="input__field" data-bind-attr="biography" data-reactid=".5.6.0.0.0">Born to be a soldier.
+
+Died as a soldier</textarea><div class="textarea-size" data-reactid=".5.6.0.0.1">Born to be a soldier.
+
+Died as a soldier
+</div></div><div class="char-count" data-reactid=".5.6.0.1"><span data-reactid=".5.6.0.1.0">40</span><span data-reactid=".5.6.0.1.1">/</span><span data-reactid=".5.6.0.1.2">150</span></div><span class="input__bar" data-reactid=".5.6.0.2"></span><label class="input__label" for="InputText_156" data-reactid=".5.6.0.3"><span class="input__label-content" data-reactid=".5.6.0.3.0">Biographie</span></label><div class="error-messages" data-reactid=".5.6.0.5"></div></span></div><button type="submit" class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--accent" data-reactid=".5.7" data-upgraded=",MaterialButton,MaterialRipple">save<span class="mdl-button__ripple-container"><span class="mdl-ripple"></span></span></button></form></div>
+<div id="loader" style="display: none;"><div class="loader mdl-progress mdl-js-progress mdl-progress__indeterminate is-upgraded" data-upgraded=",MaterialProgress"><div class="progressbar bar bar1" style="width: 0%;"></div><div class="bufferbar bar bar2" style="width: 100%;"></div><div class="auxbar bar bar3" style="width: 0%;"></div></div></div></body></html>

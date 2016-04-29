@@ -81,7 +81,7 @@ FileAppender.prototype.destroy = function(done) {
   if ('function' !== typeof done) {
     done = function() {};
   }
-  this.sream.end(done);
+  this.stream.end(done);
 };
 
 FileAppender.prototype.getStream = function() {

@@ -129,11 +129,12 @@ lookupTransforms = (ast, transformations, state = {level: 0, flattern: []}, astS
                     if ast.name.type is 'JSXIdentifier'
                         switch attribute
                             when 'spRepeat'
-                                if ast.value.type is 'StringLiteral'
+                                if ast.value.type is 'StringLiteral' or (ast.value.type is 'JSXExpressionContainer' and ast.value.expression.type is 'NumericLiteral')
                                     expression = currState.expression = astStack[astStack.length - 3]
                                     attributes = currState.attributes = astStack[astStack.length - 1].map (node)-> node.name.name
                                     transformations.push [attribute, expression.start, expression.end, currState, ast]
                                 else
+                                    console.log ast.value.expression
                                     throw new Error "#{attribute} attribute at #{ast.start}, #{ast.end} expects a string literal as value"
                             when 'spShow'
                                 if ast.value.type is 'JSXExpressionContainer'
@@ -206,23 +207,37 @@ lookupTransforms = (ast, transformations, state = {level: 0, flattern: []}, astS
 
 TRF_DICT =
     spRepeat: (str, options, transformations, start, end, state, node)->
-        value = node.value.value
-        ast = parse(value).program
-        if ast.body.length isnt 1 or
-        'ExpressionStatement' isnt ast.body[0].type or
-        'BinaryExpression' isnt ast.body[0].expression.type or
-        'in' isnt ast.body[0].expression.operator
-            throw new Error "invalid spRepeat value at #{node.start}, #{node.end}. expecting '(value, key) in obj' or 'element in elements'"
+        if node.value.type is 'JSXExpressionContainer' and node.value.expression.type is 'NumericLiteral'
+            value = node.value.expression.value
+            left = """
+                (function() {
+                    var arr = new Array(#{value});
+                    for (var index = 0; index < #{value}; index++) {
+                        arr[index] = ("""
 
-        toRepeat = str.substring(start, node.start) + str.substring(node.end, end)
+            right = """);
+                }
+                return arr;
+            }).call(this)"""
+        else
+            value = node.value.value
+            ast = parse(value).program
 
-        {start: _start, end: _end} = ast.body[0].expression.left
-        args = value.substring _start, _end
-        {start: _start, end: _end} = ast.body[0].expression.right
-        obj = value.substring _start, _end
+            if ast.body.length isnt 1 or
+            'ExpressionStatement' isnt ast.body[0].type
+                throw new Error "invalid spRepeat value at #{node.start}, #{node.end}. expecting an ExpressionStatement"
 
-        left = options.map + "(#{obj}, function(#{args}) {return ("
-        right = ")}.bind(this))"
+            if 'BinaryExpression' isnt ast.body[0].expression.type or
+            'in' isnt ast.body[0].expression.operator
+                throw new Error "invalid spRepeat value at #{node.start}, #{node.end}. expecting '(value, key) in obj' or 'element in elements'"
+
+            {start: _start, end: _end} = ast.body[0].expression.left
+            args = value.substring _start, _end
+            {start: _start, end: _end} = ast.body[0].expression.right
+            obj = value.substring _start, _end
+
+            left = options.map + "(#{obj}, function(#{args}) {return ("
+            right = ")}.bind(this))"
 
         if ~state.attributes.indexOf('spShow')
             left = left.substring(0, left.length - 1)
@@ -235,6 +250,7 @@ TRF_DICT =
         prefix = str.substring(0, start)
         suffix = str.substring(end)
 
+        toRepeat = str.substring(start, node.start) + str.substring(node.end, end)
         res = prefix + left + toRepeat + right + suffix
 
         # attribute has been removed
@@ -295,13 +311,13 @@ TRF_DICT =
         return strReplace 'spModel', str, replace, start, end, transformations, state
 
     mdlOpen: (str, options, transformations, start, end, state)->
-        if options.transformations?.mdl isnt true
+        if options.transformations?.mdl is false
             return str
         replace = "#{options.mdl} tagName=\"#{str.substring(start, end)}\""
         return strReplace 'mdlOpen', str, replace, start, end, transformations, state
 
     mdlClose: (str, options, transformations, start, end, state)->
-        if options.transformations?.mdl isnt true
+        if options.transformations?.mdl is false
             return str
         replace = "#{options.mdl}"
         return strReplace 'mdlClose', str, replace, start, end, transformations, state

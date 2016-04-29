@@ -1,23 +1,9 @@
 spTransform = require '../../src/spTransform'
 
-assertStrictEqual = (code, expected)->
-    assert.strictEqual spTransform(code), expected
-    assert.strictEqual spTransform(expected), expected
+assertStrictEqual = (code, expected, options)->
+    assert.strictEqual spTransform(code, options), expected
+    assert.strictEqual spTransform(expected, options), expected
     return
-
-# code = """
-# <button type="submit" className="mdl-button mdl-js-button mdl-button--raised" >
-#     {i18n.t('send')}
-# </button>
-# """
-# babylon = require('babylon')
-# parse = (str)->
-#     babylon.parse str, plugins: ['jsx', 'flow']
-
-# # console.log JSON.stringify parse(code).program.body[0], null, 4
-# console.log spTransform(code)
-
-# return
 
 describe 'jsx extension', ->
     delegateEvents = [
@@ -198,6 +184,17 @@ describe 'jsx extension', ->
             { _.map(locales, function(locale) {return (<button />)}.bind(this)) }
             { _.map(locales, function(locale) {return (<button />)}.bind(this)) }
         </div>"""
+        assertStrictEqual code, expected
+
+        code = """<button spRepeat={4} type="button" className="btn btn-default"/>"""
+
+        expected = """(function() {
+            var arr = new Array(4);
+            for (var index = 0; index < 4; index++) {
+                arr[index] = (<button  type="button" className="btn btn-default"/>);
+            }
+            return arr;
+        }).call(this)"""
         assertStrictEqual code, expected
 
         return

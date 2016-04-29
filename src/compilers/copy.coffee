@@ -10,6 +10,8 @@ _ = require 'lodash'
 builder = require '../builder'
 
 # 4 parallel copies at most
+# a way to control writting bottle neck on a usb key
+# which causes editor/explorer to freeze
 copySem = semLib.semCreate Math.pow(2, 2), true
 
 # change event is triggered event if the file is not completely written
@@ -31,12 +33,16 @@ debounce = (plugin, src, dst, next)->
 
             mkdirp sysPath.dirname(dst), (err)->
                 return done(err) if err
-                _src = sysPath.relative plugin.paths.APPLICATION_PATH, src
-                _dst = sysPath.relative plugin.paths.APPLICATION_PATH, dst
-                logger.debug "\n    #{_src}\n    #{_dst}"
+
+                if logger.isDebugEnabled()
+                    _src = sysPath.relative plugin.paths.APPLICATION_PATH, src
+                    _dst = sysPath.relative plugin.paths.APPLICATION_PATH, dst
+                    logger.debug "\n    #{_src}\n    #{_dst}"
+
                 readable = fs.createReadStream src
                 writable = fs.createWriteStream dst
                 readable.pipe writable
+
                 writable.on 'error', done
                 writable.on 'finish', done
                 return
