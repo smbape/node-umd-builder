@@ -10,9 +10,9 @@ var fs = require('fs'),
     log4js = require('./log4js'),
     logger = log4js.getLogger('umd-builder');
 
-var cli = require('brunch/src/cli');
+var cli = require('brunch/lib/cli'),
+    program = require('brunch/node_modules/commander');
 
-var program = require('brunch/node_modules/commander');
 program.commands.forEach(function(command) {
     if (command._name === 'build' || command._name === 'watch') {
         command.option('-c, --clean', 'empty public directory before starting');
@@ -22,7 +22,7 @@ program.commands.forEach(function(command) {
 
 var command = process.argv[2],
     cleanOpt, forceOpt;
-if (/^w|watch|b|build$/.test(command)) {
+if (/^w|watch|b|build|bb|bbp|bw|bws$/.test(command)) {
     process.argv.slice(2).forEach(function(arg) {
         if (arg === '--clean' || (/^-\w/.test(arg) && ~arg.indexOf('c'))) {
             cleanOpt = true;
@@ -66,12 +66,12 @@ function clean(next) {
         }
     }, function(err, result) {
         if (result && /^yes$/i.test(result.answer)) {
-            logger.warn('cleaning folder '+ quoteArg(PUBLIC_PATH));
+            logger.warn('cleaning folder ' + quoteArg(PUBLIC_PATH));
 
             remove(PUBLIC_PATH, {
                 empty: true
             }, function(err) {
-                logger.warn('cleaned '+ quoteArg(PUBLIC_PATH));
+                logger.warn('cleaned ' + quoteArg(PUBLIC_PATH));
                 if (err && err.code !== 'ENOENT') {
                     logger.error(err);
                 }

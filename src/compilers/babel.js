@@ -60,6 +60,7 @@ function BabelCompiler(config) {
     this.pretransform = Array.isArray(options.pretransform) ? options.pretransform : null;
 }
 
+BabelCompiler.brunchPluginName = 'babel-brunch';
 BabelCompiler.prototype.brunchPlugin = true;
 BabelCompiler.prototype.type = 'javascript';
 BabelCompiler.prototype.completer = true;

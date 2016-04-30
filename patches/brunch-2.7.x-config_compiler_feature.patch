@@ -1,0 +1,26 @@
+From d55b2a301d1bac728c9df59fda75d8688fdcd068 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?St=C3=A9phane=20MBAPE?= <rose.martin-8og3raxw@yopmail.com>
+Date: Sat, 30 Apr 2016 11:10:23 +0200
+Subject: [PATCH] add config compiler feature
+
+---
+ lib/plugins.js | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/lib/plugins.js b/lib/plugins.js
+index a0cce70..e9165df 100644
+--- a/lib/plugins.js
++++ b/lib/plugins.js
+@@ -136,7 +136,8 @@ exports.init = (config, onCompile) => {
+   logger.notificationsTitle = config.notificationsTitle;
+   const black = config.plugins.off;
+   const white = config.plugins.only;
+-  const packages = loadPackages('.').filter(arg => {
++  let packages = Array.isArray(config.compilers) ? config.compilers : [];
++  packages = packages.concat(loadPackages('.')).filter(arg => {
+     const brunchPluginName = arg.brunchPluginName;
+     if (black.length && black.indexOf(brunchPluginName) >= 0) {
+       return false;
+-- 
+2.6.2.windows.1
+

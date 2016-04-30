@@ -21,3 +21,5 @@ module.exports = class HandlebarsCompiler
             next e, {data, path, map}
 
         return
+
+HandlebarsCompiler.brunchPluginName = 'handlebars-brunch'

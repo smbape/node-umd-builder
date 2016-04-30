@@ -88,3 +88,5 @@ module.exports = class MarkdownCompiler
             next null, {data, params, map}
 
         return
+
+MarkdownCompiler.brunchPluginName = 'markdown-brunch'

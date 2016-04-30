@@ -10,7 +10,6 @@ if (!global.log4js) {
     try {
         config = require(sysPath.join(process.cwd(), 'build-log4js'));
     } catch (err) {
-        console.error(err.stack);
         config = {
             "appenders": [
                 {

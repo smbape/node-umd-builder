@@ -120,3 +120,5 @@ module.exports = class JsHinter
         next msg
 
         return
+
+JsHinter.brunchPluginName = 'jshinter-brunch'

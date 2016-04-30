@@ -1,0 +1,101 @@
+From ad01f94e45789bdcfe3fee55dc4877c26acc092a Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?St=C3=A9phane=20MBAPE?= <rose.martin-8og3raxw@yopmail.com>
+Date: Sat, 30 Apr 2016 10:58:17 +0200
+Subject: [PATCH] add anymatch feature
+
+---
+ lib/watch.js | 45 ++++++++++++++++++++++++++++++++++++++++++---
+ package.json |  3 ++-
+ 2 files changed, 44 insertions(+), 4 deletions(-)
+
+diff --git a/lib/watch.js b/lib/watch.js
+index 5734f10..b9702b5 100644
+--- a/lib/watch.js
++++ b/lib/watch.js
+@@ -11,6 +11,8 @@ const promisify = require('micro-promisify');
+ const fslstat = promisify(require('fs').lstat);
+ const fsaccess = promisify(require('fs').access);
+ const cpus = require('os').cpus();
++const anymatch = require('anymatch');
++const explore = require('fs-explorer').explore;
+ 
+ const workers = require('./workers'); // close, init
+ const fsUtils = require('./fs_utils');
+@@ -20,12 +22,49 @@ const helpers = require('./helpers'); // asyncFilter, flatten, generateCompilati
+ const checkHmrAutoReload = require('./hmr').checkAutoReload;
+ 
+ const fsExists = (path) => {
+-  return fsaccess(path).then(() => true, () => false);
++  // http://www.regular-expressions.info/characters.html#special
++  if (/[\^\$\|\?\*\+\(\)\[\]\{\}]/.test(path)) {
++    return new Promise(function(resolve, reject) {
++      // matchers are relative to component directory
++      // path = <basedir>/<component>/relative
++      // componentDir = <basedir>/<component>
++      const componentDir = path.replace(/([^\/\\]+[\/\\][^\/\\]+)[\/\\].*/g, '$1');
++
++      const matcher = anymatch([path]);
++      const files = [];
++      explore(componentDir, function(path, stats, next) {
++        // replace(/[\\]/g, '/') to avoid path sep OS differencies
++        if (matcher(path.replace(/\\/g, '/'))) {
++          files.push(path);
++        }
++        next();
++      }, function(err) {
++        if (err && err.code === 'ENOENT') {
++          err = null;
++        }
++        if (err) {
++          reject(err);
++        } else {
++          resolve(files);
++        }
++      });
++    });
++  } else {
++    return fsaccess(path).then(() => path, () => false);
++  }
+ };
+ 
+ const filterNonExistentPaths = (paths) => {
+-  return Promise.all(paths.map(fsExists)).then(values => {
+-    const watchedFiles = paths.filter((path, index) => values[index]);
++  return Promise.all(paths.map(fsExists)).then(files => {
++    const watchedFiles = [];
++    for (let i = 0, len = files.length; i < len; i++) {
++      let file = files[i];
++      if (Array.isArray(file)) {
++        watchedFiles.push.apply(watchedFiles, file);
++      } else if (file) {
++        watchedFiles.push(file);
++      }
++    }
+     return watchedFiles;
+   });
+ };
+diff --git a/package.json b/package.json
+index 8f5051b..960e8f3 100644
+--- a/package.json
++++ b/package.json
+@@ -57,8 +57,8 @@
+     "deep-assign": "^2.0.0",
+     "deppack": "~0.4.0",
+     "fcache": "~0.1.0",
++    "fs-explorer": "^1.0.1",
+     "init-skeleton": "~0.9.0",
+-    "skemata": "~0.1.0",
+     "loggy": "~0.3.3",
+     "micro-promisify": "~0.1.0",
+     "mkdirp": "~0.5.0",
+@@ -66,6 +66,7 @@
+     "read-components": "~0.7.0",
+     "serve-brunch": "~0.1.0",
+     "since-app-start": "~0.1.0",
++    "skemata": "~0.1.0",
+     "source-map": "~0.5.0"
+   },
+   "devDependencies": {
+-- 
+2.6.2.windows.1
+

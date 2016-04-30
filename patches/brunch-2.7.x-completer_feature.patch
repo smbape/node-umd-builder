@@ -1,0 +1,78 @@
+From 51ac2cdbecd825a137206d9670bcd80b1a8be712 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?St=C3=A9phane=20MBAPE?= <rose.martin-8og3raxw@yopmail.com>
+Date: Sat, 30 Apr 2016 11:51:21 +0200
+Subject: [PATCH] add completer feature
+
+---
+ lib/plugins.js | 39 +++++++++++++++++++++++++++++++++++++++
+ lib/watch.js   |  6 ++++--
+ 2 files changed, 43 insertions(+), 2 deletions(-)
+
+diff --git a/lib/plugins.js b/lib/plugins.js
+index a0cce70..935bce0 100644
+--- a/lib/plugins.js
++++ b/lib/plugins.js
+@@ -273,3 +273,42 @@ const _getPattern = plugin => {
+ exports.isPluginFor = path => {
+   return plugin => _getPattern(plugin).test(path);
+ };
++
++exports.isCompleterFor = (path, compilers) => {
++  if (!Array.isArray(compilers)) {
++    compilers = [];
++  }
++
++  const compiler = compilers[0];
++  var type;
++
++  if (compiler) {
++    type = compiler.type;
++    if ('template' === type) {
++      type = 'javascript';
++    }
++  } else {
++    switch (sysPath.extname(path)) {
++      case '.js':
++        type = 'javascript';
++        break;
++      case '.css':
++        type = 'stylesheet';
++        break;
++    }
++  }
++  if (type) {
++    return plugin => {
++      if (!plugin.completer) {
++        return false;
++      }
++      if (plugin.typePattern) {
++        return plugin.typePattern.test(type);
++      } else {
++        return plugin.type === type;
++      }
++    };
++  } else {
++    return plugin => plugin.completer && plugin.typeUndefined;
++  }
++};
+diff --git a/lib/watch.js b/lib/watch.js
+index 5734f10..e7be0af 100644
+--- a/lib/watch.js
++++ b/lib/watch.js
+@@ -261,9 +261,11 @@ class BrunchWatcher {
+    * Returns nothing.
+    */
+   changeFileList(path, isHelper) {
+-    const compiler = this.plugins.compilers.filter(plugins.isPluginFor(path));
++    const currentCompilers = this.plugins.compilers.filter(plugins.isPluginFor(path));
++    const currentCompleters = this.plugins.compilers.filter(plugins.isCompleterFor(path, currentCompilers));
++    currentCompilers.push.apply(currentCompilers, currentCompleters);
+     const currentLinters = this.plugins.linters.filter(plugins.isPluginFor(path));
+-    this.fileList.emit('change', path, compiler, currentLinters, isHelper);
++    this.fileList.emit('change', path, currentCompilers, currentLinters, isHelper);
+   }
+ 
+   compile(startTime, watcherReady) {
+-- 
+2.6.2.windows.1
+

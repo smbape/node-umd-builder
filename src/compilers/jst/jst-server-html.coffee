@@ -38,3 +38,5 @@ module.exports = class JstCompiler
             next e, params
 
         return
+
+JstCompiler.brunchPluginName = 'jst-server-html-brunch'

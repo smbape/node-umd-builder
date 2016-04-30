@@ -22,3 +22,5 @@ module.exports = class HtmlCompiler
 
         next null, {data, path, map}
         return
+
+HtmlCompiler.brunchPluginName = 'html-brunch'

@@ -75,3 +75,5 @@ module.exports = class CopyCompiler
             return
 
         return
+
+CopyCompiler.brunchPluginName = 'copy-brunch'

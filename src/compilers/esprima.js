@@ -5,6 +5,7 @@ function EsprimaCompiler(config) {
     this.validate = config && config.hasOwnProperty('validate') ? !!config.validate : true;
 }
 
+EsprimaCompiler.brunchPluginName = 'esprima-brunch';
 EsprimaCompiler.prototype.brunchPlugin = true;
 EsprimaCompiler.prototype.type = 'javascript';
 EsprimaCompiler.prototype.completer = true;

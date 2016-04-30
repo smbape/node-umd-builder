@@ -512,10 +512,10 @@ describe 'jsx extension', ->
             {i18n.t('send')}
         </Mdl>
         """
-        assertStrictEqual code, expected
+        assertStrictEqual code, expected, {mdl: 'Mdl'}
 
         code = """<span className="mdl-button mdl-js-button mdl-button--raised" />"""
         expected = """<Mdl tagName="span" className="mdl-button mdl-js-button mdl-button--raised" />"""
-        assertStrictEqual code, expected
+        assertStrictEqual code, expected, {mdl: 'Mdl'}
 
     return

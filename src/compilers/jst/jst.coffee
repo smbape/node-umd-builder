@@ -48,3 +48,5 @@ module.exports = class JstCompiler
             next e, {data, path, map}
 
         return
+
+JstCompiler.brunchPluginName = 'jst-brunch'

@@ -33,6 +33,7 @@ describe('babel compiler', function() {
   });
 
   it('should compile and produce valid result', function(done) {
+    this.timeout(20000);
     var content = 'var c = {};\nvar {a, b} = c;';
     var expected = 'var a = c.a;\nvar b = c.b;';
 

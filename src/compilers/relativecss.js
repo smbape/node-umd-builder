@@ -20,6 +20,7 @@ function RelativeCSS(config) {
     this.target = sysPath.join(this.root, 'stylesheets', 'app.css');
 }
 
+RelativeCSS.brunchPluginName = 'relative-css-brunch';
 RelativeCSS.prototype.brunchPlugin = true;
 RelativeCSS.prototype.type = 'stylesheet';
 RelativeCSS.prototype.completer = true;

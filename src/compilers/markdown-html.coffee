@@ -55,3 +55,5 @@ module.exports = class MarkdownCompiler
             return
 
         return
+
+MarkdownCompiler.brunchPluginName = 'markdown-brunch'

@@ -128,8 +128,11 @@ exports.logger = logger
 exports.matcher = matcher
 exports.isVendor = matcher ['bower_components/', 'components/', 'vendor/']
 
-# https://github.com/brunch/brunch/blob/1.8.5/docs/config.md
+# https://github.com/brunch/brunch/blob/2.7.4/docs/config.md
 config = exports.config =
+    # npm.enabled = true makes any folder named 'node_modules' in app to be treated as an npm package
+    # .i.e expecting a package.json
+    npm: enabled: false
 
     # TODO : take from compilers
     # in brunch 1.8.x, compilers are not publicly available

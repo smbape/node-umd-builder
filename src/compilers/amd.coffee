@@ -224,3 +224,5 @@ module.exports = class AmdCompiler
         finishCompilation()
 
         return
+
+AmdCompiler.brunchPluginName = 'amd-brunch'

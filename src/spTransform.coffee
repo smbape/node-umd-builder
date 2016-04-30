@@ -311,16 +311,18 @@ TRF_DICT =
         return strReplace 'spModel', str, replace, start, end, transformations, state
 
     mdlOpen: (str, options, transformations, start, end, state)->
-        if options.transformations?.mdl is false
-            return str
-        replace = "#{options.mdl} tagName=\"#{str.substring(start, end)}\""
-        return strReplace 'mdlOpen', str, replace, start, end, transformations, state
+        if options.mdl
+            replace = "#{options.mdl} tagName=\"#{str.substring(start, end)}\""
+            return strReplace 'mdlOpen', str, replace, start, end, transformations, state
+
+        return str
 
     mdlClose: (str, options, transformations, start, end, state)->
-        if options.transformations?.mdl is false
-            return str
-        replace = "#{options.mdl}"
-        return strReplace 'mdlClose', str, replace, start, end, transformations, state
+        if options.mdl
+            replace = "#{options.mdl}"
+            return strReplace 'mdlClose', str, replace, start, end, transformations, state
+
+        return str
 
 do ->
     delegateEvents = [
@@ -398,7 +400,7 @@ parse = (str, options)->
 transform = (str, options)->
     options = _.extend {
         map: '_.map',
-        mdl: 'Mdl'
+        # mdl: 'Mdl'
     }, options
 
     ast = parse str, options

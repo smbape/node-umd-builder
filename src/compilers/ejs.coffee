@@ -53,3 +53,5 @@ module.exports = class EjsCompiler
             next e, {data, path, map}
 
         return
+
+EjsCompiler.brunchPluginName = 'ejs-brunch'

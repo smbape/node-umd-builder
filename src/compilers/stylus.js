@@ -35,6 +35,7 @@ function StylusCompiler(cfg) {
     });
 }
 
+StylusCompiler.brunchPluginName = 'stylus-brunch';
 StylusCompiler.prototype.brunchPlugin = true;
 StylusCompiler.prototype.type = 'stylesheet';
 StylusCompiler.prototype.extension = 'styl';
