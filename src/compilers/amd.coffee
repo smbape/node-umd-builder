@@ -31,7 +31,10 @@ umdWrapper = (data, options, modulePath)->
 
         if (typeof process === 'object' && typeof process.platform !== 'undefined') {
             // NodeJs
-            module.exports = depsLoader.common.call(this, require, 'node', deps, factory);
+            module.exports = depsLoader.common(require, 'node', deps, factory, global);
+        } else if (typeof exports !== 'undefined') {
+            // CommonJS
+            module.exports = depsLoader.common(require, 'common', deps, factory, global);
         } else if (typeof define === 'function' && define.amd) {
             // AMD
             depsLoader.amd(deps, factory, global);
@@ -149,8 +152,6 @@ module.exports = class AmdCompiler
             @optimizer = new UglifyJSOptimizer config
 
         @config = _.clone config
-        @amdDestination = config.modules.amdDestination
-
         @sourceMaps = !!config.sourceMaps
         @amdDestination = config.modules.amdDestination
         @nameCleaner = config.modules.nameCleaner

@@ -1,23 +1,21 @@
-// jshint node: true
-
 'use strict';
 
-var log4js = global.log4js || (global.log4js = require('log4js'));
-var logger = log4js.getLogger('relative-css');
-
-var CleanCSS = require('clean-css');
-var sysPath = require('path');
-var util = require('util');
+var log4js = global.log4js || (global.log4js = require('log4js')),
+    logger = log4js.getLogger('relative-css'),
+    CleanCSS = require('clean-css'),
+    sysPath = require('path'),
+    util = require('util'),
+    builder = require('../builder'),
+    writeData = require('../writeData');
 
 function RelativeCSS(config) {
-    if (config == null) config = {};
+    if (config == null) {
+        config = {};
+    }
     this.sourceMap = !!config.sourceMaps;
     this.amdDestination = config.modules.amdDestination;
-    // this.root = sysPath.resolve(__dirname, '..', '..', config.paths.root);
     this.root = config.paths.root;
-
-    // TODO : find an unabiguous way to get it from config if possible
-    this.target = sysPath.join(this.root, 'stylesheets', 'app.css');
+    this.joinTo = config.files.stylesheets.joinTo;
 }
 
 RelativeCSS.brunchPluginName = 'relative-css-brunch';
@@ -26,40 +24,64 @@ RelativeCSS.prototype.type = 'stylesheet';
 RelativeCSS.prototype.completer = true;
 
 RelativeCSS.prototype.compile = function(params, callback) {
-    var error, minified, result, options;
 
     var data = params.data,
         path = params.path,
         map = params.map,
         destination = sysPath.join(this.root, this.amdDestination(path, true)),
-        source = sysPath.relative(sysPath.dirname(this.target), destination).replace(/[\\]/g, '/');
+        source = sysPath.relative(sysPath.dirname(this.target), destination).replace(/[\\]/g, '/'),
+        root = this.root,
+        sourceMap = map || this.sourceMap,
+        target, matcher;
 
-    options = {
-        // root: this.root,
-        target: this.target,
-        relativeTo: sysPath.dirname(destination),
-        sourceMap: map || this.sourceMap
-    };
+    for (var file in this.joinTo) {
+        matcher = this.joinTo[file];
+        if (matcher.test(path)) {
+            target = file;
+            break;
+        }
+    }
 
-    try {
-        if (map) {
-            logger.info('map', destination);
+    if (!target) {
+        return callback(null, params);
+    }
+
+    this.paths = this.paths || builder.getConfig().paths;
+    writeData(data, sysPath.join(this.paths.PUBLIC_PATH, this.amdDestination(path) + '.css'), function(err) {
+        if (err) {
+            return callback(err, params);
         }
 
-        // TODO : fix source map
-        // minified = {
-        //     destination: {
-        //         source: source,
-        //         styles: data,
-        //         sourceMap: map,
-        //         rebase: false
-        //     }
-        // };
-        // minified = new CleanCSS(options).minify(minified);
+        var minified, result, options;
 
-        minified = new CleanCSS(options).minify(data);
+        options = {
+            target: sysPath.join(root, target).replace(/[\/\\]/g, sysPath.sep),
+            relativeTo: sysPath.dirname(destination),
+            sourceMap: sourceMap
+        };
+
+        try {
+            // TODO : fix source map
+            // if (map) {
+            //     logger.info('map', destination);
+            // }
+            // minified = {
+            //     destination: {
+            //         source: source,
+            //         styles: data,
+            //         sourceMap: map,
+            //         rebase: false
+            //     }
+            // };
+            // minified = new CleanCSS(options).minify(minified);
+
+            minified = new CleanCSS(options).minify(data);
+        } catch (err) {
+            return callback(err, params);
+        }
+
         if (minified.errors.length > 0) {
-            error = minified.errors;
+            err = minified.errors;
         } else {
             // if (minified.sourceMap) {
             //     map = minified.sourceMap.toJSON();
@@ -72,14 +94,9 @@ RelativeCSS.prototype.compile = function(params, callback) {
                 map: map
             };
         }
-    } catch (_error) {
-        error = "CSS minify failed on " + path + ": " + _error;
-    } finally {
-        if (error) {
-            logger.error(path, error);
-        }
-        callback(error, result || params);
-    }
+
+        return callback(err, result || params);
+    });
 };
 
 module.exports = RelativeCSS;
