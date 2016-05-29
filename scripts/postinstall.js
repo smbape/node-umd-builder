@@ -109,10 +109,11 @@ function install(tasks, config, done) {
     }
 
     var brunchPatches = [
-            'brunch-2.7.x-anymatch_feature',
-            'brunch-2.7.x-completer_feature',
-            'brunch-2.7.x-config_compiler_feature',
-            'brunch-2.7.x-init_feature'
+            'brunch-2.8.x-anymatch_feature',
+            'brunch-2.8.x-completer_feature',
+            'brunch-2.8.x-config_compiler_feature',
+            'brunch-2.8.x-init_feature',
+            'brunch-2.8.x-fix_ready_event_emitted_before_read_done'
         ],
         filePatches = [
             ['node_modules/log4js/lib/log4js.js', 'log4js-v0.6.x-shutdown_fix.patch'],
@@ -125,7 +126,7 @@ function install(tasks, config, done) {
         patchFile;
 
     push.apply(tasks, [
-        ['git checkout tags/2.7.4', {
+        ['git checkout tags/2.8.0', {
             cwd: projectBrunch
         }],
         ['git checkout -b "' + new_branch + '"', {
