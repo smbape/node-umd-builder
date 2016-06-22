@@ -129,7 +129,7 @@ function _parse(str, tokenizer) {
     while (state !== STATES.stop && (matcher = tokenizer.exec(str))) {
         lastIndex = tokenizer.lastIndex;
         index = lastIndex - matcher[0].length;
-        processMactch.apply(null, matcher);
+        processMactch.apply(str, matcher);
     }
 
     if (state === STATES.stop) {

@@ -196,8 +196,8 @@ module.exports = class AmdCompiler
                 umdData = umdWrapper data, self.options, modulePath
                 comData = comWrapper data, self.options
 
-        done = ->
-            next null, {data: comData, path}
+        done = (err)->
+            next err, {data: comData, path}
             return
 
         dst = sysPath.join self.paths.PUBLIC_PATH, self.amdDestination(path) + '.js'
@@ -205,7 +205,8 @@ module.exports = class AmdCompiler
         finishCompilation = ->
             if self.optimizer
                 self.optimizer.optimize {data: umdData, path}, (err, res)->
-                    return logger.error err if err
+                    # return logger.error err if err
+                    return done(err) if err
                     {data: optimized, path, map} = res
                     writeData optimized || umdData, dst, done
                     return

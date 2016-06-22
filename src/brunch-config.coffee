@@ -10,7 +10,7 @@ hasOwn = Object::hasOwnProperty
 cache = {}
 
 # Light glob to regexp
-processSpecial = do ->
+globMatcher = do ->
     sep = '[\\/\\\\]' # separation
     nsep = '[^\\/\\\\]' # not separation
     mnsep = nsep + '*' # multiple not separation
@@ -57,7 +57,8 @@ processSpecial = do ->
             star
         ].join('|') + ')'
 
-        # 8 # http://www.regular-expressions.info/characters.html#special
+        # 8 escape special meaning
+        # http://www.regular-expressions.info/characters.html#special
         '([' + '\\/^$.|?*+()[]{}'.split('').join('\\') + '])'
 
     ].join('|') + ')', 'g'
@@ -72,6 +73,11 @@ processSpecial = do ->
         '\\': sep
 
     (str)->
+        if Array.isArray str
+            str = str.join('|')
+        else if 'string' isnt typeof str
+            return ''
+
         str.replace specialPattern, (match)->
             if arguments[1] or arguments[5]
                 # everything
@@ -97,32 +103,23 @@ processSpecial = do ->
                 # mnsep
                 return mnsep
 
+            # escape special meaning
             map[match] or '\\' + match
 
 matcher = (include, exclude) ->
-
-    if Array.isArray include
-        include = processSpecial include.join('|')
-    else if 'string' is typeof include
-        include = processSpecial include
-    else
-        include = ''
-
-    if Array.isArray exclude
-        exclude = processSpecial exclude.join('|')
-    else if 'string' is typeof exclude
-        exclude = processSpecial exclude
-    else
-        exclude = ''
+    include = globMatcher include
+    exclude = globMatcher exclude
 
     if include.length is 0 and exclude.length is 0
-        /(?!^)^/ # never matches, similar to true === false
-    else if exclude.length is 0
-        new RegExp '^(?:' + include + ')'
-    else if include.length is 0
-        new RegExp '^(?!' + exclude + ')'
-    else
-        new RegExp '^(?!' + exclude + ')(?:' + include + ')'
+        return /(?!^)^/ # never matches, similar to true === false
+
+    if exclude.length is 0
+        return new RegExp '^(?:' + include + ')'
+
+    if include.length is 0
+        return new RegExp '^(?!' + exclude + ')'
+
+    return new RegExp '^(?!' + exclude + ')(?:' + include + ')'
 
 exports.logger = logger
 exports.matcher = matcher

@@ -63,6 +63,7 @@
     "babel-plugin-transform-node-env-inline": "^6.5.0",
     "chai": "^3.4.1",
     "mocha": "^2.3.4",
-    "qunitjs": "^1.21.0"
+    "qunitjs": "^1.21.0",
+    "rimraf": "^2.5.2"
   }
 }
