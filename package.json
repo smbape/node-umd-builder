@@ -51,6 +51,7 @@
     "progeny": "^0.5.2",
     "prompt": "^1.0.0",
     "requirejs": "^2.1.22",
+    "rimraf": "^2.5.2",
     "sem-lib": "^1.0.0",
     "strip-ansi": "^3.0.1",
     "stylus": "^0.53.0",
@@ -63,7 +64,6 @@
     "babel-plugin-transform-node-env-inline": "^6.5.0",
     "chai": "^3.4.1",
     "mocha": "^2.3.4",
-    "qunitjs": "^1.21.0",
-    "rimraf": "^2.5.2"
+    "qunitjs": "^1.21.0"
   }
 }
