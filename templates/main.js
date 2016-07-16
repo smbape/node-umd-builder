@@ -136,33 +136,54 @@ switch(root.type) {
         }<%--
 
     --%><% } else if (isUnit) { %>
-        requirejs.config(config);
 
-        var deps = config.deps;
-        delete config.deps;
-        require(['umd-core/src/depsLoader', 'umd-core/src/path-browserify'], function(depsLoader, pathBrowserify) {
-            window.depsLoader = depsLoader;
-            window.pathBrowserify = pathBrowserify;
+    var groups = config.groups;
+    delete config.groups;
 
-            var allTestFiles = [];
-            var TEST_REGEXP = /-test\.js$/;
+    requirejs.config(config);
 
-            // add test files
-            Object.keys(window.__karma__.files).forEach(function(file) {
-                if (TEST_REGEXP.test(file)) {
-                    deps.push(pathToModule(file));
-                }
+    if (groups) {
+        var name, index, deps, group;
+        for (name in groups) {
+            deps = groups[name];
+            group = name + '-group';
+            define(group, deps, function(main) {
+                return main;
             });
 
-            // We have to kickoff testing framework,
-            // after RequireJS is done with loading all the files.
-            require(deps, window.__karma__.start);
-
-            // Normalize a path to RequireJS module name.
-            function pathToModule(path) {
-                return pathBrowserify.relative(config.baseUrl, path).replace(/\.js$/, '');
+            index = config.deps.indexOf(name);
+            if (index !== -1) {
+                config.deps[index] = group;
             }
-        });<%--
+        }
+    }
+
+    var deps = config.deps;
+    delete config.deps;
+
+    require(['umd-core/src/depsLoader', 'umd-core/src/path-browserify'], function(depsLoader, pathBrowserify) {
+        window.depsLoader = depsLoader;
+        window.pathBrowserify = pathBrowserify;
+
+        var allTestFiles = [];
+        var TEST_REGEXP = /-test\.js$/;
+
+        // add test files
+        Object.keys(window.__karma__.files).forEach(function(file) {
+            if (TEST_REGEXP.test(file)) {
+                deps.push(pathToModule(file));
+            }
+        });
+
+        // We have to kickoff testing framework,
+        // after RequireJS is done with loading all the files.
+        require(deps, window.__karma__.start);
+
+        // Normalize a path to RequireJS module name.
+        function pathToModule(path) {
+            return pathBrowserify.relative(config.baseUrl, path).replace(/\.js$/, '');
+        }
+    });<%--
 
     --%><% } else if (isMain) { %>
         requirejs.config(config);
