@@ -6,6 +6,7 @@
  * Modified version of read-components to track custom properties
  */
 
+var hasProp = {}.hasOwnProperty;
 var removeComments = require('./remove-comments');
 
 var sysPath = require('path');
@@ -35,8 +36,6 @@ Builder.prototype.alias = function(a, b) {
     return 'require.alias("' + name + '/' + b + '", "' + a + '");';
 };
 
-var jsonProps = ['main', 'scripts', 'styles'];
-
 function getDir(root, type, callback) {
     if (type === 'bower') {
         var defaultBowerDir = 'bower_components';
@@ -62,12 +61,23 @@ function getDir(root, type, callback) {
     }
 }
 
-// Return unique list items.
-function unique(list) {
-    return Object.keys(list.reduce(function(obj, _) {
-        if (!obj[_]) obj[_] = true;
-        return obj;
-    }, {}));
+/**
+ * http://www.shamasis.net/2009/09/fast-algorithm-to-find-unique-items-in-javascript-array/
+ */
+function unique(arr) {
+    var o = {},
+        l = arr.length,
+        r = [],
+        i;
+
+    for (i = 0; i < l; i += 1) {
+        o[arr[i]] = arr[i];
+    }
+
+    for (i in o) {
+        r.push(o[i]);
+    }
+    return r;
 }
 
 function sanitizeRepo(repo) {
@@ -108,22 +118,28 @@ function getJsonPath(path, type) {
     return sysPath.resolve(sysPath.join(path, jsonPaths[type]));
 }
 
-// Coerce data.main, data.scripts and data.styles to Array.
-function standardizePackage(data) {
-    if (data.main && !Array.isArray(data.main)) data.main = [data.main];
-    jsonProps.forEach(function(_) {
-        if (!data[_]) data[_] = [];
-    });
-    return data;
-}
-
 var getPackageFiles = exports.getPackageFiles = function(pkg) {
-    var list = [];
-    jsonProps.forEach(function(property) {
-        if (Array.isArray(pkg[property])) {
-            list.push.apply(list, pkg[property]);
+    var list = [],
+        prop;
+    ['main', 'scripts', 'styles'].forEach(function(prop) {
+        if (pkg[prop]) {
+            if (Array.isArray(pkg[prop])) {
+                list.push.apply(list, pkg[prop]);
+            } else {
+                list.push(pkg[prop]);
+                pkg[prop] = [pkg[prop]];
+            }
+        } else {
+            pkg[prop] = [];
         }
     });
+
+    if (pkg.map && 'object' === typeof pkg.map) {
+        list.push.apply(list, Object.keys(pkg.map));
+    } else {
+        pkg.map = {};
+    }
+
     return unique(list);
 };
 
@@ -134,38 +150,40 @@ function processPackage(type, pkg, callback) {
     var dotpath = getJsonPath(path, 'dotbower');
 
     function _read(actualPath) {
-        readJson(actualPath, type, function(error, json) {
+        readJson(actualPath, type, function(error, pkg) {
 
             if (error) return callback(error);
             if (overrides) {
                 Object.keys(overrides).forEach(function(key) {
-                    json[key] = overrides[key];
+                    pkg[key] = overrides[key];
                 });
             }
 
-            if (type === 'bower' && !json.main) {
+            if (type === 'bower' && !pkg.main) {
                 return callback(new Error('Component JSON file "' + actualPath + '" must have `main` property. See https://github.com/paulmillr/read-components#README'));
             }
-
-            var pkg = standardizePackage(json);
-
 
             var files = getPackageFiles(pkg).map(function(relativePath) {
                 return sysPath.join(path, relativePath);
             });
 
-            callback(null, {
-                name: pkg.name,
-                version: pkg.version,
-                type: pkg.type,
-                umd: pkg.umd,
-                exports: pkg.exports,
-                ignore: pkg.ignore,
-                paths: pkg.paths,
-                repo: sysPath.basename(path),
-                files: files,
-                dependencies: pkg.dependencies || {}
-            });
+            var obj = {
+                    files: files,
+                    repo: sysPath.basename(path),
+                    dependencies: pkg.dependencies || {},
+                    package: pkg
+                },
+                properties = ['name', 'version', 'type', 'umd', 'exports', 'ignore', 'paths', 'map'],
+                prop, i, len;
+
+            for (i = 0, len = properties.length; i < len; i++) {
+                prop = properties[i];
+                if (hasProp.call(pkg, prop)) {
+                    obj[prop] = pkg[prop];
+                }
+            }
+
+            callback(null, obj);
         });
     }
     fs.exists(dotpath, function(isStableBower) {

@@ -101,6 +101,7 @@
             "curly": false, // true: Require {} for every new block or scope
             "newcap": false, // true: Require capitalization of all constructor functions e.g. `new F()`
             "boss": true, // true: Tolerate assignments where comparisons would be expected
+            "immed": false, // true: Require immediate invocations to be wrapped in parens e.g. `(function () { } ());`
             "validthis": true, // true: Tolerate using this in a non-constructor function
             "-W004": false, // {a} is already defined
             "-W030": false // Expected an assignment or function call and instead saw an expression

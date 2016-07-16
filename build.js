@@ -1,7 +1,5 @@
 'use strict';
 
-require('coffee-script').register();
-
 var fs = require('fs'),
     sysPath = require('path'),
     _explore = require('fs-explorer')._explore,

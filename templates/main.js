@@ -61,25 +61,27 @@ switch(root.type) {
         break;
 }
 
-%>
-(function() {
+%>(function() {
     'use strict';
 
-    <% if (!isMainBuild) { %> window.appConfig || (window.appConfig = {}); <% } %>
+    <% if (!isMainBuild) { %>window.appConfig || (window.appConfig = {});<% } %>
 
     var config = <%= toString(config) %>;
 
-    <% if (isMain || isMainDev) { %>
-    if (!/\\.\\w+$/.test(window.location.pathname)) {
+    <% if (isMain || isMainDev) { %><%--
+
+    --%>if (!/\\.\\w+$/.test(window.location.pathname)) {
         if (typeof appConfig.baseUrl === 'string') {
             config.baseUrl = appConfig.baseUrl + config.baseUrl;
         } else {
             config.baseUrl = '/' + config.baseUrl;
         }
-    }
-    <% } %>
+    }<%--
 
-    <% if (isMainBuild) { %>
+    --%><% } %><%--
+
+    --%><% if (isMainBuild) { %>
+        <%-- TODO: entry point build --%>
         var basePath = '<%= sysPath.normalize(root.public).replace(/\\/g, '/') + '/' %>';
 
         var hasOwn = Object.prototype.hasOwnProperty,
@@ -131,8 +133,9 @@ switch(root.type) {
                 }
             }
             return lastIndex + col;
-        }
-    <% } else if (isUnit) { %>
+        }<%--
+
+    --%><% } else if (isUnit) { %>
         requirejs.config(config);
 
         var deps = config.deps;
@@ -159,14 +162,38 @@ switch(root.type) {
             function pathToModule(path) {
                 return pathBrowserify.relative(config.baseUrl, path).replace(/\.js$/, '');
             }
-        });
-    <% } else if (isMain) { %>
+        });<%--
+
+    --%><% } else if (isMain) { %>
         requirejs.config(config);
+        require(['initialize']);<%--
+
+    --%><% } else if (isMainDev) { %>
+
+    var groups = config.groups;
+    delete config.groups;
+
+    requirejs.config(config);
+
+    if (groups) {
+        var name, index, deps, group;
+        for (name in groups) {
+            deps = groups[name];
+            group = name + '-group';
+            define(group, deps, function(main) {
+                return main;
+            });
+
+            index = config.deps.indexOf(name);
+            if (index !== -1) {
+                config.deps[index] = group;
+            }
+        }
+    }
+
+    require(config.deps, function() {
         require(['initialize']);
-    <% } else if (isMainDev) { %>
-        requirejs.config(config);
-        define(config.deps, function() {
-            require(['initialize']);
-        });
+    });
+
     <% } %>
 }())

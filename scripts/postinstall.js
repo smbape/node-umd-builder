@@ -17,7 +17,9 @@ require('fs').readdir('../lib', function(err) {
         anyspawn.spawn('npm run prepublish', {
             stdio: 'inherit'
         }, function(err) {
-            if (err) throw err;
+            if (err) {
+                throw err
+            };
             setup(sysPath.join(__dirname, '..'));
         });
     }
@@ -118,7 +120,7 @@ function install(tasks, config, done) {
         filePatches = [
             ['node_modules/log4js/lib/log4js.js', 'log4js-v0.6.x-shutdown_fix.patch'],
             ['node_modules/highlight.js/lib/languages/handlebars.js', 'hljs_hbs-8.7.0_fix.patch'],
-            ['node_modules/requirejs/bin/r.js', 'rjs-2.1.22.patch']
+            // ['node_modules/requirejs/bin/r.js', 'rjs-2.1.22.patch']
         ],
         projectBrunch = config.project.brunch,
         projectRoot = config.project.root,
@@ -126,7 +128,7 @@ function install(tasks, config, done) {
         patchFile;
 
     push.apply(tasks, [
-        ['git checkout tags/2.8.0', {
+        ['git checkout tags/2.8.2', {
             cwd: projectBrunch
         }],
         ['git checkout -b "' + new_branch + '"', {
@@ -144,6 +146,18 @@ function install(tasks, config, done) {
     }
 
     push.apply(tasks, [
+        function(done) {
+            var readable = fs.createReadStream(sysPath.resolve(__dirname, '..', 'utils', 'read-components.js')),
+                writable = fs.createWriteStream(sysPath.resolve(__dirname, '..', 'node_modules', 'brunch', 'lib', 'read-components.js'));
+            readable.pipe(writable);
+            writable.on('finish', done);
+        },
+        function(done) {
+            var readable = fs.createReadStream(sysPath.resolve(__dirname, '..', 'utils', 'remove-comments.js')),
+                writable = fs.createWriteStream(sysPath.resolve(__dirname, '..', 'node_modules', 'brunch', 'lib', 'remove-comments.js'));
+            readable.pipe(writable);
+            writable.on('finish', done);
+        },
         ['npm install --production', {
             cwd: projectBrunch
         }]

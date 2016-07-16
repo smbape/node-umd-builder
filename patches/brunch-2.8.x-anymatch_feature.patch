@@ -4,12 +4,26 @@ Date: Sat, 30 Apr 2016 10:58:17 +0200
 Subject: [PATCH] add anymatch feature
 
 ---
- lib/watch.js | 45 ++++++++++++++++++++++++++++++++++++++++++---
- package.json |  3 ++-
- 2 files changed, 44 insertions(+), 4 deletions(-)
+ lib/config.js |  2 +-
+ lib/watch.js  | 45 ++++++++++++++++++++++++++++++++++++++++++---
+ package.json  |  3 ++-
+ 3 files changed, 45 insertions(+), 5 deletions(-)
 
+diff --git a/lib/config.js b/lib/config.js
+index 91dce67..2e529e7 100644
+--- a/lib/config.js
++++ b/lib/config.js
+@@ -3,7 +3,7 @@ const fs = require('fs');
+ const sysPath = require('./path');
+ const exec = require('child_process').exec;
+ const logger = require('loggy');
+-const readComponents = require('read-components');
++const readComponents = require('./read-components');
+ const anymatch = require('anymatch');
+ const coffee = require('coffee-script');
+ const debug = require('debug')('brunch:config');
 diff --git a/lib/watch.js b/lib/watch.js
-index 5734f10..b9702b5 100644
+index 953fdd6..0b42839 100644
 --- a/lib/watch.js
 +++ b/lib/watch.js
 @@ -12,6 +12,8 @@ const fslstat = promisify(require('fs').lstat);
@@ -77,10 +91,10 @@ index 5734f10..b9702b5 100644
    });
  };
 diff --git a/package.json b/package.json
-index 8f5051b..960e8f3 100644
+index 31a7e39..55233a7 100644
 --- a/package.json
 +++ b/package.json
-@@ -57,8 +57,8 @@
+@@ -58,8 +58,8 @@
      "deep-assign": "^2.0.0",
      "deppack": "~0.6.0",
      "fcache": "~0.1.0",
@@ -90,7 +104,7 @@ index 8f5051b..960e8f3 100644
      "loggy": "~0.3.3",
      "micro-promisify": "~0.1.0",
      "mkdirp": "~0.5.0",
-@@ -66,6 +66,7 @@
+@@ -67,6 +67,7 @@
      "read-components": "~0.7.0",
      "serve-brunch": "~0.1.0",
      "since-app-start": "~0.1.0",
@@ -98,6 +112,7 @@ index 8f5051b..960e8f3 100644
      "source-map": "~0.5.0"
    },
    "devDependencies": {
+
 -- 
 2.6.2.windows.1
 

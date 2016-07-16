@@ -131,7 +131,7 @@ ngModuleFactoryProxy = (modulePath, head, body)->
 reactFactoryProxy = (modulePath, head, declaration, args, body)->
     """
     #{head}
-    deps.unshift({amd: 'react', common: '!React'}, {amd: 'bundle-react-0', common: '!ReactDOM'});
+    deps.unshift({amd: 'react', common: '!React'}, {amd: 'react-dom', common: '!ReactDOM'});
     
     function factory(require, React, ReactDOM) {
         /*jshint validthis: true */
