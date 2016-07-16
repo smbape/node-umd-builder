@@ -139,17 +139,10 @@ config = exports.config =
     # add some compilers
     # amd and copy are required for any project
     compilers: [
-        require('./compilers/amd')
-        require('./compilers/copy')
-        require('./compilers/esprima')
-        require('./compilers/relativecss')
-        require('./compilers/stylus')
+        require('./compilers/amd')          # mandatory. transform files with a top level factory or freact function in umd modules
+        require('./compilers/copy')         # copy all files that do not match a compiler
+        require('./compilers/relativecss')  # keep correct path in css. ex: bootstrap
     ]
-
-    # TODO : take from compilers
-    # in brunch 1.8.x, compilers are not publicly available
-    # used by builder to know what are the js files
-    # jsExtensions: /\.(?:js|hbs|handlebars|markdown|mdown|mkdn|md|mkd|mdwn|mdtxt|mdtext|text|coffee(?:\.md)?|litcoffee)$/
 
     modules:
         nameCleaner: (path, ext = false)->
@@ -179,6 +172,9 @@ config = exports.config =
                     #{data}
                 }});\n
                 """
+
+    paths:
+        watched: ['app', 'vendor']  # only build files in app/ and vendor/
 
     files:
         javascripts:
