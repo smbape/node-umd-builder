@@ -64,18 +64,14 @@ switch(root.type) {
 %>(function() {
     'use strict';
 
-    <% if (!isMainBuild) { %>window.appConfig || (window.appConfig = {});<% } %>
+    <% if (!isMainBuild) { %>var appConfig = window.appConfig || {};<% } %>
 
     var config = <%= toString(config) %>;
 
     <% if (isMain || isMainDev) { %><%--
 
-    --%>if (!/\\.\\w+$/.test(window.location.pathname)) {
-        if (typeof appConfig.baseUrl === 'string') {
-            config.baseUrl = appConfig.baseUrl + config.baseUrl;
-        } else {
-            config.baseUrl = '/' + config.baseUrl;
-        }
+    --%>if (typeof appConfig.baseUrl === 'string') {
+        config.baseUrl = appConfig.baseUrl + config.baseUrl;
     }<%--
 
     --%><% } %><%--

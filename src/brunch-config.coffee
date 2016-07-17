@@ -136,12 +136,10 @@ config = exports.config =
     # used by builder to know what are the js files
     jsExtensions: /\.(?:js|hbs|handlebars|markdown|mdown|mkdn|md|mkd|mdwn|mdtxt|mdtext|text|coffee(?:\.md)?|litcoffee)$/
 
-    # add some compilers
-    # amd and copy are required for any project
     compilers: [
-        require('./compilers/amd')          # mandatory. transform files with a top level factory or freact function in umd modules
-        require('./compilers/copy')         # copy all files that do not match a compiler
-        require('./compilers/relativecss')  # keep correct path in css. ex: bootstrap
+        require('./compilers/amd')          # Mandatory. Transform files with a top level factory or freact function in umd modules
+        require('./compilers/copy')         # Recommended. copy all watched files that do not match a compiler
+        require('./compilers/relativecss')  # Recommended. keep correct path in css. ex: bootstrap
     ]
 
     modules:
