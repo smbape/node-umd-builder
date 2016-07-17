@@ -1,7 +1,5 @@
 # umd-builder
 
-What the f*** is that?
-
 This library is part of a bigger project developped for the following reasons:
 * Test how much [Asynchronous module definition (AMD)](http://en.wikipedia.org/wiki/Asynchronous_module_definition) is slower than [CommonJS module definition](http://requirejs.org/docs/commonjs.html) and up to which file size
 * To have both module definitions without duplicating code and serve AMD files if the single page application file becomes too big
@@ -62,7 +60,7 @@ In your favourite browser, navigate to
   - [http://127.0.0.1:3330/app](http://127.0.0.1:3330/app) to see the single page version
   - [http://127.0.0.1:3330/web](http://127.0.0.1:3330/web) to see the amd version
 
-Application can also be viewed without starting a server by opening
+The application can also be viewed without starting a server by opening in your favourite browser
   - `public/index.single.html` single page version
   - `public/index.classic.html` amd version
 
@@ -108,14 +106,15 @@ function freact() {
 // this is app/node_modules/some/path/module.js
 
 function factory() {
-    // not safe way of using require
-    // it will always work in single page mode and in nodejs
-    // but will work in amd mode only if required has already been loaded
-    // here we look for module defined in app/node_modules/someModule.js. In nodejs, will use the classic require
+    // Not safe way of using require.
+    // It will always work in single page mode and in nodejs.
+    // But will work in amd mode only if the required module has already been loaded.
+    // Here we look for the module defined in app/node_modules/someModule.js.
+    // In nodejs, will use the classic require.
     var someModule = require('someModule');
 
-    // safe way of using require
-    // work for every environments
+    // Safe way of using require.
+    // Work for every environments.
     require([
         'someModule', // look for module defined in app/node_modules/someModule.js. In nodejs, will use the classic require
         './relative', // look for module defined in app/node_modules/some/path/relative.js
@@ -132,7 +131,9 @@ function factory() {
 
 ## Wild cards in bower.json file
 
-When defining main, scripts or styles files in bower.json, you can use [anymatch](https://github.com/es128/anymatch) pattern
+When defining main, scripts or styles files in bower.json, you can use [anymatch](https://github.com/es128/anymatch) pattern.
+
+The classic brunch do not allow that.
 
 ```json
 {
@@ -160,7 +161,7 @@ When defining main, scripts or styles files in bower.json, you can use [anymatch
 
 From [requirejs config shim](http://requirejs.org/docs/api.html#config-shim)
 
-`Configure the dependencies, exports, and custom initialization for older, traditional "browser globals" scripts that do not use define() to declare the dependencies and set a module value.`
+> Configure the dependencies, exports, and custom initialization for older, traditional "browser globals" scripts that do not use define() to declare the dependencies and set a module value.
 
 ```json
 {
@@ -182,19 +183,19 @@ From [requirejs config shim](http://requirejs.org/docs/api.html#config-shim)
 
 With the classic brunch, the only way to add a compiler is to delacre it in package.json.  
 That is too restrictive for me for 3 reasons:
-  - First, I am too lazy to always create npm package when I am testing stuff
+  - First, I am too lazy to always create an npm package when I am testing stuff
   - Second, I am also too lazy to spend time to find a way to try completely separate my custom compilers from umd-builder package
-  - Third, the benefits of being lazy seem to me far greater than the benefit of having a package
+  - Third, the benefits of being lazy seem to me far greater than the benefits of having a package
 
-For those reasons, I added a way to add compilers directly in brunch-config file
+For those reasons, I made a way to add compilers directly in brunch-config file.
 
 Nevertheless, if I am aware of better benefits than being lazy, I will spend time to try to make things cleaner.
 
 ### AmdCompiler
 
-Depends on umd-builder
+Depends on umd-builder.
 
-Mandatory. Transform files with a top level factory or freact function in umd module
+Mandatory. Transform files with a top level factory or freact function in umd module.
 
 ```coffeescript
 exports.config =
@@ -216,10 +217,10 @@ exports.config =
 
 ### CopyCompiler
 
-Depends on umd-builder
+Depends on umd-builder.
 
-Recommended. copy all watched files that do not match a javascript or stylesheet compiler.  
-Usefull for images, fonts required in stylesheets
+Recommended. Copy all watched files that do not match a javascript or stylesheet compiler.  
+Usefull for images, fonts required in stylesheets.
 
 ```coffeescript
 exports.config =
@@ -230,10 +231,10 @@ exports.config =
 
 ### RelativeCSS
 
-Depends on umd-builder
+Depends on umd-builder.
 
-Recommended. keep correct path in css. ex: bootstrap.  
-Usefull for images, fonts required in stylesheets
+Recommended. Keep correct path in css. ex: bootstrap.  
+Usefull for images, fonts required in stylesheets.
 
 ```coffeescript
 exports.config =
@@ -273,7 +274,7 @@ Transform handlebars files into UMD modules
 
 Similar to [handlebars-brunch](https://github.com/brunch/handlebars-brunch).
 
-At the time I started this library, [handlebars-brunch](https://github.com/brunch/handlebars-brunch) was not using the latest version of handlebars and I was using the new features.
+At the time I started this library, [handlebars-brunch](https://github.com/brunch/handlebars-brunch) was not using the latest version of handlebars and I was using handlebars the new features.
 
 ```coffeescript
 exports.config =
@@ -297,7 +298,7 @@ exports.config =
 
 Transform jst files into UMD modules that expose a [lodash template](https://lodash.com/docs#template).
 
-I added an ignore option which allow to use comment in files.
+I added an ignore option to use comments in files.
 
 `<%` is to be able to use Java Server Page (JSP) syntax highlight in sublime text and notepad++ since Java is not far from Javscript.
 
@@ -340,7 +341,7 @@ exports.config =
 
 Transform stylus files into stylesheet files.
 
-I don't remember why I created that since there is [stylus-brunch](https://github.com/brunch/stylus-brunch) that does the same job.
+I don't remember why I created this since there is [stylus-brunch](https://github.com/brunch/stylus-brunch) that does the same job.
 
 ```coffeescript
 exports.config =
@@ -353,14 +354,39 @@ exports.config =
 
 ### Partial build for large projects
 
-It is hard to define large projet, let's say a project on which copy all files (app, bower_components, vendor) will take more than 60 second.
+It is hard to define large projet, let's say a project on which copy all files (app, bower_components, vendor) will take more than 60 seconds.
 
 With those kind of projects, sometimes, build does not start correctly.
 
 Re-run the build in those cases.
 
-Because there is a workaround and not easy to reproduce, I don't want to spend time trying to fix.
+Because there is a workaround and not easy to reproduce, I don't want to spend time trying to fix it.
 
 ### Source maps
 
 With all those transformations, I have difficulties keeping the source map correct. The truth is, I don't understand a thing about source maps.
+
+# License
+
+The MIT License (MIT)
+
+Copyright (c) 2014-2016 Stéphane MBAPE (http://smbape.com)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
