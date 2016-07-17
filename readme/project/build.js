@@ -1,0 +1,1 @@
+require('umd-builder/build');

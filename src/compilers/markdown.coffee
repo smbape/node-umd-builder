@@ -42,7 +42,7 @@ module.exports = class MarkdownCompiler
                 return
 
         if 'boolean' is typeof options.jst
-            options.jst = on: true
+            options.jst = on: options.jst
 
         if options.jst?.on
             if options.jst.holder

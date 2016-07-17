@@ -1,0 +1,68 @@
+{
+  "name": "project",
+  "description": "Project",
+  "version": "0.0.0",
+  "main": "**",
+  "umd": true,
+  "ignore": [
+    "**/.*",
+    "**/*.log",
+    "**/*.sublime-project",
+    "**/*.sublime-workspace",
+    "bower_components",
+    "node_modules",
+    "public",
+    "work",
+    "component.json",
+    "package.json"
+  ],
+  "licenses": "MIT",
+  "dependencies": {
+    "bootstrap": "^3.3.6",
+    "jquery": "^2.1.4",
+    "jquery-ui": "^1.12.0",
+    "lodash": "^4.13.1",
+    "react": "^15.2.1"
+  },
+  "overrides": {
+    "bootstrap": {
+      "main": [
+        "dist/css/bootstrap.css",
+        "dist/js/bootstrap.js",
+        "dist/fonts/**"
+      ],
+      "dependencies": {
+        "jquery": "*"
+      },
+      "exports": "$.fn.emulateTransitionEnd"
+    },
+    "jquery-ui": {
+      "main": [
+        "jquery-ui.js"
+      ],
+      "styles": [
+        "themes/redmond/**"
+      ],
+      "scripts": [
+        "ui/version.js",
+        "ui/keycode.js",
+        "ui/widgets/datepicker.js",
+        "ui/i18n/datepicker-ar.js",
+        "ui/i18n/datepicker-fr.js",
+        "ui/i18n/datepicker-he.js",
+        "ui/i18n/datepicker-zh-TW.js"
+      ]
+    },
+    "lodash": {
+      "main": "lodash.js"
+    },
+    "react": {
+      "main": [
+        "react.min.js"
+      ],
+      "map": {
+        "react-dom.min.js": "react-dom"
+      }
+    }
+  }
+}

@@ -131,7 +131,7 @@ config = exports.config =
     # .i.e expecting a package.json
     npm: enabled: false
 
-    # TODO : take from compilers
+    # TODO : take from compilers or find a way to create main-dev.js file at the end of watch
     # in brunch 1.8.x, compilers are not publicly available
     # used by builder to know what are the js files
     jsExtensions: /\.(?:js|hbs|handlebars|markdown|mdown|mkdn|md|mkd|mdwn|mdtxt|mdtext|text|coffee(?:\.md)?|litcoffee)$/

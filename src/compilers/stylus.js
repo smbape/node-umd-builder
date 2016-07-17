@@ -1,6 +1,5 @@
-// copy of https://github.com/brunch/javascript-brunch
+// copy of https://github.com/brunch/stylus-brunch
 // use "progeny": "^0.5.2"
-// use brunch 1.8.x compile signature
 
 // """
 // @import path
