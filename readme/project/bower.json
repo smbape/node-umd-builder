@@ -34,7 +34,7 @@
       "dependencies": {
         "jquery": "*"
       },
-      "exports": "$.fn.emulateTransitionEnd"
+      "exports": "jQuery.fn.emulateTransitionEnd"
     },
     "jquery-ui": {
       "main": [

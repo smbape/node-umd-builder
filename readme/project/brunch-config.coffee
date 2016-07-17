@@ -14,7 +14,7 @@ exports.config = _.merge config,
     compilers: [
         require('umd-builder/lib/compilers/babel')          # Needed for jsx interpretation
         require('umd-builder/lib/compilers/amd')            # Mandatory. Transform files with a top level factory or freact function in umd modules
-        require('umd-builder/lib/compilers/copy')           # Recommended. copy all watched files that do not match a compiler
+        require('umd-builder/lib/compilers/copy')           # Recommended. copy all watched files that do not match a javascript or stylesheet compiler
         require('umd-builder/lib/compilers/relativecss')    # Recommended. keep correct path in css. ex: bootstrap
         require('umd-builder/lib/compilers/html')           # Transform html in umd modules
     ]
