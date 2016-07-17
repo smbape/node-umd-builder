@@ -19,6 +19,6 @@
     "babel-preset-react": "^6.11.1",
     "coffee-script-brunch": "^2.0.0",
     "uglify-js-brunch": "^2.0.1",
-    "umd-builder": "^3.0.0"
+    "umd-builder": "^2.4.0"
   }
 }
