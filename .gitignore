@@ -1,7 +1,6 @@
-/lib
 /node_modules
 /npm-debug.log
 /build.log
 /dummy.coffee
 /dummy.js
-/project.sublime-workspace
+/*.sublime-workspace

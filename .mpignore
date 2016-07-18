@@ -1,9 +1,0 @@
-/src
-/node_modules
-/readme
-/npm-debug.log
-/build.log
-/dummy.coffee
-/dummy.js
-/project.sublime-project
-/project.sublime-workspace
