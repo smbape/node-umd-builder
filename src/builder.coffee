@@ -172,8 +172,8 @@ _processComponent = (component, config, options, done)->
 
     name = component.name
 
-    if component.ignored
-        logger.debug 'ignored', name
+    if component.lazy
+        logger.debug 'lazy', name
     else
         config.deps.push name
 
