@@ -44,7 +44,7 @@ index 5734f10..3331854 100644
  
      this.watcher = this.initWatcher(this._watchedPaths);
 +    if ('function' === typeof cfg.onwatch) {
-+      cfg.onwatch(this.watcher);
++      cfg.onwatch(this.watcher, this);
 +    }
 +
      this.fileList

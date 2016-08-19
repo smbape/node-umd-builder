@@ -216,8 +216,8 @@ config = exports.config =
             return
         return
 
-    onwatch: (watcher)->
-        builder.buildClient {watcher}
+    onwatch: (fswatcher, bwatcher)->
+        builder.buildClient {watcher: fswatcher, bwatcher}
         return
 
     conventions:

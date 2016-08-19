@@ -56,7 +56,7 @@ index 953fdd6..0b42839 100644
 +          files.push(path);
 +        }
 +        next();
-+      }, function(err) {
++      }, {followSymlink: true}, function(err) {
 +        if (err && err.code === 'ENOENT') {
 +          err = null;
 +        }
@@ -98,7 +98,7 @@ index 31a7e39..55233a7 100644
      "deep-assign": "^2.0.0",
      "deppack": "~0.6.0",
      "fcache": "~0.1.0",
-+    "fs-explorer": "^1.0.1",
++    "fs-explorer": "^1.1.0",
      "init-skeleton": "~0.9.0",
 -    "skemata": "~0.1.0",
      "loggy": "~0.3.3",

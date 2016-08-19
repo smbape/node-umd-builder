@@ -473,8 +473,10 @@ _compileIndex = (path, options)->
         logger.error e
 
 buildClient = (config, options, extra, next)->
+    {APPLICATION_PATH, PUBLIC_PATH} = options._c.paths
+
     if extra.watcher
-        watcher = extra.watcher
+        {watcher, bwatcher} = extra
         indexPath = sysPath.join config.paths.CLIENT_ASSETS_PATH, INDEX_FILE
         watcher.on 'ready', ->
             compileIndex indexPath, options
@@ -489,13 +491,12 @@ buildClient = (config, options, extra, next)->
     if cluster.isMaster
         if options.links
             for dstpath, srcpath of options.links
-                configPaths = options._c.paths
-                dstpath = sysPath.join configPaths.PUBLIC_PATH, dstpath
+                dstpath = sysPath.join PUBLIC_PATH, dstpath
                 if 'string' is typeof srcpath
                     type = 'file'
                 else
                     [srcpath, type] = srcpath
-                srcpath = sysPath.resolve configPaths.APPLICATION_PATH, srcpath
+                srcpath = sysPath.resolve APPLICATION_PATH, srcpath
                 logger.info "link\n    #{srcpath}\n    #{dstpath}"
                 fs.symlink srcpath, dstpath, type, (err)->
                     if err and (err.code isnt 'EEXIST' or err.path isnt srcpath)
