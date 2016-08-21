@@ -25,7 +25,7 @@ module.exports = class MarkdownCompiler
     constructor: (config = {})->
         @sourceMaps = !!config.sourceMaps
         options = config?.plugins?.markdown or {}
-        @options = _.extend {}, options, defaultOptions
+        @options = _.defaults {}, options, defaultOptions
         {@overrides} = @options
         delete @options.overrides
 
