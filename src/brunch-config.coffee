@@ -140,6 +140,7 @@ config = exports.config =
         require('./compilers/amd')          # Mandatory. Transform files with a top level factory or freact function in umd modules
         require('./compilers/copy')         # Recommended. copy all watched files that do not match a compiler
         require('./compilers/relativecss')  # Recommended. keep correct path in css. ex: bootstrap
+        require('./compilers/csso')         # Css minification for production build
     ]
 
     modules:
