@@ -30,7 +30,6 @@
     "babylon": "^6.5.0",
     "chalk": "^1.1.1",
     "chokidar": "^1.4.2",
-    "clean-css": "^3.4.9",
     "coffee-script": "^1.10.0",
     "component-builder": "^1.2.1",
     "ejs": "^2.4.1",
@@ -50,6 +49,8 @@
     "progeny": "^0.5.2",
     "prompt": "^1.0.0",
     "requirejs": "^2.1.22",
+    "rework": "^1.0.1",
+    "rework-plugin-url": "^1.1.0",
     "rimraf": "^2.5.2",
     "sem-lib": "^1.0.0",
     "strip-ansi": "^3.0.1",
@@ -57,6 +58,7 @@
     "uglify-js-brunch": "^1.7.8",
     "umd-wrapper": "^0.1.0",
     "username": "^2.0.0",
+    "validator": "^5.5.0",
     "which": "^1.2.4"
   },
   "devDependencies": {

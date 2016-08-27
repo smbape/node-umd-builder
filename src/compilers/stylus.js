@@ -52,7 +52,7 @@ StylusCompiler.prototype.compile = function(params, callback) {
         .set('linenos', !!cfg.linenos)
         .set('include css', !!cfg.includeCss)
         .include(sysPath.dirname(path))
-        .include(sysPath.join(this.rootPath))
+        .include(this.rootPath)
         .use(nib());
     if (cfg !== {}) {
         var defines = cfg.defines || {};
@@ -85,7 +85,18 @@ StylusCompiler.prototype.compile = function(params, callback) {
             });
         }
     }
-    compiler.render(callback);
+
+    compiler.render(function(err, data) {
+        // empty string will make the next compiler to have source, not compiled
+        if (data === '') {
+            data = '\n';
+        }
+        callback(err, {
+            path: path,
+            data: data, 
+            map: map
+        });
+    });
 };
 
 module.exports = StylusCompiler;

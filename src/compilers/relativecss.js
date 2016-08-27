@@ -1,9 +1,13 @@
 'use strict';
 
+module.exports = RelativeCSS;
+
 var log4js = global.log4js || (global.log4js = require('log4js')),
     logger = log4js.getLogger('relative-css'),
-    CleanCSS = require('clean-css'),
     sysPath = require('path'),
+    rework = require('rework'),
+    reworkUrl = require('rework-plugin-url'),
+    validator = require('validator'),
     util = require('util'),
     builder = require('../builder'),
     writeData = require('../writeData');
@@ -24,7 +28,6 @@ RelativeCSS.prototype.type = 'stylesheet';
 RelativeCSS.prototype.completer = true;
 
 RelativeCSS.prototype.compile = function(params, callback) {
-
     var data = params.data,
         path = params.path,
         map = params.map,
@@ -52,51 +55,64 @@ RelativeCSS.prototype.compile = function(params, callback) {
             return callback(err, params);
         }
 
-        var minified, result, options;
-
-        options = {
-            target: sysPath.join(root, target).replace(/[\/\\]/g, sysPath.sep),
-            relativeTo: sysPath.dirname(destination),
-            sourceMap: sourceMap
-        };
-
         try {
-            // TODO : fix source map
-            // if (map) {
-            //     logger.info('map', destination);
-            // }
-            // minified = {
-            //     destination: {
-            //         source: source,
-            //         styles: data,
-            //         sourceMap: map,
-            //         rebase: false
-            //     }
-            // };
-            // minified = new CleanCSS(options).minify(minified);
-
-            minified = new CleanCSS(options).minify(data);
-        } catch (err) {
-            return callback(err, params);
+            data = rebaseUrls(data, {
+                currentDir: sysPath.dirname(destination),
+                root: sysPath.dirname(sysPath.join(root, target))
+            });
+        } catch (error) {
+            logger.warn('error while relative-css', path, error.message);
         }
 
-        if (minified.errors.length > 0) {
-            err = minified.errors;
-        } else {
-            // if (minified.sourceMap) {
-            //     map = minified.sourceMap.toJSON();
-            //     map.sources = map.sources.map(function(element, index, array) {
-            //         return element === '$stdin' ? source : element;
-            //     });
-            // }
-            result = {
-                data: minified.styles,
-                map: map
-            };
-        }
-
-        return callback(err, result || params);
+        callback(null, {
+            path: path,
+            map: map,
+            data: data
+        });
     });
 };
 
-module.exports = RelativeCSS;
+
+function isAbsolute(url) {
+    var normal = sysPath.normalize(url);
+    var absolute = sysPath.resolve(url);
+    if (process.platform === 'win32') {
+        absolute = absolute.substr(2);
+    }
+    return normal === absolute;
+}
+
+function isUrl(url) {
+    if (!url) {
+        return false;
+    }
+
+    // protocol relative URLs
+    if (url.indexOf('//') === 0 && validator.isURL(url, {
+            allow_protocol_relative_urls: true
+        })) {
+        return true;
+    }
+
+    return validator.isURL(url, {
+        require_protocol: true
+    });
+}
+
+function rebaseUrls(css, options) {
+    return rework(css)
+        .use(reworkUrl(function(url) {
+            if (isAbsolute(url) || isUrl(url) || /^data:.*;.*,/.test(url)) {
+                return url;
+            }
+
+            var absolutePath = sysPath.join(options.currentDir, url);
+            var p = sysPath.relative(options.root, absolutePath);
+
+            if (process.platform === 'win32') {
+                p = p.replace(/\\/g, '/');
+            }
+
+            return p;
+        })).toString();
+}
