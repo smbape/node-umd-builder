@@ -22,6 +22,7 @@ module.exports = class MarkdownCompiler
     pattern: /\.(?:markdown|mdown|mkdn|md|mkd|mdwn|mdtxt|mdtext|text)$/
 
     constructor: (config = {})->
+        {@paths} = builder.generateConfig(config)
         @sourceMaps = !!config.sourceMaps
         options = config?.plugins?.markdown or {}
         @options = _.extend {}, options, defaultOptions
@@ -38,8 +39,6 @@ module.exports = class MarkdownCompiler
                 if minimatch sysPath.normalize(path), pattern, {nocase: true, matchBase: true}
                     _.extend options, override
                 return
-
-        @paths = @paths or builder.getConfig().paths
 
         dst = sysPath.join @paths.PUBLIC_PATH, @amdDestination(path) + '.html'
 

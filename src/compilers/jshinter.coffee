@@ -58,12 +58,12 @@ module.exports = class JsHinter
 
         @options = options
 
-    lint: (params, next)->
+    lint: (params, done)->
         {data, path, map} = params
 
         # check if it is a file to lint
         if @isIgnored path
-            return next null
+            return done null
 
         config = @options
         globals = _.clone @globals
@@ -113,11 +113,8 @@ module.exports = class JsHinter
             msg = null
         else
             msg = "warn: #{msg}" if @warnOnly
-            # dst = sysPath.join(process.cwd(), 'jshint', path.replace(/.(?!js)([^.]+)$/, '.$1.js'))
-            # mkdirp.sync sysPath.dirname dst
-            # fs.writeFileSync dst, data
 
-        next msg
+        done msg
 
         return
 

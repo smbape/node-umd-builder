@@ -131,16 +131,10 @@ config = exports.config =
     # .i.e expecting a package.json
     npm: enabled: false
 
-    # TODO : take from compilers or find a way to create main-dev.js file at the end of watch
-    # in brunch 1.8.x, compilers are not publicly available
-    # used by builder to know what are the js files
-    jsExtensions: /\.(?:js|hbs|handlebars|markdown|mdown|mkdn|md|mkd|mdwn|mdtxt|mdtext|text|coffee(?:\.md)?|litcoffee)$/
-
     compilers: [
         require('./compilers/amd')          # Mandatory. Transform files with a top level factory or freact function in umd modules
         require('./compilers/copy')         # Recommended. copy all watched files that do not match a compiler
         require('./compilers/relativecss')  # Recommended. keep correct path in css. ex: bootstrap
-        require('./compilers/csso')         # Css minification for production build
     ]
 
     modules:
@@ -192,6 +186,7 @@ config = exports.config =
         amd:
             strict: true
             jshint: true
+            package: false
         coffeescript:
             bare: true
         jshint:
@@ -207,18 +202,17 @@ config = exports.config =
             strict: true
 
     initialize: (config, done)->
-        builder.buildBower config, ->
-            read config.paths.root, 'bower', (err, components)->
-                throw err if err
-                for component in components
-                    cache[sysPath.join('bower_components', component.name)] = !component.umd
-                done()
-                return
+        read sysPath.resolve(config.paths.root), 'bower', (err, components)->
+            throw err if err
+            for component in components
+                cache[sysPath.join('bower_components', component.name)] = !component.umd
+            done()
             return
         return
 
     onwatch: (fswatcher, bwatcher)->
-        builder.buildClient {watcher: fswatcher, bwatcher}
+        builder.fswatcher = fswatcher
+        builder.bwatcher = bwatcher
         return
 
     conventions:

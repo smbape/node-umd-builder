@@ -1,5 +1,7 @@
 'use strict';
 
+require('coffee-script').register();
+
 var mkdirp = require('mkdirp'),
     sysPath = require('path');
 
@@ -17,11 +19,6 @@ if (!global.log4js) {
                     "layout": {
                         "type": "colored"
                     }
-                }, {
-                    "type": sysPath.join(__dirname, 'lib/appenders/file'),
-                    "filename": sysPath.join(process.cwd(), 'build.log'),
-                    "maxLogSize": 1048576,
-                    "backups": 10
                 }
             ],
             "levels": {

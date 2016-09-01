@@ -6,7 +6,8 @@ var fs = require('fs'),
     mkdirp = require('mkdirp'),
     quoteArg = require('anyspawn').quoteArg,
     log4js = require('./log4js'),
-    logger = log4js.getLogger('umd-builder');
+    logger = log4js.getLogger('umd-builder'),
+    fcache = require('./utils/fcache');
 
 var cli = require('brunch/lib/cli'),
     program = require('brunch/node_modules/commander');
