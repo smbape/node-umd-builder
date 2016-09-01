@@ -410,7 +410,9 @@ module.exports = class AmdCompiler
         if config.optimize
             @optimizer = new UglifyJSOptimizer config
 
-        {@paths} = builder.generateConfig(config)
+        @paths = builder.generateConfig(config).paths
+        @paths.public = config.paths.public
+
         @config = _.clone config
         @sourceMaps = !!config.sourceMaps
         @amdDestination = config.modules.amdDestination
