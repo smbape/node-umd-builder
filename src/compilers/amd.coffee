@@ -540,6 +540,8 @@ module.exports = class AmdCompiler
         }
 
         plugin = @
+        watcherIsReady = builder.bwatcher.watcherIsReady
+        builder.bwatcher.watcherIsReady = false
 
         count = 0
 
@@ -559,6 +561,7 @@ module.exports = class AmdCompiler
                         return
 
                     plugin._compilePackages generatedFiles, changedAssets
+                    builder.bwatcher.watcherIsReady = true if watcherIsReady
                     _compileIndex config, options, done
 
                     return
@@ -643,6 +646,9 @@ module.exports = class AmdCompiler
     _compilePackages: (generatedFiles, changedAssets)->
         plugin = @
         {lastPackages, packages} = plugin
+
+        if not plugin.options.package
+            return
 
         generatedFiles.forEach (generatedFile, index)->
             generatedFile.sourceFiles.forEach (file, index)->
