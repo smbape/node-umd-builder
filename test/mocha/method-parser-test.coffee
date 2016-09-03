@@ -11,8 +11,6 @@ _.template fs.readFileSync(__dirname + '/../stuff/step4.html').toString(),
     interpolate: /\{\{=([\s\S]+?)\}\}/g
     evaluate: /\{\{([\s\S]+?)\}\}/g
 
-return
-
 assert.equals = (actual, expected)->
     assert _.isEqual(actual, expected), "expected #{util.inspect actual} to equal #{util.inspect expected}"
     return
@@ -96,6 +94,12 @@ describe 'method-parser', ->
 
     it 'should avoid scoped', ->
         str = '{/* locals = a, b, c */}'
+        [locals, name, args, head, declaration, body] = parse(str)
+        assert.strictEqual locals, undefined
+        assert.strictEqual name, undefined
+        assert.strictEqual args, undefined
+
+        str = "(a, function factory{/&/g,\n'&amp;'};)"
         [locals, name, args, head, declaration, body] = parse(str)
         assert.strictEqual locals, undefined
         assert.strictEqual name, undefined
@@ -212,6 +216,16 @@ describe 'method-parser', ->
         assert.strictEqual args, undefined
 
         [locals, name, args, head, declaration, body] = parse fs.readFileSync(__dirname + '/../stuff/jquery.js').toString()
+        assert.strictEqual locals, undefined
+        assert.strictEqual name, undefined
+        assert.strictEqual args, undefined
+
+        [locals, name, args, head, declaration, body] = parse fs.readFileSync(__dirname + '/../stuff/lodash.core.js').toString()
+        assert.strictEqual locals, undefined
+        assert.strictEqual name, undefined
+        assert.strictEqual args, undefined
+
+        [locals, name, args, head, declaration, body] = parse fs.readFileSync(__dirname + '/../stuff/lodash.core.min.js').toString()
         assert.strictEqual locals, undefined
         assert.strictEqual name, undefined
         assert.strictEqual args, undefined

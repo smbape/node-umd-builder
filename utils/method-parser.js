@@ -67,22 +67,26 @@ var SYMBOLS = {
     REGEXP_QUOTE_END: '/',
     SINGLE_QUOTE: "'",
     DOUBLE_QUOTE: '"',
-    ESCAPE_QUOTE: /\\(?:["'\/\\]|\r?\n)/,
+    ESCAPED_QUOTE_OR_NEW_LINE: /\\(?:["'\/\\]|\r?\n)/,
     NEW_LINE: /\r?\n/,
-    SCOPE_BEGIN: '{',
-    SCOPE_END: '}',
+    CURLY_BEGIN: '{',
+    CURLY_END: '}',
+    PAREN_BEGIN: '(',
+    PAREN_END: ')',
     NON_NEW_LINE: /./
 };
 
 var tokenizer = createTokenizer([
-    SYMBOLS.LOCALS,
-    SYMBOLS.ALL_FNS_REG,
-    SYMBOLS.SCOPE_BEGIN,
-    SYMBOLS.SCOPE_END,
     SYMBOLS.LINE_COMMENT,
+    SYMBOLS.LOCALS,
     SYMBOLS.BLOCK_COMMENT_START,
     SYMBOLS.BLOCK_COMMENT_END,
-    SYMBOLS.ESCAPE_QUOTE,
+    SYMBOLS.CURLY_BEGIN,
+    SYMBOLS.CURLY_END,
+    SYMBOLS.PAREN_BEGIN,
+    SYMBOLS.PAREN_END,
+    SYMBOLS.ALL_FNS_REG,
+    SYMBOLS.ESCAPED_QUOTE_OR_NEW_LINE,
     SYMBOLS.SINGLE_QUOTE,
     SYMBOLS.DOUBLE_QUOTE,
     SYMBOLS.REGEXP_QUOTE_BEGIN,
@@ -222,7 +226,8 @@ function _parse(str, tokenizer) {
                         return;
                 }
                 /* falls through */
-            case SYMBOLS.SCOPE_BEGIN:
+            case SYMBOLS.CURLY_BEGIN:
+            case SYMBOLS.PAREN_BEGIN:
                 switch (state) {
                     case STATES.single_quoting:
                     case STATES.double_quoting:
@@ -235,7 +240,8 @@ function _parse(str, tokenizer) {
                         return;
                 }
                 /* falls through */
-            case SYMBOLS.SCOPE_END:
+            case SYMBOLS.CURLY_END:
+            case SYMBOLS.PAREN_END:
                 switch (state) {
                     case STATES.single_quoting:
                     case STATES.double_quoting:
@@ -249,7 +255,7 @@ function _parse(str, tokenizer) {
                 }
                 /* falls through */
             case SYMBOLS.REGEXP_QUOTE_END:
-                // console.log('regexp_quoting', col, index, [str.substring(col, index)], state);
+                // console.log('regexp_quoting', col, index, [str.substring(col, index)], state, arguments);
                 switch (state) {
                     case STATES.regexp_quoting:
                         state = STATES.initial;
@@ -260,7 +266,17 @@ function _parse(str, tokenizer) {
                     case STATES.block_commenting:
                         return;
                     default:
-                        if (/^\s*$/.test(str.substring(col, index)) /* begining of line */ || 'string' === typeof regexp_quote) {
+                        // console.log('regexp_quoting', {
+                        //     col: col,
+                        //     index: index,
+                        //     str: str.substring(col, index),
+                        //     state: state,
+                        //     arguments: arguments
+                        // });
+                        if (
+                            /^\s*$/.test(str.substring(col, index)) /* begining of line */ ||
+                            /[\,\{\}\;\=\(\+\-\!\&\|\:]\s*$/m.test(str.substring(col, index)) ||
+                            'string' === typeof regexp_quote) {
                             // console.log('regexp_quoting');
                             state = STATES.regexp_quoting;
                             quoting_start = 'line ' + line + ' col ' + (index - col + 1);
@@ -269,7 +285,7 @@ function _parse(str, tokenizer) {
                 }
                 /* falls through */
             default:
-                if (!SYMBOLS.ESCAPE_QUOTE.test(match) && SYMBOLS.NEW_LINE.test(match)) {
+                if (!SYMBOLS.ESCAPED_QUOTE_OR_NEW_LINE.test(match) && SYMBOLS.NEW_LINE.test(match)) {
                     switch (state) {
                         case STATES.single_quoting:
                         case STATES.double_quoting:

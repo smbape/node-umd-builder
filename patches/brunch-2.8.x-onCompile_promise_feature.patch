@@ -1,0 +1,65 @@
+From b5526028d692abac779a793e286389390ed787ab Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?St=C3=A9phane=20MBAPE?= <rose.martin-8og3raxw@yopmail.com>
+Date: Sat, 3 Sep 2016 12:32:38 +0200
+Subject: [PATCH] onCompile can now return a promise
+
+---
+ lib/plugins.js | 26 ++++++++++++++++++++++++--
+ lib/watch.js   |  4 +++-
+ 2 files changed, 27 insertions(+), 3 deletions(-)
+
+diff --git a/lib/plugins.js b/lib/plugins.js
+index de2b85e..e45aea2 100644
+--- a/lib/plugins.js
++++ b/lib/plugins.js
+@@ -230,8 +230,30 @@ exports.init = (config, onCompile) => {
+ 
+   // Add default brunch callback.
+   callbacks.push(onCompile);
+-  const callCompileCallbacks = (generatedFiles, changedAssets) => {
+-    callbacks.forEach(cb => cb(generatedFiles, changedAssets));
++  const callCompileCallbacks = (generatedFiles, changedAssets, done) => {
++    var count = 0;
++
++    take();
++    callbacks.forEach(cb => {
++      take();
++      const ret = cb(generatedFiles, changedAssets);
++      if (ret && 'object' === typeof ret && 'function' === typeof ret.then) {
++        ret.then(give);
++      } else {
++        give();
++      }
++    });
++    give();
++
++    function take() {
++      ++count;
++    }
++
++    function give(err) {
++      if (--count === 0) {
++        done();
++      }
++    }
+   };
+   const teardownBrunch = () => {
+     teardowners.forEach(plugin => plugin.teardown());
+diff --git a/lib/watch.js b/lib/watch.js
+index 953fdd6..9fdc7f6 100644
+--- a/lib/watch.js
++++ b/lib/watch.js
+@@ -330,7 +330,9 @@ class BrunchWatcher {
+       // Pass `fs_utils.GeneratedFile` instances to callbacks.
+       // Does not block the execution.
+       const assets = fileList.assets.filter(a => a.copyTime > startTime);
+-      callback(generatedFiles, assets);
++      return new Promise(function(resolve, reject) {
++        callback(generatedFiles, assets, resolve);
++      });
+     }, error => {
+       fileList.emit('bundled');
+       if (!Array.isArray(error)) error = [error];
+-- 
+2.6.2.windows.1
+

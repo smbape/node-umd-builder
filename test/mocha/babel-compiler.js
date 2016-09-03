@@ -37,6 +37,7 @@ describe('babel compiler', function() {
     var content = 'var c = {};\nvar {a, b} = c;';
     var expected = 'var a = c.a;\nvar b = c.b;';
 
+    plugin = new BabelCompiler({ plugins: { babel: { presets: ['es2015'] }}});
     plugin.compile({data: content, path: 'file.js'}, function(error, result) {
       assert(!error);
       assert(result.data.indexOf(expected) !== -1);
@@ -48,7 +49,7 @@ describe('babel compiler', function() {
     var content = 'var c = () => process.env.NODE_ENV;';
     var expected = '"use strict";\n\nvar c = function c() {\n  return undefined;\n};';
 
-    plugin = new BabelCompiler({ plugins: { babel: { plugins: ['transform-node-env-inline'] }}});
+    plugin = new BabelCompiler({ plugins: { babel: { presets: ['es2015'], plugins: ['transform-node-env-inline'] }}});
     plugin.compile({data: content, path: 'file.js'}, function(error, result) {
       assert(!error);
       assert(result.data.indexOf(expected) !== -1);

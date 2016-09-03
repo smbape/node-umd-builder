@@ -490,12 +490,14 @@ module.exports = class AmdCompiler
             return
         return
 
-    onCompile: (generatedFiles, changedAssets, done)->
-        if 'function' isnt typeof done
-            done = ->
-
+    onCompile: (generatedFiles, changedAssets)->
         if generatedFiles.length is 0
-            done()
+            return
+
+        resolve = ->
+        reject = ->
+        done = (err)->
+            resolve()
             return
 
         config =
@@ -540,8 +542,6 @@ module.exports = class AmdCompiler
         }
 
         plugin = @
-        watcherIsReady = builder.bwatcher.watcherIsReady
-        builder.bwatcher.watcherIsReady = false
 
         count = 0
 
@@ -561,7 +561,6 @@ module.exports = class AmdCompiler
                         return
 
                     plugin._compilePackages generatedFiles, changedAssets
-                    builder.bwatcher.watcherIsReady = true if watcherIsReady
                     _compileIndex config, options, done
 
                     return
@@ -579,7 +578,10 @@ module.exports = class AmdCompiler
             give()
             return
 
-        return
+        return new Promise (_resolve, _reject)->
+            resolve = _resolve
+            reject = _reject
+            return
 
     _getComponents: (done)->
         if @components

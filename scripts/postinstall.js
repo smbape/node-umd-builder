@@ -115,7 +115,8 @@ function install(tasks, config, done) {
             'brunch-2.8.x-completer_feature',
             'brunch-2.8.x-config_compiler_feature',
             'brunch-2.8.x-init_feature',
-            'brunch-2.8.x-fix_ready_event_emitted_before_read_done'
+            'brunch-2.8.x-fix_ready_event_emitted_before_read_done',
+            'brunch-2.8.x-onCompile_promise_feature'
         ],
         filePatches = [
             ['node_modules/log4js/lib/log4js.js', 'log4js-v0.6.x-shutdown_fix.patch'],

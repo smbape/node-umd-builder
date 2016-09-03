@@ -35,10 +35,10 @@ function BabelCompiler(config) {
         this.isIgnored = anymatch(/^(bower_components|vendor)/);
     }
 
-    // if (this.options.pattern) {
-    //     this.pattern = this.options.pattern;
-    //     delete this.options.pattern;
-    // }
+    if (this.options.pattern) {
+        this.pattern = this.options.pattern;
+        delete this.options.pattern;
+    }
 
     if (Array.isArray(this.options.presets) && this.options.presets.length === 0) {
         delete this.options.presets;
