@@ -98,7 +98,7 @@ _compileComponentFile = (path, component, config, memo, isAbsolutePath, options,
         if typeof component.paths is 'string'
             paths = [component.paths, path]
         else if Array.isArray(component.paths)
-            paths = component.paths
+            paths = component.paths.slice(0)
             paths.push path
         else
             paths = path
@@ -494,6 +494,12 @@ module.exports = class AmdCompiler
         if generatedFiles.length is 0
             return
 
+        options = _.pick @, ['paths', 'paths', 'lastPackages']
+
+        if not @_compilePackages generatedFiles, changedAssets
+            _compileIndex config, options, ->
+            return
+
         resolve = ->
         reject = ->
         done = (err)->
@@ -535,12 +541,6 @@ module.exports = class AmdCompiler
         config.map or (config.map = {})
         config.map['*'] or (config.map['*'] = {})
 
-        options = {
-            paths: @paths
-            optimizer: @optimizer
-            lastPackages: @lastPackages
-        }
-
         plugin = @
 
         count = 0
@@ -560,7 +560,6 @@ module.exports = class AmdCompiler
                         done(err)
                         return
 
-                    plugin._compilePackages generatedFiles, changedAssets
                     _compileIndex config, options, done
 
                     return
@@ -650,7 +649,7 @@ module.exports = class AmdCompiler
         {lastPackages, packages} = plugin
 
         if not plugin.options.package
-            return
+            return false
 
         generatedFiles.forEach (generatedFile, index)->
             generatedFile.sourceFiles.forEach (file, index)->
@@ -664,8 +663,10 @@ module.exports = class AmdCompiler
                 return
             return
 
+        hasChanged = false
         for dirname, paths of packages
             if not lastPackages or not _.isEqual(lastPackages[dirname], paths)
+                hasChanged = true
                 packageName = sysPath.join dirname, fcache.packageName
                 absPath = sysPath.join(plugin.paths.APPLICATION_PATH, packageName).replace(/[\\]/g, sysPath.sep)
                 paths = Object.keys(paths)
@@ -715,6 +716,6 @@ module.exports = class AmdCompiler
 
         plugin.lastPackages = _.clone packages
 
-        return
+        return hasChanged
 
 AmdCompiler.brunchPluginName = 'amd-brunch'
