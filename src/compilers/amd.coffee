@@ -496,10 +496,6 @@ module.exports = class AmdCompiler
 
         options = _.pick @, ['paths', 'paths', 'lastPackages']
 
-        if not @_compilePackages generatedFiles, changedAssets
-            _compileIndex config, options, ->
-            return
-
         resolve = ->
         reject = ->
         done = (err)->
@@ -560,6 +556,7 @@ module.exports = class AmdCompiler
                         done(err)
                         return
 
+                    plugin._compilePackages generatedFiles, changedAssets
                     _compileIndex config, options, done
 
                     return
@@ -664,7 +661,9 @@ module.exports = class AmdCompiler
             return
 
         hasChanged = false
-        for dirname, paths of packages
+        for dirname in Object.keys(packages).sort()
+            paths = packages[dirname]
+
             if not lastPackages or not _.isEqual(lastPackages[dirname], paths)
                 hasChanged = true
                 packageName = sysPath.join dirname, fcache.packageName
