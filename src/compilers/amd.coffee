@@ -653,7 +653,7 @@ module.exports = class AmdCompiler
                 if file.removed
                     path = file.path
                     dirname = sysPath.dirname(path).replace /[\\]/g, '/'
-                    delete packages[dirname][path]
+                    delete packages[dirname]?[path]
 
                     dst = sysPath.join plugin.paths.PUBLIC_PATH, plugin.amdDestination(path) + '.js'
                     fs.unlinkSync dst
