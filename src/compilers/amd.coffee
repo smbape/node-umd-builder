@@ -244,20 +244,32 @@ _compileIndex = (config, options, done)->
         template = _.template source
 
         destFileSingle = sysPath.resolve paths.PUBLIC_PATH, 'index.single.html'
-        fs.writeFileSync destFileSingle, template _.defaults
-            build: 'app'
-        , tplOpts
+        _writeHTML template(_.defaults({build: 'app'}, tplOpts)), destFileSingle, options.options, (err)->
+            return done(err) if err
 
-        destFileClassic = sysPath.resolve paths.PUBLIC_PATH, 'index.classic.html'
-        fs.writeFileSync destFileClassic, template _.defaults
-            build: 'web'
-        , tplOpts
+            destFileClassic = sysPath.resolve paths.PUBLIC_PATH, 'index.classic.html'
+            _writeHTML template(_.defaults({build: 'web'}, tplOpts)), destFileClassic, options.options, (err)->
+                return done(err) if err
+                logger.info 'compiled index file'
+                done()
+                return
+    catch err
+        done(err)
 
-        logger.info 'compiled index file'
-    catch e
-        logger.error e
+    return
 
-    done()
+_writeHTML = (html, dst, options, done)->
+    beforeWrite = options.beforeWrite
+    if _.isFunction beforeWrite
+        html = beforeWrite html, dst, options
+        if html instanceof Promise
+            html.then (html)->
+                fs.writeFile dst, html, done
+                return
+        else
+            fs.writeFile dst, html, done
+    else
+        fs.writeFile dst, html, done
     return
 
 anymatch = require 'anymatch'
@@ -491,10 +503,10 @@ module.exports = class AmdCompiler
         return
 
     onCompile: (generatedFiles, changedAssets)->
-        if generatedFiles.length is 0
+        if generatedFiles.length is 0 and changedAssets.length is 0
             return
 
-        options = _.pick @, ['paths', 'paths', 'lastPackages']
+        options = _.pick @, ['paths', 'lastPackages', 'options']
 
         resolve = ->
         reject = ->
@@ -652,11 +664,12 @@ module.exports = class AmdCompiler
             generatedFile.sourceFiles.forEach (file, index)->
                 if file.removed
                     path = file.path
-                    dirname = sysPath.dirname(path).replace /[\\]/g, '/'
-                    delete packages[dirname]?[path]
+                    if path
+                        dirname = sysPath.dirname(path).replace /[\\]/g, '/'
+                        delete packages[dirname]?[path.replace(/\.[^\.]+$/, '')]
 
-                    dst = sysPath.join plugin.paths.PUBLIC_PATH, plugin.amdDestination(path) + '.js'
-                    fs.unlinkSync dst
+                        dst = sysPath.join plugin.paths.PUBLIC_PATH, plugin.amdDestination(path) + '.js'
+                        fs.unlinkSync dst
                 return
             return
 
@@ -713,7 +726,7 @@ module.exports = class AmdCompiler
                 else
                     builder.fswatcher.emit 'change', absPath
 
-        plugin.lastPackages = _.clone packages
+        plugin.lastPackages = _.cloneDeep packages
 
         return hasChanged
 

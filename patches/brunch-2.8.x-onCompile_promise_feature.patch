@@ -1,13 +1,27 @@
-From b5526028d692abac779a793e286389390ed787ab Mon Sep 17 00:00:00 2001
+From 7aa38290a5084e8f87ff8e4290ac91dabfab41b8 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?St=C3=A9phane=20MBAPE?= <rose.martin-8og3raxw@yopmail.com>
 Date: Sat, 3 Sep 2016 12:32:38 +0200
 Subject: [PATCH] onCompile can now return a promise
 
 ---
- lib/plugins.js | 26 ++++++++++++++++++++++++--
- lib/watch.js   |  4 +++-
- 2 files changed, 27 insertions(+), 3 deletions(-)
+ lib/fs_utils/source_file.js |  2 +-
+ lib/plugins.js              | 26 ++++++++++++++++++++++++--
+ lib/watch.js                |  4 +++-
+ 3 files changed, 28 insertions(+), 4 deletions(-)
 
+diff --git a/lib/fs_utils/source_file.js b/lib/fs_utils/source_file.js
+index 4ff8c71..8c2442f 100644
+--- a/lib/fs_utils/source_file.js
++++ b/lib/fs_utils/source_file.js
+@@ -141,7 +141,7 @@ class SourceFile {
+ 
+   dispose() {
+     debug(`Disposing ${this.path}`);
+-    this.path = '';
++    //this.path = '';
+     this.targets = Object.freeze({});
+     this.dependencies = Object.freeze([]);
+     this.disposed = true;
 diff --git a/lib/plugins.js b/lib/plugins.js
 index de2b85e..e45aea2 100644
 --- a/lib/plugins.js
