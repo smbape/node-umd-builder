@@ -417,7 +417,7 @@ module.exports = class AmdCompiler
     brunchPlugin: true
     type: 'javascript'
     completer: true
-    
+
     constructor: (config = {})->
         if config.optimize
             @optimizer = new UglifyJSOptimizer config
@@ -674,14 +674,14 @@ module.exports = class AmdCompiler
             return
 
         hasChanged = false
-        for dirname in Object.keys(packages).sort()
-            paths = packages[dirname]
+        for dirname, paths of packages
 
             if not lastPackages or not _.isEqual(lastPackages[dirname], paths)
                 hasChanged = true
+                packageNameWithoutExt = fcache.packageName.replace(/\.[^\.]+$/, '')
                 packageName = sysPath.join dirname, fcache.packageName
                 absPath = sysPath.join(plugin.paths.APPLICATION_PATH, packageName).replace(/[\\]/g, sysPath.sep)
-                paths = Object.keys(paths)
+                paths = Object.keys(paths).sort()
 
                 if paths.length is 0
                     delete packages[dirname]
@@ -697,6 +697,8 @@ module.exports = class AmdCompiler
                 for path in paths
                     hasFile = true
                     [match, basename] = path.match /([^\/\\]+)(?:\.[^\.]+)?$/
+                    if basename is packageNameWithoutExt
+                        continue
                     arg = 'arg' + i
                     args.push arg
                     deps.push './' + basename
