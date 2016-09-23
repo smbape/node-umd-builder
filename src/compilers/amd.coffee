@@ -442,6 +442,9 @@ module.exports = class AmdCompiler
     compile: (params, done)->
         {data, path, map} = params
 
+        if @options.bind
+            data = data.replace /function\s*\(\)\s*\{\s*return fn.apply\(me, arguments\);\s*\}/, 'fn.bind(me)'
+
         umdData = comData = data
         
         if not @isIgnored params.path
