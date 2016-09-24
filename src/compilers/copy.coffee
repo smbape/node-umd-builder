@@ -19,39 +19,41 @@ copySem = semLib.semCreate Math.pow(2, 2), true
 # usefull for images changes
 wait = Math.pow 2, 8
 fns = {}
-hasOwnProperty = Object::hasOwnProperty
-debounce = (plugin, src, dst, next)->
-    fns[src] or (fns[src] = {})
-    return fns[src][dst] if hasOwnProperty.call fns[src], dst
+hasProp = Object::hasOwnProperty
 
-    fns[src][dst] = _.debounce ->
-        copySem.semTake ->
-            done = (err)->
-                next(err)
-                copySem.semGive()
-                return
+_copyFile = (dst, src, plugin, next)->
+    copySem.semTake ->
+        done = (err)->
+            next(err)
+            copySem.semGive()
+            return
 
-            mkdirp sysPath.dirname(dst), (err)->
-                return done(err) if err
+        mkdirp sysPath.dirname(dst), (err)->
+            return done(err) if err
 
-                if logger.isDebugEnabled()
-                    _src = sysPath.relative plugin.paths.APPLICATION_PATH, src
-                    _dst = sysPath.relative plugin.paths.APPLICATION_PATH, dst
-                    logger.debug "\n    #{_src}\n    #{_dst}"
+            if logger.isDebugEnabled()
+                _src = sysPath.relative plugin.paths.APPLICATION_PATH, src
+                _dst = sysPath.relative plugin.paths.APPLICATION_PATH, dst
+                logger.debug "\n    #{_src}\n    #{_dst}"
 
-                readable = fs.createReadStream src
-                writable = fs.createWriteStream dst
-                readable.pipe writable
+            readable = fs.createReadStream src
+            writable = fs.createWriteStream dst
+            readable.pipe writable
 
-                writable.on 'error', done
-                writable.on 'finish', done
-                return
+            writable.on 'error', done
+            writable.on 'finish', done
             return
         return
-    , wait
+    return
 
-copyFile = (plugin, src, dst, next)->
-    debounce(plugin, src, dst, next)()
+copyFile = (dst, src, plugin, done)->
+    if hasProp.call fns, dst
+        fn = fns[dst]
+    else
+        fn = fns[dst] = _.throttle _copyFile.bind(null, dst), wait, {leading: false, trailling: false}
+
+    fn.cancel()
+    fn(src, plugin, done)
     return
 
 module.exports = class CopyCompiler
@@ -65,13 +67,13 @@ module.exports = class CopyCompiler
         @amdDestination = config.modules.amdDestination
         {@paths} = builder.generateConfig(config)
 
-    compile: (params, next)->
+    compile: (params, done)->
         {data, path, map} = params
         self = @
         src = sysPath.join self.paths.APPLICATION_PATH, path
         dst = sysPath.join self.paths.PUBLIC_PATH, self.amdDestination(path, true)
-        copyFile @, src, dst, (err)->
-            next err, params
+        copyFile dst, src, @, (err)->
+            done err, params
             return
 
         return
