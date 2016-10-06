@@ -32,9 +32,7 @@ RebaseCssUrl.prototype.compile = function(params, callback) {
     var data = params.data,
         path = params.path,
         map = params.map,
-        destination = sysPath.join(this.root, this.amdDestination(path, true)),
-        root = this.root,
-        source = sysPath.relative(sysPath.dirname(root), destination).replace(/[\\]/g, '/'),
+        dstFilename = this.amdDestination(path),
         sourceMap = map || this.sourceMap,
         target, matcher;
 
@@ -50,15 +48,15 @@ RebaseCssUrl.prototype.compile = function(params, callback) {
         return callback(null, params);
     }
 
-    writeData(data, sysPath.join(this.paths.PUBLIC_PATH, this.amdDestination(path) + '.css'), function(err) {
+    writeData(data, sysPath.join(this.paths.PUBLIC_PATH, dstFilename + '.css'), function(err) {
         if (err) {
             return callback(err, params);
         }
 
         try {
             data = rebaseUrls(data, {
-                currentDir: sysPath.dirname(destination),
-                root: sysPath.dirname(sysPath.join(root, target))
+                currentDir: sysPath.dirname(dstFilename),
+                root: sysPath.dirname(target)
             });
         } catch (error) {
             logger.warn('error while rebase-css-url', path, error.message);
