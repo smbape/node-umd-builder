@@ -67,10 +67,16 @@ module.exports = class MarkdownCompiler
             data = marked(data, options).replace holder, ->
                 holders[index++]
 
+            if (options.decorate)
+                data = options.decorate(data)
+
             @jstCompiler.compile {data, path, map}, next
 
         else
             data = JSON.stringify marked(data, options)
+
+            if (options.decorate)
+                data = options.decorate(data)
 
             data = """(function() {
                 var __templateData = #{data};

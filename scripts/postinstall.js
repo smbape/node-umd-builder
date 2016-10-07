@@ -6,26 +6,26 @@ var fs = require('fs'),
     os = require('os'),
     chalk = require('chalk'),
     which = require('which'),
+    async = require('async'),
     anyspawn = require('anyspawn'),
     new_branch = '__umd_features__',
+    has_new_branch = new RegExp('(?:^|\\n)\\s*(?:\\*?\\s*)' + new_branch + '\\s*(?:\\n|$)', 'm'),
     username = require('username').sync(),
     push = Array.prototype.push,
-    slice = Array.prototype.slice;
+    slice = Array.prototype.slice,
+    emptyFn = Function.prototype;
 
-require('fs').readdir('../lib', function(err) {
+setup(sysPath.join(__dirname, '..'), function(err) {
     if (err) {
-        anyspawn.spawn('npm run prepublish', {
-            stdio: 'inherit'
-        }, function(err) {
-            if (err) {
-                throw err
-            };
-            setup(sysPath.join(__dirname, '..'));
-        });
+        console.error(err && err.stack || (new Error(err)).stack);
     }
 });
 
 function setup(projectRoot, done) {
+    if ('function' !== typeof done) {
+        done = emptyFn;
+    }
+
     // https://ariejan.net/2009/10/26/how-to-create-and-apply-a-patch-with-git/
     var config = {
             patches: {},
@@ -36,81 +36,154 @@ function setup(projectRoot, done) {
         projectModules = config.project.modules = sysPath.join(projectRoot, 'node_modules'),
         projectBrunch = config.project.brunch = sysPath.join(projectModules, 'brunch'),
         patchesFolder = config.patches.folder = sysPath.join(projectRoot, 'patches'),
-        is_new_branch = new RegExp('\\*\\s+' + new_branch + '(?:\\n|$)'),
-        has_new_branch = new RegExp('(?:^|\n)' + new_branch + '(?:\\n|$)');
+        cloneCmd = 'git clone --depth 1 --branch 2.8.2 https://github.com/brunch/brunch.git';
 
-    // make such patch executable exists
+    // make sure patch executable exists
     which.sync('patch');
 
-    var tasks = [
-            // with node v4 and npm 3.4.0 and npm 3.4.1, nested postinstall script is launched before end of all packages installation
-            ['npm install --production --ignore-scripts', {
+    var preinstall = [
+        function() {
+            var next = arguments[arguments.length - 1];
+            anyspawn.spawn('npm run prepublish', {
+                stdio: 'inherit',
                 cwd: projectRoot
-            }]
-        ],
-        options = {
-            stdio: 'inherit',
-            cwd: projectBrunch
-        };
-    if (fs.existsSync(projectBrunch)) {
-        anyspawn.spawn('git rev-parse', options, function(code) {
-            if (code) {
-                throw new Error('"' + projectBrunch + '" exists and is not a git repository');
+            }, next);
+        },
+
+        function() {
+            var next = arguments[arguments.length - 1];
+            anyspawn.spawn('npm install --production --ignore-scripts', {
+                stdio: 'inherit',
+                cwd: projectRoot
+            }, next);
+        }
+    ];
+
+    var spawnBrunchOptions = {
+        stdio: 'inherit',
+        cwd: projectBrunch
+    };
+
+    var resetRepoBrunchTasks = [
+        function() {
+            var next = arguments[arguments.length - 1];
+            anyspawn.spawn('git rev-parse', spawnBrunchOptions, function(code) {
+                if (code) {
+                    // invalid git repo
+                    anyspawn.spawn('rm -rf brunch', {
+                        stdio: 'inherit',
+                        cwd: sysPath.dirname(projectBrunch)
+                    }, function(code) {
+                        if (code) {
+                            return next(code);
+                        }
+                        anyspawn.spawn(cloneCmd, {
+                            stdio: 'inherit',
+                            cwd: sysPath.dirname(projectBrunch)
+                        }, next);
+                    });
+                    return;
+                }
+
+                next();
+            });
+        },
+
+        function() {
+            var next = arguments[arguments.length - 1];
+            anyspawn.exec('git branch -l', spawnBrunchOptions, next);
+        },
+
+        function(data, code, next) {
+            var commands = [
+                'git reset --hard HEAD',
+                'git checkout tags/2.8.2'
+            ];
+
+            if (has_new_branch.test(data)) {
+                commands.push('git branch -D "' + new_branch + '"');
             }
 
-            anyspawn.exec('git branch -l', options, function(err, data) {
-                if (err) {
-                    throw new Error('"' + projectBrunch + '": cannot list branches');
-                }
-                var commands;
-                if (is_new_branch.test(data)) {
-                    commands = [
-                        'git reset --hard HEAD~2',
-                        'git checkout master',
-                        'git branch -D "' + new_branch + '"'
-                    ];
-                } else if (has_new_branch.test(data)) {
-                    commands = [
-                        'git reset --hard HEAD',
-                        'git checkout master',
-                        'git branch -D "' + new_branch + '"'
-                    ];
-                } else {
-                    commands = [
-                        'git reset --hard HEAD',
-                        'git checkout master'
-                    ];
-                }
+            commands = commands.map(function(cmd) {
+                return [cmd, {
+                    cwd: projectBrunch
+                }];
+            });
 
-                commands = commands.map(function(element) {
-                    return [element, {
-                        cwd: projectBrunch
-                    }];
+            anyspawn.spawnSeries(commands, next);
+        }
+    ];
+
+    fs.lstat(projectBrunch, function(err, stats) {
+        if (err) {
+            // Brunch folder doesn't exists
+            // clone repo before installing
+            preinstall.push(function() {
+                var next = arguments[arguments.length - 1];
+                anyspawn.spawn(cloneCmd, {
+                    stdio: 'inherit',
+                    cwd: sysPath.dirname(projectBrunch)
+                }, next);
+            });
+            doInstall();
+            return;
+        }
+
+        fs.lstat(sysPath.join(projectBrunch, '.git'), function(err, stats) {
+            if (stats && stats.isDirectory()) {
+                preinstall.unshift(function() {
+                    var next = arguments[arguments.length - 1];
+                    anyspawn.spawn('mv .git/ .git.bak/', spawnBrunchOptions, next);
                 });
 
-                anyspawn.spawnSeries(commands, function(err) {
-                    if (err) {
-                        done(err);
-                        return;
-                    }
-                    install(tasks, config, done);
+                preinstall.push(function() {
+                    var next = arguments[arguments.length - 1];
+                    anyspawn.spawn('mv .git.bak/ .git/', spawnBrunchOptions, next);
                 });
+                push.apply(preinstall, resetRepoBrunchTasks);
+
+                doInstall();
+                return;
+            }
+
+            fs.lstat(sysPath.join(projectBrunch, '.git.bak'), function(err, stats) {
+                if (stats && stats.isDirectory()) {
+
+                    preinstall.push(function() {
+                        var next = arguments[arguments.length - 1];
+                        anyspawn.spawn('mv .git.bak/ .git/', spawnBrunchOptions, next);
+                    });
+                }
+
+                push.apply(preinstall, resetRepoBrunchTasks);
+                doInstall();
             });
         });
-    } else {
-        tasks.push(['git clone https://github.com/brunch/brunch.git', {
-            cwd: sysPath.dirname(projectBrunch)
-        }]);
-        install(tasks, config, done);
+
+    });
+
+    function doInstall() {
+        async.waterfall(preinstall, function(err) {
+            if (err) {
+                return done(err);
+            }
+            install(config, function(err) {
+                if (err) {
+                    return done(err);
+                }
+
+                anyspawn.spawn('mv .git/ .git.bak/', {
+                    cwd: projectBrunch
+                }, done);
+            });
+        });
     }
+
 }
 
-function install(tasks, config, done) {
-    if ('function' !== typeof done) {
-        done = emptyFn;
-    }
-
-    var brunchPatches = [
+function install(config, done) {
+    var tasks = [],
+        brunchPatches = [
             'brunch-2.8.x-anymatch_feature',
             'brunch-2.8.x-completer_feature',
             'brunch-2.8.x-config_compiler_feature',
@@ -121,7 +194,7 @@ function install(tasks, config, done) {
         filePatches = [
             ['node_modules/log4js/lib/log4js.js', 'log4js-v0.6.x-shutdown_fix.patch'],
             ['node_modules/highlight.js/lib/languages/handlebars.js', 'hljs_hbs-8.7.0_fix.patch'],
-            // ['node_modules/requirejs/bin/r.js', 'rjs-2.1.22.patch']
+            ['node_modules/stylus/lib', 'stylus-0.x-include-feature.patch']
         ],
         projectBrunch = config.project.brunch,
         projectRoot = config.project.root,
@@ -184,38 +257,65 @@ function patchSeries(patches, config, done) {
 
     iterate(0);
 
-    function iterate(err) {
-        var file, patch;
-        if (err === 0 && ++i < _len) {
+    function iterate(code) {
+        var file;
+        if ( (code === 0 || code === 1) && ++i < _len ) {
             file = sysPath.relative(projectRoot, sysPath.join(projectRoot, patches[i][0]));
-            locateModuleFile(file, projectRoot, function(err, file) {
+            resolveModule(file, projectRoot, function(err, file, stats) {
+                var patch, cmd, cwd;
                 if (err) {
                     return done(err);
                 }
-                patch = sysPath.relative(projectRoot, sysPath.join(patchesFolder, patches[i][1]));
-                anyspawn.spawn('patch ' + anyspawn.quoteArg(file) + ' < ' + anyspawn.quoteArg(patch), {
-                    cwd: projectRoot,
-                    stdio: 'inherit'
+
+                patch = sysPath.join(patchesFolder, patches[i][1]);
+                if (stats.isDirectory()) {
+                    cmd = 'patch -p1 -N < ' + anyspawn.quoteArg(patch);
+                    cwd = file;
+                } else {
+                    patch = sysPath.relative(projectRoot, patch);
+                    cmd = 'patch -N ' + anyspawn.quoteArg(file) + ' < ' + anyspawn.quoteArg(patch);
+                    cwd = projectRoot;
+                }
+                anyspawn.spawn(cmd, {
+                    cwd: cwd,
+                    stdio: 'inherit',
+                    prompt: true
                 }, iterate);
             });
         } else {
-            done(err);
+            if (code === 2) {
+                code = "Cannot find file to patch " + patches[i][0];
+            } else if (code === 1) {
+                code = 0;
+            }
+            done(code);
         }
     }
 }
 
-function locateModuleFile(file, root, cb) {
+function resolveModule(file, root, done) {
     var filepath = sysPath.join(root, file),
         newRoot;
-    fs.exists(filepath, function(exists) {
-        if (exists) {
-            cb(null, filepath);
+    fs.lstat(filepath, function(err, stats) {
+        if (!err) {
+            if (stats.isSymbolicLink()) {
+                fs.realpath(filepath, function(err, resolvedPath) {
+                    if (err) {
+                        return done(err);
+                    }
+
+                    fs.stats(resolvedPath, function(err, stats) {
+                        done(err, resolvedPath, stats);
+                    });
+                });
+                return;
+            }
+
+            done(null, filepath, stats);
         } else if ((newRoot = sysPath.dirname(root)) !== root) {
-            locateModuleFile(file, newRoot, cb);
+            resolveModule(file, newRoot, done);
         } else {
-            cb(new Error('Unable to find file'));
+            done(new Error('Unable to find file'));
         }
     });
 }
-
-function emptyFn() {}
