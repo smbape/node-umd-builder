@@ -47,9 +47,9 @@ module.exports = class MarkdownCompiler
         if options.jst?.on
             if options.jst.holder
                 holderStr = options.jst.holder
-                holder = new RegExp holderStr.replace(SPECIAL_CHAR_REG, '\\$1'), 'g'
+                holder = new RegExp holderStr.replace(SPECIAL_CHAR_REG, '\\$1') + '_(\\d+)', 'g'
             else
-                holder = /@@@/g
+                holder = /@@@_(\d+)/g
                 holderStr = holder.source
 
             delete options.jst
@@ -60,12 +60,12 @@ module.exports = class MarkdownCompiler
             {ignore, escape, interpolate, evaluate} = jstOptions
             placeholderFinder = new RegExp '(?:' + ignore.source + '|' + escape.source + '|' + interpolate.source + '|' + evaluate.source + ')', 'g'
             data = data.replace placeholderFinder, (match)->
+                replace = holderStr + '_' + holders.length
                 holders.push match
-                holderStr
+                replace
 
-            index = 0
-            data = marked(data, options).replace holder, ->
-                holders[index++]
+            data = marked(data, options).replace holder, (match, index)->
+                holders[parseInt(index, 10)]
 
             if (options.decorate)
                 data = options.decorate(data)
