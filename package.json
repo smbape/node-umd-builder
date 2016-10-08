@@ -24,6 +24,7 @@
   "dependencies": {
     "anymatch": "^1.3.0",
     "anyspawn": "^1.0.3",
+    "async": "^2.0.1",
     "async-each": "^1.0.0",
     "babel-core": "^6.5.1",
     "babel-preset-react": "^6.5.0",

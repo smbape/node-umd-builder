@@ -47,9 +47,9 @@ module.exports = class MarkdownCompiler
         if options.jst?.on
             if options.jst.holder
                 holderStr = options.jst.holder
-                holder = new RegExp holderStr.replace(SPECIAL_CHAR_REG, '\\$1') + '_(\\d+)', 'g'
+                holder = new RegExp '(?:<p>)?' + holderStr.replace(SPECIAL_CHAR_REG, '\\$1') + '_(\\d+)(?:</p>)?', 'g'
             else
-                holder = /@@@_(\d+)/g
+                holder = /(?:<p>)?@@@_(\d+)(?:<\/p>)?/g
                 holderStr = holder.source
 
             delete options.jst
