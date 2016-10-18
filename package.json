@@ -39,7 +39,7 @@
     "esprima": "^2.7.2",
     "fs-explorer": "^1.0.1",
     "handlebars": "^4.0.5",
-    "highlight.js": "^8.8.0",
+    "highlight.js": "^9.7.0",
     "js-beautify": "^1.6.2",
     "jshint": "^2.9.1",
     "lodash": "^4.3.0",

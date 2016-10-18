@@ -47,12 +47,23 @@ _processComponent = (component, config, options, done)->
         _compileComponentFile path, component, config, memo, false, options, opts, give
         return
 
+    toCompile = {}
+
     for prop in ['main', 'scripts']
         isScript = prop is 'scripts'
         for path in component.package[prop]
             # normalize path
             path = sysPath.relative(componentDir, sysPath.resolve(componentDir, path)).replace(/[\\]/g, '/')
-            task path, {isScript} if component.jsfiles and hasProp.call component.jsfiles, path
+            if /[\^\$\|\?\*\+\(\)\[\]\{\}]/.test(path)
+                matcher = anymatch [path]
+                for path of component.jsfiles
+                    if not hasProp.call(toCompile, path) and matcher path.replace(/[\\]/g, '/')
+                        toCompile[path] = {isScript}
+            else if not hasProp.call(toCompile, path) and component.jsfiles and hasProp.call component.jsfiles, path
+                toCompile[path] = {isScript}
+
+    for path, opts of toCompile
+        task path, opts
 
     if component.map
         for path, map of component.map
@@ -75,7 +86,7 @@ _compileComponentFile = (path, component, config, memo, isAbsolutePath, options,
         absolutePath = sysPath.join configPaths.BOWER_COMPONENTS_ABSOLUTE_PATH, name, path
 
     return done() if hasProp.call processed, absolutePath
-    logger.trace "compiling bower file #{component.name}, #{path}"
+    logger.trace "compiling bower file #{component.name}: #{path}"
 
     processed[absolutePath] = true
     extname = sysPath.extname path
@@ -125,13 +136,16 @@ _compileComponentFile = (path, component, config, memo, isAbsolutePath, options,
             config.map['*'][path] = plugin
         else
             if component.exports
-                plugin = name + ( '' + Math.random() ).replace( /\D/g, '' )
+                plugin = name + ( '-' + Math.random() ).replace( /\D/g, '' )
             else
                 plugin = path
 
             if hasProp.call(config.paths, plugin)
                 done new Error "[#{name}] - Cannot add [#{plugin}] to groups. Already exists as path name"
                 return
+
+            # configure requirejs for plugin path resolution
+            config.paths[plugin] = path
 
         if component.exports
             # shim non amd file
