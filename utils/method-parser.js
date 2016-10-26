@@ -137,9 +137,9 @@ function _parse(str, tokenizer) {
     }
 
     if (state === STATES.stop) {
-        head = str.substring(0, pos[0]);
-        declaration = str.substring(pos[0], pos[1]);
-        body = str.substring(pos[2]);
+        head = str.slice(0, pos[0]);
+        declaration = str.slice(pos[0], pos[1]);
+        body = str.slice(pos[2]);
     }
 
     return [locals, name, args, head, declaration, body];
@@ -255,7 +255,7 @@ function _parse(str, tokenizer) {
                 }
                 /* falls through */
             case SYMBOLS.REGEXP_QUOTE_END:
-                // console.log('regexp_quoting', col, index, [str.substring(col, index)], state, arguments);
+                // console.log('regexp_quoting', col, index, [str.slice(col, index)], state, arguments);
                 switch (state) {
                     case STATES.regexp_quoting:
                         state = STATES.initial;
@@ -269,13 +269,13 @@ function _parse(str, tokenizer) {
                         // console.log('regexp_quoting', {
                         //     col: col,
                         //     index: index,
-                        //     str: str.substring(col, index),
+                        //     str: str.slice(col, index),
                         //     state: state,
                         //     arguments: arguments
                         // });
                         if (
-                            /^\s*$/.test(str.substring(col, index)) /* begining of line */ ||
-                            /[\,\{\}\;\=\(\+\-\!\&\|\:]\s*$/m.test(str.substring(col, index)) ||
+                            /^\s*$/.test(str.slice(col, index)) /* begining of line */ ||
+                            /[\,\{\}\;\=\(\+\-\!\&\|\:]\s*$/m.test(str.slice(col, index)) ||
                             'string' === typeof regexp_quote) {
                             // console.log('regexp_quoting');
                             state = STATES.regexp_quoting;
@@ -329,13 +329,13 @@ function _parse(str, tokenizer) {
                     if (_locals) {
                         locals = _locals.trim();
                     } else if (name1 || name2) {
-                        var fnText = str.substring(index, lastIndex);
+                        var fnText = str.slice(index, lastIndex);
                         name = name1 || name2;
                         if (args1 || args2) {
-                            args = (args1 || args2).trim()
-                            var argIndex = fnText.indexOf(args);
-                            // args within parenthesis
-                            pos = [index, index + argIndex + 1, index + argIndex + args.length - 1, lastIndex];
+                            args = (args1 || args2).trim();
+                            var declarationIndex = fnText.indexOf(args);
+                            var argIndex = fnText.indexOf('(', declarationIndex);
+                            pos = [index, index + argIndex + 1, index + declarationIndex + args.length - 1, lastIndex];
                             args = annotate("function " + args);
                         } else {
                             args = [];

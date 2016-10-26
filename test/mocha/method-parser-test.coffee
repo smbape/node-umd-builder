@@ -302,3 +302,37 @@ describe 'method-parser', ->
         assert.strictEqual actual, expected
 
         return
+
+    it 'should parse variable function with name declared', ->
+        str = """
+        var deps, factory,
+          hasProp = {}.hasOwnProperty;
+
+        deps = ['umd-core/src/views/BackboneView'];
+
+        factory = function factory(BackboneView) {
+            return Tutorial1View;
+
+          })(BackboneView);
+        };
+        """
+        [locals, name, args, head, declaration, body] = parse(str)
+        args.unshift 'require'
+        actual = "#{head}#{declaration}#{args.join(', ')}#{body}"
+
+        expected = """
+        var deps, factory,
+          hasProp = {}.hasOwnProperty;
+
+        deps = ['umd-core/src/views/BackboneView'];
+
+        factory = function factory(require, BackboneView) {
+            return Tutorial1View;
+
+          })(BackboneView);
+        };
+        """
+
+        assert.strictEqual actual, expected
+
+        return
