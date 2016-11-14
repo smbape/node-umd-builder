@@ -10,7 +10,6 @@ var fs = require('fs'),
     anyspawn = require('anyspawn'),
     new_branch = '__umd_features__',
     has_new_branch = new RegExp('(?:^|\\n)\\s*(?:\\*?\\s*)' + new_branch + '\\s*(?:\\n|$)', 'm'),
-    username = require('username').sync(),
     push = Array.prototype.push,
     slice = Array.prototype.slice,
     emptyFn = Function.prototype;
