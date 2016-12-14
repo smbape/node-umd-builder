@@ -42,24 +42,16 @@ function annotate(fn) {
     return $inject;
 }
 
-exports.NG_PREFIX = 'ng';
-var NG_FNS = ['usable', 'run', 'config', 'module', 'factory', 'filter', 'directive', 'controller', 'service', 'value', 'constant', 'decorator', 'provider'].map(function(element) {
-    return exports.NG_PREFIX + element;
+exports.NG_FACTORIES = ['usable', 'run', 'config', 'module', 'factory', 'filter', 'directive', 'controller', 'service', 'value', 'constant', 'decorator', 'provider'].map(function(element) {
+    return 'ng' + element;
 });
-exports.NG_FNS = NG_FNS;
 
-var OTHER_FNS = ['factory', 'freact'];
-exports.OTHER_FNS = OTHER_FNS;
+exports.FACTORY_FNS = ['factory', 'freact'];
 
-var ALL_FNS = '\\b(' + OTHER_FNS.concat(NG_FNS).join('|') + ')\\b';
-// var ALL_FNS = '\\b(' + ['factory'].join('|') + ')\\b';
-exports.ALL_FNS = ALL_FNS;
 var FN_ARGS_REG = /(\s*[^\(]*\(\s*[^\)]*\))/;
-var ALL_FNS_REG = new RegExp("(?:" + ALL_FNS + "\\s*=\\s*(?:function" + FN_ARGS_REG.source + ")?|function\\s+" + ALL_FNS + FN_ARGS_REG.source + ")");
 
 var SYMBOLS = {
     LOCALS: /\/\*\s*locals\s*=\s*([^*]+)\s*\*\//,
-    ALL_FNS_REG: ALL_FNS_REG,
     LINE_COMMENT: '//',
     BLOCK_COMMENT_START: '/*',
     BLOCK_COMMENT_END: '*/',
@@ -76,25 +68,6 @@ var SYMBOLS = {
     NON_NEW_LINE: /./
 };
 
-var tokenizer = createTokenizer([
-    SYMBOLS.LINE_COMMENT,
-    SYMBOLS.LOCALS,
-    SYMBOLS.BLOCK_COMMENT_START,
-    SYMBOLS.BLOCK_COMMENT_END,
-    SYMBOLS.CURLY_BEGIN,
-    SYMBOLS.CURLY_END,
-    SYMBOLS.PAREN_BEGIN,
-    SYMBOLS.PAREN_END,
-    SYMBOLS.ALL_FNS_REG,
-    SYMBOLS.ESCAPED_QUOTE_OR_NEW_LINE,
-    SYMBOLS.SINGLE_QUOTE,
-    SYMBOLS.DOUBLE_QUOTE,
-    SYMBOLS.REGEXP_QUOTE_BEGIN,
-    SYMBOLS.REGEXP_QUOTE_END,
-    SYMBOLS.NEW_LINE
-]);
-// console.log(tokenizer);
-
 function createTokenizer(symbols) {
     var tokenizer = [];
     for (var i = 0, len = symbols.length; i < len; i++) {
@@ -108,7 +81,35 @@ function createTokenizer(symbols) {
     return new RegExp(tokenizer.join('|'), 'mg');
 }
 
-function parse(str) {
+function parse(str, options) {
+    var factories;
+    if (options && options.factories) {
+        factories = options.factories;
+    } else {
+        factories = exports.FACTORY_FNS.concat(exports.NG_FACTORIES);
+    }
+
+    factories = '\\b(' + factories.join('|') + ')\\b';
+    var factories_REG = new RegExp("(?:" + factories + "\\s*=\\s*(?:function" + FN_ARGS_REG.source + ")?|function\\s+" + factories + FN_ARGS_REG.source + ")");
+
+    var tokenizer = createTokenizer([
+        SYMBOLS.LINE_COMMENT,
+        SYMBOLS.LOCALS,
+        SYMBOLS.BLOCK_COMMENT_START,
+        SYMBOLS.BLOCK_COMMENT_END,
+        SYMBOLS.CURLY_BEGIN,
+        SYMBOLS.CURLY_END,
+        SYMBOLS.PAREN_BEGIN,
+        SYMBOLS.PAREN_END,
+        factories_REG,
+        SYMBOLS.ESCAPED_QUOTE_OR_NEW_LINE,
+        SYMBOLS.SINGLE_QUOTE,
+        SYMBOLS.DOUBLE_QUOTE,
+        SYMBOLS.REGEXP_QUOTE_BEGIN,
+        SYMBOLS.REGEXP_QUOTE_END,
+        SYMBOLS.NEW_LINE
+    ]);
+
     return _parse(str, new RegExp(tokenizer));
 }
 

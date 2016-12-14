@@ -12,7 +12,7 @@ var sysPath = require('path');
 var fs = require('fs');
 
 function BabelCompiler(config) {
-    if (!config) config = {};
+    if (config == null) config = {};
     var originalOptions = config.plugins && config.plugins.babel,
         options = originalOptions || {},
         hasOptions = false;
@@ -59,6 +59,21 @@ function BabelCompiler(config) {
             e = error;
             e = e.toString().replace("Error: ENOENT, ", "");
             console.warn(".babelrc parsing error: " + e + ". babel will run with default options.");
+        }
+    }
+
+    // fix plugin relative path resolution
+    if (this.options.hasOwnProperty('plugins')) {
+        var plugins = this.options.plugins;
+        for (var i = 0, len = plugins.length; i < len; i++) {
+            var plugin = plugins[i];
+            if ('string' === typeof plugin) {
+                if ('.' === plugin[0]) {
+                    plugins[i] = sysPath.resolve(plugin);
+                }
+            } else if (Array.isArray(plugin) && '.' === plugin[0][0]) {
+                plugin[0] = sysPath.resolve(plugin[0]);
+            }
         }
     }
 

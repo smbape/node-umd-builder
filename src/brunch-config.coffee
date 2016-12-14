@@ -76,6 +76,9 @@ config = exports.config =
             strict: true
             jshint: true
             package: false
+            tplOpts:
+                karma:
+                    pattern: /-test\.js$/
         coffeescript:
             bare: true
         jshint:

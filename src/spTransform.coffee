@@ -395,7 +395,23 @@ do ->
     return
 
 parse = (str, options)->
-    babylon.parse str, { plugins: ['jsx', 'flow'], sourceType: 'module' }
+    babylon.parse str, { plugins: [
+        'jsx'
+        'flow'
+        'jsx'
+        'doExpressions'
+        'functionBind'
+        'classConstructorCall'
+        'exportExtensions'
+        'dynamicImport'
+        'classProperties'
+        'decorators'
+        'trailingFunctionCommas'
+        'asyncFunctions'
+        'exponentiationOperator'
+        'asyncGenerators'
+        'objectRestSpread'
+     ], sourceType: 'module' }
 
 transform = (str, options)->
     options = _.extend {

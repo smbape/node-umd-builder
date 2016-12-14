@@ -161,8 +161,7 @@ switch(root.type) {
         window.depsLoader = depsLoader;
         window.pathBrowserify = pathBrowserify;
 
-        var allTestFiles = [];
-        var TEST_REGEXP = /-test\.js$/;
+        var TEST_REGEXP = <%= root.karma.pattern %>;
 
         // add test files
         Object.keys(window.__karma__.files).forEach(function(file) {

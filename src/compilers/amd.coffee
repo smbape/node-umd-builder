@@ -169,11 +169,12 @@ _writeMainFile = (config, options, done)->
     pathBrowserify = config['path-browserify'] or 'umd-core/path-browserify'
     delete config['path-browserify']
 
-    srcPath = sysPath.resolve(__dirname, '../../templates/main.js')
+
+    srcPath = options.options?.mainTemplate or sysPath.resolve(__dirname, '../../templates/main.js')
     source = fs.readFileSync srcPath, 'utf8'
     template = _.template source
 
-    tplOpts = {
+    tplOpts = _.extend {
         require: require
         __filename: srcPath
         __dirname: sysPath.dirname srcPath
@@ -183,7 +184,7 @@ _writeMainFile = (config, options, done)->
         optimize: !!options.optimizer
         root: paths.APPLICATION_PATH
         public: paths.PUBLIC_PATH
-    }
+    }, options.options.tplOpts
 
     types =
         build: [sysPath.resolve(paths.APPLICATION_PATH, 'work/rbuild.js'), 'work/rbuild.js' ]
@@ -247,6 +248,13 @@ _writeMainData = (data, dst, path, options, done)->
 _compileIndex = (config, options, done)->
     paths = options.paths
     srcpath = sysPath.join paths.CLIENT_ASSETS_PATH, 'index.jst'
+
+    try
+        stats = fs.lstatSync(srcpath)
+        return done() if not stats.isFile()
+    catch e
+        return done()
+
     source = fs.readFileSync srcpath, 'utf8'
     tplOpts =
         require: require
@@ -294,14 +302,16 @@ UglifyJSOptimizer = require 'uglify-js-brunch'
 builder = require '../builder'
 writeData = require '../writeData'
 readComponents = require '../../utils/read-components'
-{parse, NG_FNS, NG_PREFIX} = require('../../utils/method-parser')
+{ parse: factoryParse, NG_FACTORIES } = require('../../utils/method-parser')
 
 JsHinter = require './jshinter'
 
 removeStrictOptions = (str)->
     str.replace /^\s*(['"])use strict\1;?[^\n]*$/m, ''
 
-umdWrapper = (data, options, modulePath)->
+defaultOptions = {}
+
+defaultOptions.umdWrapper = (data, options, modulePath)->
     strict = ''
     if options.strict
         data = removeStrictOptions data
@@ -319,7 +329,7 @@ umdWrapper = (data, options, modulePath)->
             module.exports = depsLoader.common(require, 'node', deps, factory, global);
         } else if (typeof exports !== 'undefined') {
             // CommonJS
-            module.exports = depsLoader.common(require, 'common', deps, factory, global);
+            module.exports = depsLoader.common(require, global.require && global.require.brunch ? ['brunch', 'common'] : 'common', deps, factory, global);
         } else if (typeof define === 'function' && define.amd) {
             // AMD
             depsLoader.amd(deps, factory, global);
@@ -327,7 +337,7 @@ umdWrapper = (data, options, modulePath)->
     }(require, typeof window !== 'undefined' && window === window.window ? window : typeof global !== 'undefined' ? global : null));
     """
 
-comWrapper = (data, options)->
+defaultOptions.comWrapper = (data, options)->
     strict = ''
     if options.strict
         data = removeStrictOptions data
@@ -339,11 +349,20 @@ comWrapper = (data, options)->
 
     #{data}
 
-    module.exports = depsLoader.common(require, 'common', deps, factory, typeof window !== 'undefined' && window === window.window ? window : typeof global !== 'undefined' ? global : null);
+    (function(require, global) {
+        // CommonJS
+        module.exports = depsLoader.common(require, global.require && global.require.brunch ? ['brunch', 'common'] : 'common', deps, factory, global);
+    }(require, typeof window !== 'undefined' && window === window.window ? window : typeof global !== 'undefined' ? global : null));
     """
 
-ngFactoryProxy = (plugin, modulePath, ctor, locals, head, body)->
-    ngmethod = ctor.substring NG_PREFIX.length
+defaultFactories = defaultOptions.factories = {}
+
+ngFactory = (plugin, modulePath, data, parsed)->
+    [locals, name, args, head, declaration, body] = parsed
+
+    body = "#{declaration}#{args.join(', ')}#{body}"
+
+    ngmethod = ctor.substring 'ng'.length
     realPath = plugin.config.paths.modules + '/' + modulePath
     $name = modulePath.replace(/\//g, '.')
     $dirname = sysPath.dirname realPath
@@ -378,7 +397,17 @@ ngFactoryProxy = (plugin, modulePath, ctor, locals, head, body)->
     }
     """
 
-ngModuleFactoryProxy = (modulePath, head, body)->
+do ->
+    for name in NG_FACTORIES
+        defaultFactories[name] = ngFactory
+
+    return
+
+defaultFactories.ngmodule = (plugin, modulePath, data, parsed)->
+    [locals, name, args, head, declaration, body] = parsed
+
+    body = "#{declaration}#{args.join(', ')}#{body}"
+
     """
     var ngdeps = [];
 
@@ -413,7 +442,9 @@ ngModuleFactoryProxy = (modulePath, head, body)->
     }
     """
 
-reactFactoryProxy = (modulePath, head, declaration, args, body)->
+defaultFactories.freact = (plugin, modulePath, data, parsed)->
+    [locals, name, args, head, declaration, body] = parsed
+
     """
     #{head}
     deps.unshift({amd: 'react', common: '!React'}, {amd: 'react-dom', common: '!ReactDOM'});
@@ -426,6 +457,19 @@ reactFactoryProxy = (modulePath, head, declaration, args, body)->
         return freact.apply(this, Array.prototype.slice.call(arguments, 3));
     }
     """
+
+defaultFactories.factory = (plugin, modulePath, data, parsed)->
+    [locals, name, args, head, declaration, body] = parsed
+
+    if 'require' isnt args[0]
+        # remove any require variable
+        while (index = args.indexOf('require')) isnt -1
+            args[index] = 'undefined'
+
+        args.unshift 'require'
+        data = "#{head}#{declaration}#{args.join(', ')}#{body}"
+
+    return data
 
 module.exports = class AmdCompiler
     brunchPlugin: true
@@ -443,7 +487,7 @@ module.exports = class AmdCompiler
         @sourceMaps = !!config.sourceMaps
         @amdDestination = config.modules.amdDestination
         @nameCleaner = config.modules.nameCleaner
-        @options = _.extend {}, config.plugins?.amd
+        @options = options = _.merge {}, defaultOptions, config.plugins?.amd
         if @options.jshint
             @jshinter = new JsHinter config
         @isIgnored = if @options.ignore then anymatch(@options.ignore) else if config.conventions and config.conventions.vendor then config.conventions.vendor else anymatch(/^(?:bower_components|vendor)/)
@@ -452,6 +496,9 @@ module.exports = class AmdCompiler
         @pending = []
         @requirejs = config.requirejs
         @packages = {}
+        @noAmd = @options.noAmd
+        @factories = _.clone @options.factories
+        @parseOptions = factories: Object.keys @factories
 
     compile: (params, done)->
         {data, path, map} = params
@@ -463,31 +510,17 @@ module.exports = class AmdCompiler
         
         if not @isIgnored params.path
             try
-                [locals, name, args, head, declaration, body] = res = parse data
+                [locals, name] = parsed = factoryParse data, @parseOptions
             catch err
                 logger.error err
 
             if name
                 modulePath = @nameCleaner path
-                switch name
-                    when 'factory'
-                        if 'require' isnt args[0]
-                            # remove any require variable
-                            while (index = args.indexOf('require')) isnt -1
-                                args[index] = 'undefined'
+                if hasProp.call(@factories, name) and 'function' is typeof @factories[name]
+                    data = @factories[name] @, modulePath, data, parsed
 
-                            args.unshift 'require'
-                            data = "#{head}#{declaration}#{args.join(', ')}#{body}"
-                    when 'freact'
-                        data = reactFactoryProxy modulePath, head, declaration, args, body
-                    when 'ngmodule'
-                        data = ngModuleFactoryProxy modulePath, head, "#{declaration}#{args.join(', ')}#{body}"
-                    else
-                        if name in NG_FNS
-                            data = ngFactoryProxy self, modulePath, name, locals, head, "#{declaration}#{args.join(', ')}#{body}"
-
-                umdData = umdWrapper data, @options, modulePath
-                comData = comWrapper data, @options
+                umdData = @options.umdWrapper data, _.clone(@options), modulePath
+                comData = @options.comWrapper data, _.clone(@options), modulePath
 
         dst = sysPath.join @paths.PUBLIC_PATH, @amdDestination(path) + '.js'
 
@@ -497,10 +530,13 @@ module.exports = class AmdCompiler
                 [match, name, relpath] = path.match(/^bower_components[\/\\]([^\/\\]+)[\/\\](.+)/)
                 components[name].jsfiles or (components[name].jsfiles = {})
                 components[name].jsfiles[relpath] = true
-                # console.log name, path, components[name].jsfiles
 
             @_lint {comData, umdData, path, map, dst}, (err, options)=>
                 return done(err) if (err)
+
+                if @noAmd
+                    done err, {data: comData, path}
+                    return
 
                 @_writeData options, (err, options)=>
                     return done(err) if err
@@ -652,7 +688,7 @@ module.exports = class AmdCompiler
         return
 
     _writeData: (options, done)->
-        {comData, umdData, path, dst} = options
+        {umdData, path, dst} = options
 
         next = (err)->
             return done(err) if err
