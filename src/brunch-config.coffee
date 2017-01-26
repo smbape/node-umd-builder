@@ -6,7 +6,7 @@ sysPath = require 'path'
 builder = require './builder'
 read = require '../utils/read-components'
 matcher = require './glob-matcher'
-hasOwn = Object::hasOwnProperty
+hasProp = Object::hasOwnProperty
 
 cache = {}
 
@@ -117,7 +117,7 @@ config = exports.config =
             /vendor[\\/](?:node|j?ruby-.*|bundle)[\\/]/
         ]
         vendor: (path)->
-            if hasOwn.call cache, path
+            if hasProp.call(cache, path)
                 return cache[path]
 
             res = cache[path] = exports.isVendor.test path
@@ -125,7 +125,7 @@ config = exports.config =
 
             if m = /^bower_components[\/\\]([^\/\\]+)/.exec(path)
                 folder = sysPath.join('bower_components', m[1])
-                if hasOwn.call cache, folder
+                if hasProp.call(cache, folder)
                     return cache[path] = cache[folder]
 
             return res

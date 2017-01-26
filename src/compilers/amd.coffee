@@ -223,11 +223,11 @@ _writeMainData = (data, dst, path, options, done)->
         if options.optimizer
             options.optimizer.optimize {data, path}, (err, {data: optimized, path, map})->
                 return done err if err
-                writer.write optimized || data
-                done()
-                return
+                writer.write(optimized || data, 'utf8', done)
+                writer.end()
+                writer = null
         else
-            writer.write beautify data, 
+            writer.write beautify(data, 
                 indent_with_tabs: false
                 preserve_newlines: true
                 max_preserve_newlines: 4
@@ -241,7 +241,10 @@ _writeMainData = (data, dst, path, options, done)->
                 break_chained_methods: false
                 e4x: false
                 wrap_line_length: 0
-            done()
+            ), 'utf8', done
+
+            writer.end()
+            writer = null
         return
     return
 
@@ -688,7 +691,7 @@ module.exports = class AmdCompiler
         return
 
     _writeData: (options, done)->
-        {umdData, path, dst} = options
+        {umdData, path, map, dst} = options
 
         next = (err)->
             return done(err) if err
