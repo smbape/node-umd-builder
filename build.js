@@ -14,7 +14,7 @@ var cli = require('brunch/lib/cli'),
 
 program.commands.forEach(function(command) {
     if (command._name === 'build' || command._name === 'watch') {
-        command.option('-c, --clean', 'empty public directory before starting');
+        command.option('--clean', 'empty public directory before starting');
         command.option('-f, --force', 'force clean without prompt');
     }
 });
@@ -23,7 +23,7 @@ var command = process.argv[2],
     cleanOpt, forceOpt;
 if (/^w|watch|b|build|bb|bbp|bw|bws$/.test(command)) {
     process.argv.slice(2).forEach(function(arg) {
-        if (arg === '--clean' || (/^-\w/.test(arg) && ~arg.indexOf('c'))) {
+        if (arg === '--clean') {
             cleanOpt = true;
         }
         if (arg === '--force' || (/^-\w/.test(arg) && ~arg.indexOf('f'))) {

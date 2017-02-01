@@ -10,6 +10,7 @@ var removeComments = require('../../utils/remove-comments');
 var _ = require('lodash');
 var sysPath = require('path');
 var fs = require('fs');
+var resolve = require('babel-core/lib/helpers/resolve');
 
 function BabelCompiler(config) {
     if (config == null) config = {};
@@ -62,22 +63,34 @@ function BabelCompiler(config) {
         }
     }
 
-    // fix plugin relative path resolution
-    if (this.options.hasOwnProperty('plugins')) {
-        var plugins = this.options.plugins;
-        for (var i = 0, len = plugins.length; i < len; i++) {
-            var plugin = plugins[i];
-            if ('string' === typeof plugin) {
-                if ('.' === plugin[0]) {
-                    plugins[i] = sysPath.resolve(plugin);
-                }
-            } else if (Array.isArray(plugin) && '.' === plugin[0][0]) {
-                plugin[0] = sysPath.resolve(plugin[0]);
+    // fix preset/plugin path resolution
+    var dirname = process.cwd();
+    resolveOption('preset', this.options, dirname);
+    resolveOption('plugin', this.options, dirname);
+
+    this.pretransform = Array.isArray(options.pretransform) ? options.pretransform : null;
+}
+
+function resolveOption(type, options, dirname) {
+    if (options.hasOwnProperty(type + 's')) {
+        var config = options[type + 's'];
+        if (!Array.isArray(config)) {
+            return;
+        }
+
+        for (var i = 0, len = config.length; i < len; i++) {
+            var name = config[i];
+            if ('string' === typeof name) {
+                config[i] = babelResolve(type, name, dirname);
+            } else if (Array.isArray(name) && 'string' === typeof name[0]) {
+                name[0] = babelResolve(type, name[0]);
             }
         }
     }
+}
 
-    this.pretransform = Array.isArray(options.pretransform) ? options.pretransform : null;
+function babelResolve(type, name, dirname) {
+    return resolve('babel-' + type + '-' + name, dirname) || resolve(type + '-' + name, dirname) || resolve('babel-' + name) || resolve(name) || name;
 }
 
 BabelCompiler.brunchPluginName = 'babel-brunch';

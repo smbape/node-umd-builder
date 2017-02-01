@@ -1,0 +1,128 @@
+From 09187a22c6a10378c1f5461c9d7b172bb884c128 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?St=C3=A9phane=20MBAPE?= <rose.martin-8og3raxw@yopmail.com>
+Date: Tue, 31 Jan 2017 16:13:53 +0100
+Subject: [PATCH] add anymatch feature
+
+---
+ lib/utils/config.js  |  2 +-
+ lib/utils/helpers.js | 33 ++++++++++++++++++++++++++++++++-
+ lib/watch.js         | 13 ++++++++++--
+ package.json         |  3 ++-
+ 4 files changed, 46 insertions(+), 5 deletions(-)
+
+diff --git a/lib/utils/config.js b/lib/utils/config.js
+index 0f5a105..09d5272 100644
+--- a/lib/utils/config.js
++++ b/lib/utils/config.js
+@@ -6,7 +6,7 @@ const checkDeps = require('check-dependencies');
+ const sysPath = require('universal-path');
+ const anymatch = require('anymatch');
+ const logger = require('loggy');
+-const readComponents = require('read-components');
++const readComponents = require('./read-components');
+ const debug = require('debug')('brunch:config');
+ const helpers = require('./helpers');
+ const deppack = require('deppack'); // isNpm, loadInit
+diff --git a/lib/utils/helpers.js b/lib/utils/helpers.js
+index 9338883..08f8a68 100644
+--- a/lib/utils/helpers.js
++++ b/lib/utils/helpers.js
+@@ -3,6 +3,8 @@ const basename = require('universal-path').basename;
+ const promisify = require('micro-promisify');
+ const fslstat = promisify(require('fs').lstat);
+ const fsaccess = promisify(require('fs').access);
++const anymatch = require('anymatch');
++const explore = require('fs-explorer').explore;
+ 
+ // Single-level flatten.
+ const flatten = array => [].concat.apply([], array);
+@@ -184,7 +186,36 @@ const deepFreeze = (object, except) => {
+ };
+ 
+ const fsExists = path => {
+-  return fsaccess(path).then(() => true, () => false);
++  // http://www.regular-expressions.info/characters.html#special
++  if (/[\^\$\|\?\*\+\(\)\[\]\{\}]/.test(path)) {
++    return new Promise(function(resolve, reject) {
++      // matchers are relative to component directory
++      // path = <basedir>/<component>/relative
++      // componentDir = <basedir>/<component>
++      const componentDir = path.replace(/([^\/\\]+[\/\\][^\/\\]+)[\/\\].*/g, '$1');
++
++      const matcher = anymatch([path]);
++      const files = [];
++      explore(componentDir, function(path, stats, next) {
++        // replace(/[\\]/g, '/') to avoid path sep OS differencies
++        if (matcher(path.replace(/\\/g, '/'))) {
++          files.push(path);
++        }
++        next();
++      }, {followSymlink: true}, function(err) {
++        if (err && err.code === 'ENOENT') {
++          err = null;
++        }
++        if (err) {
++          reject(err);
++        } else {
++          resolve(files);
++        }
++      });
++    });
++  } else {
++    return fsaccess(path).then(() => path, () => false);
++  }
+ };
+ 
+ const isSymlink = path => {
+diff --git a/lib/watch.js b/lib/watch.js
+index e9e5f4a..a1b45da 100644
+--- a/lib/watch.js
++++ b/lib/watch.js
+@@ -47,9 +47,18 @@ const mergeHooks = (plugins, config) => {
+ };
+ 
+ const filterNonExistentPaths = paths => {
+-  return Promise.all(paths.map(helpers.fsExists)).then(values => {
++  return Promise.all(paths.map(helpers.fsExists)).then(files => {
+     // watched files
+-    return paths.filter((path, index) => values[index]);
++    const watchedFiles = [];
++    for (let i = 0, len = files.length; i < len; i++) {
++      let file = files[i];
++      if (Array.isArray(file)) {
++        watchedFiles.push.apply(watchedFiles, file);
++      } else if (file) {
++        watchedFiles.push(file);
++      }
++    }
++    return watchedFiles;
+   });
+ };
+ 
+diff --git a/package.json b/package.json
+index a30bce2..6988b98 100644
+--- a/package.json
++++ b/package.json
+@@ -59,17 +59,18 @@
+     "deppack": "~0.7",
+     "deps-install": "~0.1",
+     "fcache": "~0.3",
++    "fs-explorer": "^1.1.0",
+     "init-skeleton": "~1.0",
+     "loggy": "~1.0",
+     "micro-es7-shim": "^0.1",
+     "micro-promisify": "~0.1",
+     "mkdirp": "~0.5",
++    "promise.prototype.finally": "^2",
+     "read-components": "~0.7",
+     "serve-brunch": "~0.1",
+     "since-app-start": "~0.3",
+     "skemata": "~0.1",
+     "source-map": "~0.5",
+-    "promise.prototype.finally": "^2",
+     "universal-path": "^0.1"
+   },
+   "devDependencies": {
+-- 
+2.10.0.windows.1
+

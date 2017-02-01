@@ -8,6 +8,7 @@ var fs = require('fs'),
     which = require('which'),
     async = require('async'),
     anyspawn = require('anyspawn'),
+    bversion = '2.10.5',
     new_branch = '__umd_features__',
     has_new_branch = new RegExp('(?:^|\\n)\\s*(?:\\*?\\s*)' + new_branch + '\\s*(?:\\n|$)', 'm'),
     push = Array.prototype.push,
@@ -35,7 +36,7 @@ function setup(projectRoot, done) {
         projectModules = config.project.modules = sysPath.join(projectRoot, 'node_modules'),
         projectBrunch = config.project.brunch = sysPath.join(projectModules, 'brunch'),
         patchesFolder = config.patches.folder = sysPath.join(projectRoot, 'patches'),
-        cloneCmd = 'git clone --depth 1 --branch 2.8.2 https://github.com/brunch/brunch.git';
+        cloneCmd = 'git clone --depth 1 --branch ' + bversion + ' https://github.com/brunch/brunch.git';
 
     // make sure patch executable exists
     which.sync('patch');
@@ -96,7 +97,7 @@ function setup(projectRoot, done) {
         function(data, code, next) {
             var commands = [
                 'git reset --hard HEAD',
-                'git checkout tags/2.8.2'
+                'git checkout tags/' + bversion
             ];
 
             if (has_new_branch.test(data)) {
@@ -183,12 +184,12 @@ function setup(projectRoot, done) {
 function install(config, done) {
     var tasks = [],
         brunchPatches = [
-            'brunch-2.8.x-anymatch_feature',
-            'brunch-2.8.x-completer_feature',
-            'brunch-2.8.x-config_compiler_feature',
-            'brunch-2.8.x-init_feature',
-            'brunch-2.8.x-fix_ready_event_emitted_before_read_done',
-            'brunch-2.8.x-onCompile_promise_feature'
+            'brunch-2.10.x-anymatch_feature',
+            'brunch-2.10.x-completer_feature',
+            'brunch-2.10.x-config_compiler_feature',
+            'brunch-2.10.x-init_feature',
+            'brunch-2.10.x-nameCleaner_path',
+            'brunch-2.10.x-onCompile_blocking'
         ],
         filePatches = [
             ['node_modules/log4js/lib/log4js.js', 'log4js-v0.6.x-shutdown_fix.patch'],
@@ -201,7 +202,7 @@ function install(config, done) {
         patchFile;
 
     push.apply(tasks, [
-        ['git checkout tags/2.8.2', {
+        ['git checkout tags/' + bversion, {
             cwd: projectBrunch
         }],
         ['git checkout -b "' + new_branch + '"', {
@@ -221,13 +222,13 @@ function install(config, done) {
     push.apply(tasks, [
         function(done) {
             var readable = fs.createReadStream(sysPath.resolve(__dirname, '..', 'utils', 'read-components.js')),
-                writable = fs.createWriteStream(sysPath.resolve(__dirname, '..', 'node_modules', 'brunch', 'lib', 'read-components.js'));
+                writable = fs.createWriteStream(sysPath.resolve(__dirname, '..', 'node_modules', 'brunch', 'lib', 'utils', 'read-components.js'));
             readable.pipe(writable);
             writable.on('finish', done);
         },
         function(done) {
             var readable = fs.createReadStream(sysPath.resolve(__dirname, '..', 'utils', 'remove-comments.js')),
-                writable = fs.createWriteStream(sysPath.resolve(__dirname, '..', 'node_modules', 'brunch', 'lib', 'remove-comments.js'));
+                writable = fs.createWriteStream(sysPath.resolve(__dirname, '..', 'node_modules', 'brunch', 'lib', 'utils', 'remove-comments.js'));
             readable.pipe(writable);
             writable.on('finish', done);
         },

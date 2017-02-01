@@ -1,0 +1,67 @@
+From 9dd169944f6e4fdefe4e421b5d82ee7bdab33139 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?St=C3=A9phane=20MBAPE?= <rose.martin-8og3raxw@yopmail.com>
+Date: Tue, 31 Jan 2017 18:45:59 +0100
+Subject: [PATCH] make onCompile hook blocking
+
+---
+ lib/fs_utils/source_file.js |  2 +-
+ lib/watch.js                | 30 ++++++++++++++++++++++++++++--
+ 2 files changed, 29 insertions(+), 3 deletions(-)
+
+diff --git a/lib/fs_utils/source_file.js b/lib/fs_utils/source_file.js
+index 03fd440..e295946 100644
+--- a/lib/fs_utils/source_file.js
++++ b/lib/fs_utils/source_file.js
+@@ -175,7 +175,7 @@ class SourceFile {
+   dispose() {
+     debug(`Disposing file ${this.path}`);
+ 
+-    this.path = '';
++    // this.path = '';
+     this.source = '';
+     this.disposed = true;
+     this.error = null;
+diff --git a/lib/watch.js b/lib/watch.js
+index e9e5f4a..6dbd79f 100644
+--- a/lib/watch.js
++++ b/lib/watch.js
+@@ -293,8 +293,34 @@ class BrunchWatcher {
+       ));
+ 
+       // Pass `fs_utils.GeneratedFile` instances to callbacks.
+-      // Does not block the execution.
+-      this.hooks.onCompile(generatedFiles, assets);
++      const results = this.hooks.onCompile(generatedFiles, assets);
++
++      let done;
++      const promise = new Promise(resolve => {
++        done = resolve;
++      });
++
++      let count = results.length;
++
++      function give(err) {
++        if (--count === 0) {
++          done();
++        }
++      }
++
++      results.forEach(ret => {
++        if (ret && 'object' === typeof ret && 'function' === typeof ret.then) {
++          ret.then(give);
++        } else {
++          give();
++        }
++      });
++  
++      if (count === 0) {
++        return;
++      }
++
++      return promise;
+     }, error => {
+       this._endBundle();
+       if (error.code === 'WRITE_FAILED') return; // Ignore write errors as they are logged already
+-- 
+2.10.0.windows.1
+

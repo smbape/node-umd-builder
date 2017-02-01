@@ -41,16 +41,14 @@ config = exports.config =
             path = path.replace(/[\\]/g, '/')
             if ext then path else path.replace(/\.[^.]*$/, '')
 
-        wrapper: (path, data, isVendor) ->
+        wrapper: (moduleName, data, isVendor) ->
             if isVendor
-                logger.debug "Not wrapping '#{path}', is vendor file"
+                logger.debug "Not wrapping '#{moduleName}', is vendor file"
                 data
             else
-                modulePath = config.modules.nameCleaner path
-
-                logger.debug "commonJs wrapping for '#{path}'"
+                logger.debug "commonJs wrapping for '#{moduleName}'"
                 """
-                require.define({"#{modulePath}": function(exports, require, module) {
+                require.define({"#{moduleName}": function(exports, require, module) {
                     #{data}
                 }});\n
                 """
@@ -107,14 +105,18 @@ config = exports.config =
         builder.bwatcher = bwatcher
         return
 
+    # watcher:
+    #     ignored: (path)-> /[\\/]\.(?![\\/.])/.test(path)
+    #     usePolling: false
+
     conventions:
         ignored: [
-            /[\\/]\./
+            /[\\/]\.(?![\\/.])/
             /[\\/]_/
-            /bower.json/
-            /component.json/
-            /package.json/
-            /vendor[\\/](?:node|j?ruby-.*|bundle)[\\/]/
+            /(?!^|[\\/])bower\.json/
+            /(?!^|[\\/])component\.json/
+            /(?!^|[\\/])package\.json/
+            /(?!^|[\\/])vendor[\\/](?:node|j?ruby-.*|bundle)[\\/]/
         ]
         vendor: (path)->
             if hasProp.call(cache, path)
@@ -134,11 +136,11 @@ config = exports.config =
         production:
             conventions:
                 ignored: [
-                    /[\\/]\./
+                    /[\\/]\.(?![\\/.])/
                     /[\\/]_/
-                    /bower.json/
-                    /component.json/
-                    /package.json/
-                    /vendor[\\/](?:node|j?ruby-.*|bundle)[\\/]/
+                    /(?!^|[\\/])bower\.json/
+                    /(?!^|[\\/])component\.json/
+                    /(?!^|[\\/])package\.json/
+                    /(?!^|[\\/])vendor[\\/](?:node|j?ruby-.*|bundle)[\\/]/
                     /\btest\b/
                 ]

@@ -7,8 +7,8 @@ globMatcher = do ->
     star = '\\*' # star
     mstar = '\\*{2,}' # multiple star
     specialPattern = new RegExp '(?:' + [
-        # 1.1 # /**$ => /**: everything
-        # 1.2 # ioio/**$ => /**: everything
+        # 1.1 # /**$ => /**: (sep, everything) or nothing
+        # 1.2 # ioio/**$ => /**: (sep, everything) or nothing
         '(' + sep + mstar + '$)'
 
         # 2 # ouiuo/**/iuuo => /**/?: sep, (everything, sep) or nothing
@@ -69,9 +69,9 @@ globMatcher = do ->
             return ''
 
         str.replace specialPattern, (match)->
-            if arguments[1] or arguments[5]
-                # everything
-                return '.*?'
+            if arguments[1]
+                # (sep, everything) or nothing
+                return '(?:' + sep + '.*?|$)'
 
             if arguments[2]
                 # sep, (everything, sep) or nothing
@@ -84,6 +84,10 @@ globMatcher = do ->
             if arguments[4]
                 # everything, sep
                 return '.*?' + sep
+
+            if arguments[5]
+                # everything
+                return '.*?'
 
             if arguments[6]
                 # sep, (mnsep, sep) or nothing

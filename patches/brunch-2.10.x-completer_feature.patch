@@ -1,0 +1,76 @@
+From 2c75b1ace1afe58edb73669b7593d385a686ef09 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?St=C3=A9phane=20MBAPE?= <rose.martin-8og3raxw@yopmail.com>
+Date: Tue, 31 Jan 2017 17:13:49 +0100
+Subject: [PATCH] add completer feature
+
+---
+ lib/fs_utils/pipeline.js | 44 ++++++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 42 insertions(+), 2 deletions(-)
+
+diff --git a/lib/fs_utils/pipeline.js b/lib/fs_utils/pipeline.js
+index 9eb587b..c20bcad 100644
+--- a/lib/fs_utils/pipeline.js
++++ b/lib/fs_utils/pipeline.js
+@@ -132,17 +132,57 @@ const processFile = parallel('PROCESS_FILE', file => {
+     () => true;
+ 
+   const compilers = respondTo('compile').filter(usePlugin);
++  let type;
+   const nextCompiler = file => {
+     const compiler = pull(compilers, compiler => {
+-      return compiler.pattern.test(file.path);
++      return !compiler.completer && compiler.pattern.test(file.path);
+     });
+ 
++    if (compiler && !type) {
++      type = compiler.type;
++      if ('template' === type) {
++        type = 'javascript';
++      }
++    }
++
+     return compiler ?
+       compile(file, compiler).then(nextCompiler) :
+       file;
+   };
+ 
+-  const compiled = lint(file).then(nextCompiler);
++  const nextCompleter = file => {
++    const compiler = pull(compilers, compiler => {
++      if (!compiler.completer) {
++        return false;
++      }
++
++      if (!type) {
++        switch (require('path').extname(file.path)) {
++          case '.js':
++            type = 'javascript';
++            break;
++          case '.css':
++            type = 'stylesheet';
++            break;
++        }
++      }
++
++      if (type) {
++        if (compiler.typePattern) {
++          return compiler.typePattern.test(type);
++        }
++        return compiler.type === type;
++      }
++
++      return compiler.typeUndefined;
++    });
++
++    return compiler ?
++      compile(file, compiler).then(nextCompleter) :
++      file;
++  };
++
++  const compiled = lint(file).then(nextCompiler).then(nextCompleter);
+   if (!isNpm) return compiled;
+ 
+   return compiled.then(file => {
+-- 
+2.10.0.windows.1
+

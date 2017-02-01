@@ -1,14 +1,9 @@
 'use strict';
 
-var fs = require('fs');
-var fcache = require('brunch/node_modules/fcache');
-var ver = require('brunch/node_modules/fcache/package.json').version.split('.').slice(0, 2).join('.');
-var key = '_fcache_' + ver;
-var cache = global[key] || (global[key] = Object.create(null));
-var toAbsolute = require('path').resolve;
-var hasProp = Object.prototype.hasOwnProperty;
-
-// updateCache = fcache.updateCache;
+const fs = require('fs');
+const fcache = require('brunch/node_modules/fcache');
+const cache = new Map();
+const toAbsolute = require('path').resolve;
 
 exports = module.exports = fcache;
 
@@ -18,49 +13,50 @@ exports.isPackage = function(path) {
     return /(?:^|[\/\\])package\.js$/.test(path);
 };
 
-exports.readFile = function(path, callback) {
-    var absPath = toAbsolute(path);
-    if (hasProp.call(cache, absPath)) {
-        callback(undefined, cache[absPath]);
-    } else {
-        fs.readFile(absPath, 'utf-8', callback);
-    }
-};
-
-
-exports.updateCache = function(path, callback) {
-    var absPath = toAbsolute(path);
-
-    if (!callback) {
-        callback = Function.prototype;
-    }
-
-    if (exports.isPackage(absPath) && !existsSync(absPath) && hasProp.call(cache, absPath)) {
-        callback(void 0, cache[absPath]);
+exports.readFile = path => new Promise((resolve, reject) => {
+    const absPath = toAbsolute(path);
+    if (cache.has(absPath)) {
+        resolve(cache.get(absPath));
         return;
     }
 
-    fs.readFile(absPath, 'utf-8', function(error, source) {
-        if (error) {
-            return callback(error);
+    fs.readFile(absPath, (error, data) => {
+        if (error){
+            reject(error);
+        } else{
+            resolve(data);
         }
-        cache[absPath] = source;
-        callback(void 0, source);
     });
-};
+});
 
-exports.updateFakeFile = function(path, content) {
-    var absPath = toAbsolute(path);
-    var status = hasProp.call(cache, absPath) ? 1 : 0;
-    cache[absPath] = content;
+exports.updateCache = path => new Promise((resolve, reject) => {
+    const absPath = toAbsolute(path);
+
+    fs.stat(absPath, (error, stats) => {
+        if (error) {
+            if (cache.has(absPath)) {
+                resolve(cache.get(absPath));
+            } else {
+                reject(error);
+            }
+            return;
+        }
+
+        fs.readFile(absPath, (error, data) => {
+            if (error) {
+                reject(error);
+                return;
+            }
+            cache.set(absPath, data);
+            resolve(data);
+        });
+    });
+
+});
+
+exports.updateFakeFile = function(path, data) {
+    const absPath = toAbsolute(path);
+    const status = cache.has(absPath) ? 1 : 0;
+    cache.set(absPath, data);
     return status;
 };
-
-function existsSync(path) {
-    try {
-        fs.statSync(path);
-        return true;
-    } catch (err) {
-        return false;
-    }
-}

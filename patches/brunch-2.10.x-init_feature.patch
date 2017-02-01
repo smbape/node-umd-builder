@@ -1,0 +1,54 @@
+From 379b702842a083412ecc4d2028a708491ea429f7 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?St=C3=A9phane=20MBAPE?= <rose.martin-8og3raxw@yopmail.com>
+Date: Tue, 31 Jan 2017 17:43:45 +0100
+Subject: [PATCH] add initialize feature
+
+---
+ lib/watch.js | 24 ++++++++++++++++++++++++
+ 1 file changed, 24 insertions(+)
+
+diff --git a/lib/watch.js b/lib/watch.js
+index e9e5f4a..ce37913 100644
+--- a/lib/watch.js
++++ b/lib/watch.js
+@@ -101,6 +101,26 @@ class BrunchWatcher {
+     }
+ 
+     application.loadConfig(persistent, options)
++       .then(cfg => {
++        return new Promise((resolve, reject) => {
++          if ('function' === typeof cfg.initialize) {
++            const initTimeout = setTimeout(function() {
++              logger.warn('initialize is taking a long time to start');
++              return logger.warn('**don\'t forget to invoke callback()**');
++            }, cfg.timeout || 5000);
++
++            const callback = () => {
++              var server;
++              clearTimeout(initTimeout);
++              resolve(cfg);
++            };
++
++            cfg.initialize(cfg, callback);
++          } else {
++            resolve(cfg);
++          }
++        });
++      })
+       .then(cfg => {
+         this.config = cfg;
+         if (options.jobs > 1) {
+@@ -127,6 +147,10 @@ class BrunchWatcher {
+ 
+         return Promise.all(this.hooks.preCompile()).then(() => {
+           this.initWatcher(watchedPaths);
++          const cfg = this.config;
++          if ('function' === typeof cfg.onwatch) {
++            cfg.onwatch(this.watcher, this);
++          }
+           this.initCompilation();
+         });
+       })
+-- 
+2.10.0.windows.1
+
