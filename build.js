@@ -12,10 +12,11 @@ var fs = require('fs'),
     quoteArg = require('anyspawn').quoteArg,
     log4js = require('./log4js'),
     logger = log4js.getLogger('umd-builder'),
-    fcache = require('./utils/fcache');
+    fcache = require('./utils/fcache'),
+    resolveFrom = require('./utils/resolveFrom');
 
 var cli = require('brunch/lib/cli'),
-    program = require('brunch/node_modules/commander');
+    program = require(resolveFrom('brunch', 'commander'));
 
 program.commands.forEach(function(command) {
     if (command._name === 'build' || command._name === 'watch') {

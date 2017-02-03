@@ -101,7 +101,7 @@ BabelCompiler.prototype.completer = true;
 BabelCompiler.prototype.compile = function(params, callback) {
     if (this.isIgnored(params.path)) return callback(null, params);
     var options = _.defaults({
-        filenameRelative: params.path
+        filename: params.path
     }, this.options);
 
     var compiled, transform, toptions;

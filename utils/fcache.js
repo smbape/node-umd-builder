@@ -2,7 +2,8 @@
 
 const sysPath = require('path');
 const fs = require('fs');
-const fcache = require(resolve(sysPath.dirname(require.resolve('brunch/package.json')), 'fcache'));
+const resolveFrom = require('./resolveFrom');
+const fcache = require(resolveFrom('brunch', 'fcache'));
 const cache = new Map();
 const toAbsolute = require('path').resolve;
 
@@ -61,24 +62,3 @@ exports.updateFakeFile = function(path, data) {
     cache.set(absPath, data);
     return status;
 };
-
-function resolve(dirname, moduleName) {
-    dirname = sysPath.resolve(dirname);
-    var parts = dirname.split(/[\\/]/g);
-    var index = parts.length;
-    var currentFile;
-
-    var err = 1;
-    while (err && index !== 0) {
-        err = 0;
-        currentFile = [parts.slice(0, index--).join(sysPath.sep), 'node_modules', moduleName].join(sysPath.sep);
-
-        try {
-            return require.resolve(currentFile);
-        } catch ( _err ) {
-            err = _err;
-        }
-    }
-
-    return null;
-}

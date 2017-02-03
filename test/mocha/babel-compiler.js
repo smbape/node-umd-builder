@@ -35,7 +35,7 @@ describe('babel compiler', function() {
   it('should compile and produce valid result', function(done) {
     this.timeout(20000);
     var content = 'var c = {};\nvar {a, b} = c;';
-    var expected = 'var a = c.a;\nvar b = c.b;';
+    var expected = 'var a = c.a,\n    b = c.b;';
 
     plugin = new BabelCompiler({ plugins: { babel: { presets: ['es2015'] }}});
     plugin.compile({data: content, path: 'file.js'}, function(error, result) {
