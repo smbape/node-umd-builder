@@ -1,10 +1,5 @@
 'use strict';
 
-process.on('uncaughtException', err =>{
-    console.log(err.stack);
-    process.exit(1);
-});
-
 var fs = require('fs'),
     sysPath = require('path'),
     _explore = require('fs-explorer')._explore,
