@@ -36,28 +36,28 @@ index 9338883..08f8a68 100644
  
  // Single-level flatten.
  const flatten = array => [].concat.apply([], array);
-@@ -184,7 +186,36 @@ const deepFreeze = (object, except) => {
+@@ -184,7 +186,35 @@ const deepFreeze = (object, except) => {
  };
  
  const fsExists = path => {
 -  return fsaccess(path).then(() => true, () => false);
 +  // http://www.regular-expressions.info/characters.html#special
-+  if (/[\^\$\|\?\*\+\(\)\[\]\{\}]/.test(path)) {
-+    return new Promise(function(resolve, reject) {
++  if (/[\^$|?*+()[\]{}]/.test(path)) {
++    return new Promise((resolve, reject) => {
 +      // matchers are relative to component directory
 +      // path = <basedir>/<component>/relative
 +      // componentDir = <basedir>/<component>
-+      const componentDir = path.replace(/([^\/\\]+[\/\\][^\/\\]+)[\/\\].*/g, '$1');
++      const componentDir = path.replace(/([^/\\]+[/\\][^/\\]+)[/\\].*/g, '$1');
 +
 +      const matcher = anymatch([path]);
 +      const files = [];
-+      explore(componentDir, function(path, stats, next) {
++      explore(componentDir, (path, stats, next) => {
 +        // replace(/[\\]/g, '/') to avoid path sep OS differencies
 +        if (matcher(path.replace(/\\/g, '/'))) {
 +          files.push(path);
 +        }
 +        next();
-+      }, {followSymlink: true}, function(err) {
++      }, {followSymlink: true}, err => {
 +        if (err && err.code === 'ENOENT') {
 +          err = null;
 +        }
@@ -68,9 +68,8 @@ index 9338883..08f8a68 100644
 +        }
 +      });
 +    });
-+  } else {
-+    return fsaccess(path).then(() => path, () => false);
 +  }
++  return fsaccess(path).then(() => path, () => false);
  };
  
  const isSymlink = path => {
@@ -88,7 +87,7 @@ index e9e5f4a..a1b45da 100644
 -    return paths.filter((path, index) => values[index]);
 +    const watchedFiles = [];
 +    for (let i = 0, len = files.length; i < len; i++) {
-+      let file = files[i];
++      const file = files[i];
 +      if (Array.isArray(file)) {
 +        watchedFiles.push.apply(watchedFiles, file);
 +      } else if (file) {

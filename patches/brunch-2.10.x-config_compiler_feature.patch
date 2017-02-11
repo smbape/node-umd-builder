@@ -18,8 +18,8 @@ index 0cce810..592930d 100644
 +  const addPlugin = (plugins, Plugin, name) => {
 +    if (Plugin && Plugin.prototype && Plugin.prototype.brunchPlugin) {
 +      const plugin = new Plugin(config);
-+      if ('string' !== typeof plugin.brunchPluginName) {
-+        plugin.brunchPluginName = 'string' === typeof name ? name : Plugin.brunchPluginName;
++      if (typeof plugin.brunchPluginName !== 'string') {
++        plugin.brunchPluginName = typeof name === 'string' ? name : Plugin.brunchPluginName;
 +      }
 +      plugins.push(adapter(plugin));
 +    }

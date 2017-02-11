@@ -24,7 +24,7 @@ index 9eb587b..c20bcad 100644
  
 +    if (compiler && !type) {
 +      type = compiler.type;
-+      if ('template' === type) {
++      if (type === 'template') {
 +        type = 'javascript';
 +      }
 +    }

@@ -11,20 +11,19 @@ diff --git a/lib/watch.js b/lib/watch.js
 index e9e5f4a..ce37913 100644
 --- a/lib/watch.js
 +++ b/lib/watch.js
-@@ -101,6 +101,26 @@ class BrunchWatcher {
+@@ -101,6 +101,25 @@ class BrunchWatcher {
      }
  
      application.loadConfig(persistent, options)
-+       .then(cfg => {
-+        return new Promise((resolve, reject) => {
-+          if ('function' === typeof cfg.initialize) {
++      .then(cfg => {
++        return new Promise(resolve => {
++          if (typeof cfg.initialize === 'function') {
 +            const initTimeout = setTimeout(function() {
 +              logger.warn('initialize is taking a long time to start');
 +              return logger.warn('**don\'t forget to invoke callback()**');
 +            }, cfg.timeout || 5000);
 +
 +            const callback = () => {
-+              var server;
 +              clearTimeout(initTimeout);
 +              resolve(cfg);
 +            };
@@ -43,7 +42,7 @@ index e9e5f4a..ce37913 100644
          return Promise.all(this.hooks.preCompile()).then(() => {
            this.initWatcher(watchedPaths);
 +          const cfg = this.config;
-+          if ('function' === typeof cfg.onwatch) {
++          if (typeof cfg.onwatch === 'function') {
 +            cfg.onwatch(this.watcher, this);
 +          }
            this.initCompilation();

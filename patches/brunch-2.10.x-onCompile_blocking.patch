@@ -40,20 +40,20 @@ index e9e5f4a..6dbd79f 100644
 +
 +      let count = results.length;
 +
-+      function give(err) {
++      const give = () => {
 +        if (--count === 0) {
 +          done();
 +        }
-+      }
++      };
 +
 +      results.forEach(ret => {
-+        if (ret && 'object' === typeof ret && 'function' === typeof ret.then) {
++        if (ret && typeof ret === 'object' && typeof ret.then === 'function') {
 +          ret.then(give);
 +        } else {
 +          give();
 +        }
 +      });
-+  
++
 +      if (count === 0) {
 +        return;
 +      }

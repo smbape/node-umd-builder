@@ -44,14 +44,6 @@ function setup(projectRoot, done) {
     var preinstall = [
         function() {
             var next = arguments[arguments.length - 1];
-            anyspawn.spawn('npm run prepublish', {
-                stdio: 'inherit',
-                cwd: projectRoot
-            }, next);
-        },
-
-        function() {
-            var next = arguments[arguments.length - 1];
             anyspawn.spawn('npm install --production --ignore-scripts', {
                 stdio: 'inherit',
                 cwd: projectRoot
