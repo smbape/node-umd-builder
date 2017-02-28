@@ -4,10 +4,14 @@ log4js = global.log4js || (global.log4js = require('log4js'))
 logger = log4js.getLogger 'AmdCompiler'
 
 fs = require 'fs'
+sysPath = require 'path'
 mkdirp = require 'mkdirp'
 beautify = require('js-beautify').js_beautify
 hasProp = Object::hasOwnProperty
 fcache = require '../../utils/fcache'
+anymatch = require 'anymatch'
+_ = require 'lodash'
+UglifyJSOptimizer = require 'uglify-js-brunch'
 
 _processComponent = (component, config, options, done)->
     if component.umd
@@ -68,8 +72,9 @@ _processComponent = (component, config, options, done)->
     if component.map
         for path, map of component.map
             # normalize path
-            path = sysPath.relative(componentDir, sysPath.resolve(componentDir, path)).replace(/[\\]/g, '/')
-            task path, {map} if component.jsfiles and hasProp.call component.jsfiles, path
+            path = sysPath.resolve(componentDir, path)
+            path = sysPath.relative(componentDir, path).replace(/[\\]/g, '/')
+            task path, { map } if component.jsfiles and hasProp.call(component.jsfiles, path)
 
     give()
     return
@@ -95,14 +100,15 @@ _compileComponentFile = (path, component, config, memo, isAbsolutePath, options,
     memo.hasJs = true
     pathext = configPaths.BOWER_COMPONENTS_URL + '/' + sysPath.join(name, path).replace(/[\\]/g, '/')
     path = pathext.replace(/\.js$/, '')
+    exports = component.exports
 
     if typeof config.paths[name] is 'undefined' and not opts.isScript and not opts.map
-        if component.exports
+        if exports
             # shim non amd file
-            shim = exports: component.exports
+            shim = exports: exports
 
             if typeof component.dependencies is 'object' and component.dependencies isnt null
-                shim.deps = Object.keys component.dependencies
+                shim.deps = Object.keys(component.dependencies)
 
             config.shim[name] = shim
 
@@ -122,38 +128,62 @@ _compileComponentFile = (path, component, config, memo, isAbsolutePath, options,
     else
         logger.debug  "[#{name}] add [#{path}] as group"
 
-        if opts.map
+        if _.isObject(opts.map)
+            if opts.map.exports
+                exports = opts.map.exports
+            paths = opts.map.paths
+            if "string" is typeof paths
+                paths = [paths]
+            else if not Array.isArray(paths)
+                paths = null
+
+            if opts.map.dependencies
+                deps = Object.keys(opts.map.dependencies)
+
+            plugin = opts.map.name
+        else if "string" is typeof opts.map
             plugin = opts.map
 
+        if plugin
             if hasProp.call(config.paths, plugin)
-                done new Error "[#{name}] - Cannot add [#{plugin}] to groups. Already exists as path name"
+                done new Error "[#{name}] - Cannot add [#{plugin}] to groups. Already exists as path #{config.paths[plugin]}"
                 return
 
+            if Array.isArray(paths)
+                paths.push(path)
+            else
+                paths = path
+
             # configure requirejs for plugin path resolution
-            config.paths[plugin] = path
+            config.paths[plugin] = paths
 
             # reverse path, treat full path as name
             config.map['*'][path] = plugin
         else
-            if component.exports
-                plugin = name + ( '-' + Math.random() ).replace( /\D/g, '' )
+            if exports
+                plugin = name + "_" + Math.random().toString(36).slice(2)
             else
                 plugin = path
 
             if hasProp.call(config.paths, plugin)
-                done new Error "[#{name}] - Cannot add [#{plugin}] to groups. Already exists as path name"
+                done new Error "[#{name}] - Cannot add [#{plugin}] to groups. Already exists as path #{config.paths[plugin]}"
                 return
 
             # configure requirejs for plugin path resolution
             config.paths[plugin] = path
 
-        if component.exports
+        if exports
             # shim non amd file
+            if deps
+                if deps.indexOf(name) is -1
+                    deps.unshift(name)
+            else
+                deps = [name]
 
             # make current file to load after the main file
             config.shim[plugin] =
-                exports: component.exports
-                deps: [name]
+                exports: exports
+                deps: deps
 
         if not hasProp.call config.groups, name
             config.groups[name] = [name]
@@ -169,8 +199,8 @@ _writeMainFile = (config, options, done)->
     pathBrowserify = config['path-browserify'] or 'umd-core/path-browserify'
     delete config['path-browserify']
 
-
-    srcPath = options.options?.mainTemplate or sysPath.resolve(__dirname, '../../templates/main.js')
+    localOptions = options.options or {}
+    srcPath = localOptions.mainTemplate or sysPath.resolve(__dirname, '../../templates/main.js')
     source = fs.readFileSync srcPath, 'utf8'
     template = _.template source
 
@@ -184,11 +214,11 @@ _writeMainFile = (config, options, done)->
         optimize: !!options.optimizer
         root: paths.APPLICATION_PATH
         public: paths.PUBLIC_PATH
-    }, options.options.tplOpts
+    }, localOptions.tplOpts
 
     types =
         build: [sysPath.resolve(paths.APPLICATION_PATH, 'work/rbuild.js'), 'work/rbuild.js' ]
-        unit: [sysPath.resolve(paths.APPLICATION_PATH, 'test/unit/test-main.js'), 'test/unit/test-main.js']
+        unit: [localOptions.unitBuildDest or sysPath.resolve(paths.APPLICATION_PATH, 'test/unit/test-main.js'), 'test/unit/test-main.js']
         main: [sysPath.resolve(paths.PUBLIC_PATH, 'javascripts/main.js'), 'javascripts/main.js']
         'main-dev': [sysPath.resolve(paths.PUBLIC_PATH, 'javascripts/main-dev.js'), 'javascripts/main-dev.js']
 
@@ -297,17 +327,10 @@ _writeHTML = (html, dst, options, done)->
         fs.writeFile dst, html, done
     return
 
-anymatch = require 'anymatch'
-sysPath = require 'path'
-_ = require 'lodash'
-UglifyJSOptimizer = require 'uglify-js-brunch'
-
 builder = require '../builder'
 writeData = require '../writeData'
 readComponents = require '../../utils/read-components'
 { parse: factoryParse, NG_FACTORIES } = require('../../utils/method-parser')
-
-JsHinter = require './jshinter'
 
 removeStrictOptions = (str)->
     str.replace /^\s*(['"])use strict\1;?[^\n]*$/m, ''
@@ -474,6 +497,9 @@ defaultFactories.factory = (plugin, modulePath, data, parsed)->
 
     return data
 
+JsHinter = require './jshinter'
+EsLinter = require './eslinter'
+
 module.exports = class AmdCompiler
     brunchPlugin: true
     type: 'javascript'
@@ -491,8 +517,12 @@ module.exports = class AmdCompiler
         @amdDestination = config.modules.amdDestination
         @nameCleaner = config.modules.nameCleaner
         @options = options = _.merge {}, defaultOptions, config.plugins?.amd
-        if @options.jshint
-            @jshinter = new JsHinter config
+
+        if @options.eslint
+            @linter = new EsLinter config
+        else if @options.jshint
+            @linter = new JsHinter config
+
         @isIgnored = if @options.ignore then anymatch(@options.ignore) else if config.conventions and config.conventions.vendor then config.conventions.vendor else anymatch(/^(?:bower_components|vendor)/)
         @isVendor = config.conventions and config.conventions.vendor
         @initializing = false
@@ -678,12 +708,13 @@ module.exports = class AmdCompiler
         return
 
     _lint: (options, done)->
-        if linter = @jshinter
+        if linter = @linter
             {comData, umdData, path, map, dst} = options
             linter.lint {data: umdData, path, map}, (msg)->
                 if msg and linter.warnOnly
                     logger.warn path, msg
                     msg = null
+
                 done msg, options
                 return
             return

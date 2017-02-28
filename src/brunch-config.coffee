@@ -72,13 +72,16 @@ config = exports.config =
     plugins:
         amd:
             strict: true
-            jshint: true
+            jshint: false
+            eslint: false
             package: false
             tplOpts:
                 karma:
                     pattern: /-test\.js$/
         coffeescript:
             bare: true
+        eslint:
+            warnOnly: true
         jshint:
             warnOnly: true
         jst:

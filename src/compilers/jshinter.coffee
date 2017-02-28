@@ -35,7 +35,7 @@ module.exports = class JsHinter
         else if config.conventions and config.conventions.vendor
             @isIgnored = config.conventions.vendor
         else
-            @isIgnored = anymatch(/^(bower_components|vendor)/)
+            @isIgnored = anymatch(/^(?:bower_components|vendor)[/\\]/)
 
         @reporter = if cfg.reporter? then require(require(cfg.reporter))
 
