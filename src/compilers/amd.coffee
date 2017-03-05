@@ -211,7 +211,7 @@ _writeMainFile = (config, options, done)->
         config
         pathBrowserify
         paths: paths
-        optimize: !!options.optimizer
+        optimize: options.config.isProduction
         root: paths.APPLICATION_PATH
         public: paths.PUBLIC_PATH
     }, localOptions.tplOpts
@@ -234,7 +234,7 @@ _writeMainFile = (config, options, done)->
         tplOpts.type = keys[index++]
         data = template tplOpts
 
-        opts = if tplOpts.type is 'main-dev' then {optimizer: options.optimizer} else {}
+        opts = if tplOpts.type is 'main-dev' then { optimizer: options.optimizer } else {}
 
         _writeMainData data, types[tplOpts.type][0], types[tplOpts.type][1], opts, iterate
 
@@ -463,6 +463,7 @@ defaultFactories.ngmodule = (plugin, modulePath, data, parsed)->
 
         #{body}
 
+        // eslint-disable-next-line no-invalid-this
         ngmodule.apply(this, Array.prototype.slice.call(arguments, 2));
         return exports;
     }
@@ -480,6 +481,7 @@ defaultFactories.freact = (plugin, modulePath, data, parsed)->
 
         #{declaration}#{args.join(', ')}#{body}
 
+        // eslint-disable-next-line no-invalid-this
         return freact.apply(this, Array.prototype.slice.call(arguments, 3));
     }
     """
@@ -506,7 +508,7 @@ module.exports = class AmdCompiler
     completer: true
 
     constructor: (config = {})->
-        if config.optimize
+        if config.isProduction
             @optimizer = new UglifyJSOptimizer config
 
         @paths = builder.generateConfig(config).paths
@@ -592,7 +594,7 @@ module.exports = class AmdCompiler
         if generatedFiles.length is 0 and changedAssets.length is 0
             return
 
-        options = _.pick @, ['paths', 'lastPackages', 'options']
+        options = _.pick @, ['paths', 'lastPackages', 'options', 'config', 'optimizer']
 
         resolve = ->
         reject = ->

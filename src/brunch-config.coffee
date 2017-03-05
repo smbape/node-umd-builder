@@ -12,7 +12,10 @@ cache = {}
 
 exports.logger = logger
 exports.matcher = matcher
-exports.isVendor = matcher ['bower_components/', 'components/', 'vendor/']
+exports.isVendor = new RegExp matcher(['bower_components', 'components', 'vendor']).source + /[/\\]/.source
+
+moduleSources = ['app/node_modules', 'bower_components', 'components']
+pathCleaner = new RegExp matcher(moduleSources).source + /[/\\](.*)$/.source
 
 # https://github.com/brunch/brunch/blob/2.7.4/docs/config.md
 config = exports.config =
@@ -27,16 +30,18 @@ config = exports.config =
     ]
 
     modules:
+        pathCleaner: pathCleaner
+
         nameCleaner: (path, ext = false)->
             if not config.conventions.vendor path
-                path = path.replace(/^(?:app[\/\\]node_modules|bower_components|components)[\/\\](.*)$/, '$1')
+                path = path.replace(config.modules.pathCleaner, '$1')
 
             path = path.replace(/[\\]/g, '/')
             if ext then path else path.replace(/\.[^.]*$/, '')
 
         amdDestination: (path, ext = false)->
             if not config.conventions.vendor path
-                path = path.replace(/^(?:app[\/\\]node_modules|bower_components|components)[\/\\](.*)$/, 'node_modules/$1')
+                path = path.replace(config.modules.pathCleaner, 'node_modules/$1')
 
             path = path.replace(/[\\]/g, '/')
             if ext then path else path.replace(/\.[^.]*$/, '')
@@ -60,7 +65,7 @@ config = exports.config =
         javascripts:
             joinTo:
                 'javascripts/app.js': matcher ['app/node_modules/']
-                'javascripts/vendor.js': matcher ['bower_components/', 'components/', 'vendor/']
+                'javascripts/vendor.js': exports.isVendor
 
         stylesheets:
             joinTo:
