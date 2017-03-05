@@ -7,18 +7,21 @@ module.exports = class HtmlCompiler
     compile: (params, next)->
         {data, path, map} = params
 
-        data = """(function() {
-            var __templateData = #{JSON.stringify(data)};
-            if (typeof define === 'function' && define.amd) {
-                define([], function() {
+        data = """
+            (function() {
+                /* eslint-disable consistent-return */
+                var __templateData = #{JSON.stringify(data)};
+                if (typeof define === 'function' && define.amd) {
+                    define([], function() {
+                        return __templateData;
+                    });
+                } else if (typeof module === 'object' && module && module.exports) {
+                    module.exports = __templateData;
+                } else {
                     return __templateData;
-                });
-            } else if (typeof module === 'object' && module && module.exports) {
-                module.exports = __templateData;
-            } else {
-                return __templateData;
-            }
-        })();"""
+                }
+            })();
+        """
 
         next null, {data, path, map}
         return
