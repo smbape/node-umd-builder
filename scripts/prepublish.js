@@ -21,7 +21,8 @@ rimraf(lib, function(err) {
                 fs.readFile(path, function(err, data) {
                     if (err) return next(err);
                     var compiled = coffeescript.compile(data.toString(), {
-                        bare: true
+                        bare: true,
+                        header: false
                     });
                     fs.writeFile(dst.replace(/\.coffee$/, '.js'), compiled, next);
                 });

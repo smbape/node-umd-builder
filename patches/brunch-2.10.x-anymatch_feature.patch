@@ -7,8 +7,8 @@ Subject: [PATCH] add anymatch feature
  lib/utils/config.js  |  2 +-
  lib/utils/helpers.js | 33 ++++++++++++++++++++++++++++++++-
  lib/watch.js         | 13 ++++++++++--
- package.json         |  3 ++-
- 4 files changed, 46 insertions(+), 5 deletions(-)
+ package.json         |  1 +
+ 4 files changed, 45 insertions(+), 4 deletions(-)
 
 diff --git a/lib/utils/config.js b/lib/utils/config.js
 index 0f5a105..09d5272 100644
@@ -99,29 +99,17 @@ index e9e5f4a..a1b45da 100644
  };
  
 diff --git a/package.json b/package.json
-index a30bce2..6988b98 100644
+index bbad3d3..a2dbd57 100644
 --- a/package.json
 +++ b/package.json
-@@ -59,17 +59,18 @@
+@@ -59,6 +59,7 @@
      "deppack": "~0.7",
      "deps-install": "~0.1",
      "fcache": "~0.3",
 +    "fs-explorer": "^1.1.0",
      "init-skeleton": "~1.0",
-     "loggy": "~1.0",
+     "loggy": "~1.0.2",
      "micro-es7-shim": "^0.1",
-     "micro-promisify": "~0.1",
-     "mkdirp": "~0.5",
-+    "promise.prototype.finally": "^2",
-     "read-components": "~0.7",
-     "serve-brunch": "~0.1",
-     "since-app-start": "~0.3",
-     "skemata": "~0.1",
-     "source-map": "~0.5",
--    "promise.prototype.finally": "^2",
-     "universal-path": "^0.1"
-   },
-   "devDependencies": {
 -- 
 2.10.0.windows.1
 
