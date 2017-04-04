@@ -13,7 +13,7 @@ CssoOptimizer.prototype.type = 'stylesheet';
 CssoOptimizer.prototype.optimize = function(params, callback) {
     var data = params.data,
         map = params.map,
-        path = params.map;
+        path = params.path;
 
     var ignored = this.options.ignored,
         optimized;

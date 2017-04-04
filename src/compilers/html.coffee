@@ -8,8 +8,8 @@ module.exports = class HtmlCompiler
         {data, path, map} = params
 
         data = """
+            /* eslint-disable consistent-return */
             (function() {
-                /* eslint-disable consistent-return */
                 var __templateData = #{JSON.stringify(data)};
                 if (typeof define === 'function' && define.amd) {
                     define([], function() {
