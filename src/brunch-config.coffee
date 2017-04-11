@@ -98,6 +98,10 @@ config = exports.config =
             interpolate: /<%=([\s\S]+?)%>/g # default value
             evaluate: /<%([\s\S]+?)%>/g # default value
             strict: true
+        stylus:
+            # http://visionmedia.github.com/nib/
+            plugins: [ require('nib')() ]
+            imports: [ 'nib' ]
 
     initialize: (config, done)->
         read sysPath.resolve(config.paths.root), 'bower', (err, components)->
