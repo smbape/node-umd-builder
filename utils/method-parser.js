@@ -55,7 +55,7 @@ var SYMBOLS = {
     LINE_COMMENT: '//',
     BLOCK_COMMENT_START: '/*',
     BLOCK_COMMENT_END: '*/',
-    REGEXP_QUOTE_BEGIN: /([\,\{\}\;\=\(\+\-\!\&\|\:])[^\S\n]*\/(?!\/)/,
+    REGEXP_QUOTE_BEGIN: /([\,\{\}\[\]\;\=\(\+\-\!\&\|\:])[^\S\n]*\/(?!\/)/,
     REGEXP_QUOTE_END: '/',
     SINGLE_QUOTE: "'",
     DOUBLE_QUOTE: '"',
@@ -281,6 +281,9 @@ function _parse(str, tokenizer) {
                             // console.log('regexp_quoting');
                             state = STATES.regexp_quoting;
                             quoting_start = 'line ' + line + ' col ' + (index - col + 1);
+                            if (findEndOfRegexpQuote(this, tokenizer, lastIndex)) {
+                                state = STATES.initial;
+                            }
                         }
                         return;
                 }
@@ -315,6 +318,9 @@ function _parse(str, tokenizer) {
                             // console.log('regexp_quoting', index);
                             state = STATES.regexp_quoting;
                             quoting_start = 'line ' + line + ' col ' + (index - col + 1);
+                            if (findEndOfRegexpQuote(this, tokenizer, lastIndex)) {
+                                state = STATES.initial;
+                            }
                             return;
                     }
                 } else if (scope === 0) {
@@ -347,4 +353,46 @@ function _parse(str, tokenizer) {
                 }
         }
     }
+}
+
+function findEndOfRegexpQuote(str, tokenizer, lastIndex) {
+    const len = str.length;
+    let ch, in_class;
+    
+    main:
+    while (lastIndex < len) {
+        ch = str[lastIndex];
+        switch (ch) {
+            case "\r":
+            case "\n":
+                break main;
+            case "\\":
+                lastIndex++;
+                if (lastIndex === len) {
+                    break main;
+                }
+                break;
+            case "[":
+                in_class = true;
+                break;
+            case "]":
+                in_class = false;
+                break;
+            case "/":
+                if (!in_class) {
+                    break main;
+                }
+                break;
+        }
+        lastIndex++;
+    }
+
+    tokenizer.lastIndex = lastIndex;
+
+    if (str[lastIndex] === "/") {
+        tokenizer.lastIndex++;
+        return true;
+    }
+
+    return false;
 }

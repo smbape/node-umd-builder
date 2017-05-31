@@ -4,11 +4,14 @@ var HomeController, deps, ngcontroller,
 
 deps = ['lib/AbstractController'];
 
-
 /* locals = AbstractController */
 
 ngcontroller = HomeController = (function(superClass) {
   extend(HomeController, superClass);
+
+  var px = /^\$(?:\[(?:\d+|"(?:[^\\"\u0000-\u001f]|\\([\\"/bfnrt]|u[0-9a-zA-Z]{4}))*")\])*$/;
+  [/^\$(?:\[(?:\d+|"(?:[^\\"\u0000-\u001f]|\\([\\"/bfnrt]|u[0-9a-zA-Z]{4}))*")\])*$/];
+  function fn() { /^\$(?:\[(?:\d+|"(?:[^\\"\u0000-\u001f]|\\([\\"/bfnrt]|u[0-9a-zA-Z]{4}))*")\])*$/ }
 
   function HomeController() {
     return HomeController.__super__.constructor.apply(this, arguments);
