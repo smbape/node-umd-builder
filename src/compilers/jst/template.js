@@ -2,14 +2,13 @@
 
 module.exports = template;
 
-var lodash = require('lodash'),
-    extendWith = lodash.extendWith,
-    keys = lodash.keys,
-    attempt = lodash.attempt,
-    isError = lodash.isError,
-
-    isObject = lodash.isObject,
-    isArrayLike = lodash.isArrayLike;
+var extendWith = require("lodash/extendWith"),
+    keys = require("lodash/keys"),
+    attempt = require("lodash/attempt"),
+    isError = require("lodash/isError"),
+    isObject = require("lodash/isObject"),
+    isArrayLike = require("lodash/isArrayLike"),
+    templateSettings = require("lodash/templateSettings");
 
 /**
  * Used as the [maximum length](http://ecma-international.org/ecma-262/6.0/#sec-number.max_safe_integer)
@@ -258,13 +257,13 @@ function isIterateeCall(value, index, object) {
 function template(string, options, otherOptions) {
     // Based on John Resig's `tmpl` implementation (http://ejohn.org/blog/javascript-micro-templating/)
     // and Laura Doktorova's doT.js (https://github.com/olado/doT).
-    var settings = lodash.templateSettings;
+    var settings = templateSettings;
 
     if (otherOptions && isIterateeCall(string, options, otherOptions)) {
         options = otherOptions = undefined;
     }
     string = baseToString(string);
-    options = extendWith({}, otherOptions || options, settings, extendDefaults);
+    options = extendWith({ ignore: reIgnore }, otherOptions || options, settings, extendDefaults);
 
     var imports = extendWith({}, options.imports, settings.imports, extendDefaults),
         importsKeys = keys(imports),

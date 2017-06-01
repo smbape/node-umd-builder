@@ -1,11 +1,11 @@
 sysPath = require 'path'
-_ = require 'lodash'
 builder = require('../../../').builder
 writeData = require '../../writeData'
 
-_.template = require './template'
-_.templateSettings.variable = 'root'
-_.templateSettings.ignore = /<%--([\s\S]+?)--%>/g
+extend = require("lodash/extend")
+_template = require './template'
+
+modules = require("../../../utils/modules")
 
 module.exports = class JstCompiler
     brunchPlugin: true
@@ -21,15 +21,15 @@ module.exports = class JstCompiler
         {data, path, map} = params
 
         try
-            options = _.extend {}, @options, sourceURL: @nameCleaner path
-            template = _.template(data, options)
+            options = extend { variable: "root" }, @options, {
+                sourceURL: @nameCleaner path
+            }
+
+            options.imports = extend modules.makeModule(filename, module), options.imports
 
             src = sysPath.join self.paths.APPLICATION_PATH, path
             dst = sysPath.join self.paths.PUBLIC_PATH, self.amdDestination(path, true)
-            data = template
-                require: require
-                __filename: src
-                __dirname: sysPath.dirname src
+            data = _template(data, options)()
 
             writeData data, dst, (err)->
                 next err, params

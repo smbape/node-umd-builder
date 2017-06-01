@@ -5,7 +5,11 @@ fs = require('fs')
 sysPath = require('path')
 anymatch = require('anymatch')
 minimatch = require('minimatch')
-_ = require('lodash')
+
+clone = require("lodash/clone")
+each = require("lodash/each")
+merge = require("lodash/merge")
+
 mkdirp = require('mkdirp')
 
 pad = (str, length) ->
@@ -35,7 +39,7 @@ module.exports = class EsLinter
     constructor: (config)->
         cfg = config?.plugins?.eslint ? config?.eslint ? {}
         { @warnOnly, @overrides, ignore, config, pattern } = cfg
-        options = _.clone(config)
+        options = clone(config)
 
         if ignore
             @isIgnored = anymatch(ignore)
@@ -65,12 +69,12 @@ module.exports = class EsLinter
             config = config(params)
 
         if @overrides
-            config = _.clone @options
-            _.each @overrides, (options, pattern) ->
+            config = clone @options
+            each @overrides, (options, pattern) ->
                 if minimatch sysPath.normalize(path), pattern, {nocase: true, matchBase: true}
                     if "function" is typeof options
                         options = options(params)
-                    _.merge config, options
+                    merge config, options
                 return
 
         CLIEngine = @CLIEngine

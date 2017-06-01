@@ -1,6 +1,10 @@
 babylon = require('babylon')
 escodegen = require('escodegen')
-_ = require 'lodash'
+clone = require("lodash/clone")
+defaults = require("lodash/defaults")
+extend = require("lodash/extend")
+isObject = require("lodash/isObject")
+
 hasOwn = {}.hasOwnProperty
 isDedugEnabled = false
 
@@ -109,12 +113,12 @@ lookupTransforms = (ast, transformations, state = {level: 0, flattern: []}, astS
     delete state.attribute
     if Array.isArray ast
         astStack.push ast
-        stateStack.push _.clone(state)
+        stateStack.push clone(state)
         for iast in ast
             lookupTransforms iast, transformations, state, astStack, stateStack
         stateStack.pop()
         astStack.pop()
-    else if _.isObject ast
+    else if isObject ast
         if hasOwn.call(ast, 'type')
             ast.cid = ++cid
             state.flattern.push ast
@@ -125,7 +129,7 @@ lookupTransforms = (ast, transformations, state = {level: 0, flattern: []}, astS
 
                     inExpression = stateStack[stateStack.length - 4].inExpression
                     attribute = state.attribute = ast.name.name
-                    currState = _.defaults {inExpression}, state
+                    currState = defaults {inExpression}, state
                     if ast.name.type is 'JSXIdentifier'
                         switch attribute
                             when 'spRepeat'
@@ -187,7 +191,7 @@ lookupTransforms = (ast, transformations, state = {level: 0, flattern: []}, astS
                         inExpression = state.inExpression = true
 
         astStack.push ast
-        stateStack.push _.clone(state)
+        stateStack.push clone(state)
         for own prop of ast
             lookupTransforms ast[prop], transformations, state, astStack, stateStack
         stateStack.pop()
@@ -414,7 +418,7 @@ parse = (str, options)->
      ], sourceType: 'module' }
 
 transform = (str, options)->
-    options = _.extend {
+    options = extend {
         map: '_.map',
         # mdl: 'Mdl'
     }, options

@@ -1,4 +1,8 @@
-_ = require 'lodash'
+clone = require("lodash/clone")
+defaults = require("lodash/defaults")
+each = require("lodash/each")
+extend = require("lodash/extend")
+
 JstCompiler = require './jst/jst'
 sysPath = require('path')
 minimatch = require('minimatch')
@@ -25,7 +29,7 @@ module.exports = class MarkdownCompiler
     constructor: (config = {})->
         @sourceMaps = !!config.sourceMaps
         options = config?.plugins?.markdown or {}
-        @options = _.defaults {}, options, defaultOptions
+        @options = defaults {}, options, defaultOptions
         {@overrides} = @options
         delete @options.overrides
 
@@ -34,11 +38,11 @@ module.exports = class MarkdownCompiler
     compile: (params, next)->
         {data, path, map} = params
 
-        options = _.clone @options
+        options = clone @options
         if @overrides
-            _.each @overrides, (override, pattern) ->
+            each @overrides, (override, pattern) ->
                 if minimatch sysPath.normalize(path), pattern, {nocase: true, matchBase: true}
-                    _.extend options, override
+                    extend options, override
                 return
 
         if 'boolean' is typeof options.jst

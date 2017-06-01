@@ -7,7 +7,11 @@ sysPath = require('path')
 chalk = require('chalk')
 anymatch = require('anymatch')
 minimatch = require('minimatch')
-_ = require('lodash')
+
+clone = require("lodash/clone")
+each = require("lodash/each")
+extend = require("lodash/extend")
+
 mkdirp = require('mkdirp')
 
 pad = (str, length) ->
@@ -66,15 +70,15 @@ module.exports = class JsHinter
             return done null
 
         config = @options
-        globals = _.clone @globals
+        globals = clone @globals
         if @overrides
-            config = _.clone @options
-            _.each @overrides, (options, pattern) ->
+            config = clone @options
+            each @overrides, (options, pattern) ->
                 if minimatch sysPath.normalize(path), pattern, {nocase: true, matchBase: true}
                     if options.globals
-                        globals = _.extend(globals or {}, options.globals)
+                        globals = extend(globals or {}, options.globals)
                         delete options.globals
-                    _.extend config, options
+                    extend config, options
                 return
 
         JSHINT data, config, globals

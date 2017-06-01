@@ -3,11 +3,6 @@
 log4js = require '../log4js'
 logger = log4js.getLogger 'umd-builder'
 
-_ = require 'lodash'
-_.template = require('./compilers/jst/template')
-_.templateSettings.variable = 'root'
-_.templateSettings.ignore = /<%--([\s\S]+?)--%>/g
-
 sysPath = require 'path'
 
 exports.generateConfig = generateConfig = (options)->

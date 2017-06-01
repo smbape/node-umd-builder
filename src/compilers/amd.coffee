@@ -10,8 +10,23 @@ beautify = require('js-beautify').js_beautify
 hasProp = Object::hasOwnProperty
 fcache = require '../../utils/fcache'
 anymatch = require 'anymatch'
-_ = require 'lodash'
+
+clone = require("lodash/clone")
+cloneDeep = require("lodash/cloneDeep")
+defaults = require("lodash/defaults")
+defaultsDeep = require("lodash/defaultsDeep")
+extend = require("lodash/extend")
+isEqual = require("lodash/isEqual")
+isFunction = require("lodash/isFunction")
+isObject = require("lodash/isObject")
+merge = require("lodash/merge")
+pick = require("lodash/pick")
+
+_template = require("./jst/template")
+
 UglifyJSOptimizer = require 'uglify-js-brunch'
+
+modules = require("../../utils/modules")
 
 _processComponent = (component, config, options, done)->
     if component.umd
@@ -128,7 +143,7 @@ _compileComponentFile = (path, component, config, memo, isAbsolutePath, options,
     else
         logger.debug  "[#{name}] add [#{path}] as group"
 
-        if _.isObject(opts.map)
+        if isObject(opts.map)
             if opts.map.exports
                 exports = opts.map.exports
             paths = opts.map.paths
@@ -195,19 +210,21 @@ _compileComponentFile = (path, component, config, memo, isAbsolutePath, options,
 
 _writeMainFile = (config, options, done)->
     paths = options.paths
-    config = _.clone config
+    config = clone config
     pathBrowserify = config['path-browserify'] or 'umd-core/path-browserify'
     delete config['path-browserify']
 
     localOptions = options.options or {}
-    srcPath = localOptions.mainTemplate or sysPath.resolve(__dirname, '../../templates/main.js')
-    source = fs.readFileSync srcPath, 'utf8'
-    template = _.template source
+    filename = localOptions.mainTemplate or sysPath.resolve(__dirname, '../../templates/main.js')
+    dirname = sysPath.dirname(filename)
+    source = fs.readFileSync filename, 'utf8'
 
-    tplOpts = _.extend {
-        require: require
-        __filename: srcPath
-        __dirname: sysPath.dirname srcPath
+    template = _template(source, {
+        variable: "root",
+        imports: modules.makeModule(filename, module)
+    })
+
+    tplOpts = extend {
         config
         pathBrowserify
         paths: paths
@@ -296,14 +313,16 @@ _compileIndex = (config, options, done)->
         optimize: !!options.optimizer
 
     try
-        template = _.template source
+        template = _template(source, {
+            variable: "root"
+        })
 
         destFileSingle = sysPath.resolve paths.PUBLIC_PATH, 'index.single.html'
-        _writeHTML template(_.defaults({build: 'app'}, tplOpts)), destFileSingle, options.options, (err)->
+        _writeHTML template(defaults({build: 'app'}, tplOpts)), destFileSingle, options.options, (err)->
             return done(err) if err
 
             destFileClassic = sysPath.resolve paths.PUBLIC_PATH, 'index.classic.html'
-            _writeHTML template(_.defaults({build: 'web'}, tplOpts)), destFileClassic, options.options, (err)->
+            _writeHTML template(defaults({build: 'web'}, tplOpts)), destFileClassic, options.options, (err)->
                 return done(err) if err
                 logger.info 'compiled index file'
                 done()
@@ -315,7 +334,7 @@ _compileIndex = (config, options, done)->
 
 _writeHTML = (html, dst, options, done)->
     beforeWrite = options.beforeWrite
-    if _.isFunction beforeWrite
+    if isFunction beforeWrite
         html = beforeWrite html, dst, options
         if html instanceof Promise
             html.then (html)->
@@ -514,11 +533,11 @@ module.exports = class AmdCompiler
         @paths = builder.generateConfig(config).paths
         @paths.public = config.paths.public
 
-        @config = _.clone config
+        @config = clone config
         @sourceMaps = !!config.sourceMaps
         @amdDestination = config.modules.amdDestination
         @nameCleaner = config.modules.nameCleaner
-        @options = options = _.merge {}, defaultOptions, config.plugins?.amd
+        @options = options = merge {}, defaultOptions, config.plugins?.amd
 
         if @options.eslint
             @linter = new EsLinter config
@@ -532,7 +551,7 @@ module.exports = class AmdCompiler
         @requirejs = config.requirejs
         @packages = {}
         @noAmd = @options.noAmd
-        @factories = _.clone @options.factories
+        @factories = clone @options.factories
         @parseOptions = factories: Object.keys @factories
 
     compile: (params, done)->
@@ -554,8 +573,8 @@ module.exports = class AmdCompiler
                 if hasProp.call(@factories, name) and 'function' is typeof @factories[name]
                     data = @factories[name] @, modulePath, data, parsed
 
-                umdData = @options.umdWrapper data, _.clone(@options), modulePath
-                comData = @options.comWrapper data, _.clone(@options), modulePath
+                umdData = @options.umdWrapper data, clone(@options), modulePath
+                comData = @options.comWrapper data, clone(@options), modulePath
 
         dst = sysPath.join @paths.PUBLIC_PATH, @amdDestination(path) + '.js'
 
@@ -594,7 +613,7 @@ module.exports = class AmdCompiler
         if generatedFiles.length is 0 and changedAssets.length is 0
             return
 
-        options = _.pick @, ['paths', 'lastPackages', 'options', 'config', 'optimizer']
+        options = pick @, ['paths', 'lastPackages', 'options', 'config', 'optimizer']
 
         resolve = ->
         reject = ->
@@ -633,7 +652,7 @@ module.exports = class AmdCompiler
             deps: []
 
         # options is immutable, thats why deep is required
-        config = _.defaultsDeep {}, @requirejs, config
+        config = defaultsDeep {}, @requirejs, config
         config.map or (config.map = {})
         config.map['*'] or (config.map['*'] = {})
 
@@ -765,7 +784,7 @@ module.exports = class AmdCompiler
         hasChanged = false
         for dirname, paths of packages
 
-            if not lastPackages or not _.isEqual(lastPackages[dirname], paths)
+            if not lastPackages or not isEqual(lastPackages[dirname], paths)
                 hasChanged = true
                 packageNameWithoutExt = fcache.packageName.replace(/\.[^\.]+$/, '')
                 packageName = sysPath.join dirname, fcache.packageName
@@ -817,7 +836,7 @@ module.exports = class AmdCompiler
                 else
                     builder.fswatcher.emit 'change', absPath
 
-        plugin.lastPackages = _.cloneDeep packages
+        plugin.lastPackages = cloneDeep packages
 
         return hasChanged
 

@@ -1,5 +1,7 @@
-_ = require 'lodash'
-_.template = require './template'
+extend = require("lodash/extend")
+each = require("lodash/each")
+extend = require("lodash/extend")
+_template = require './template'
 sysPath = require('path')
 minimatch = require('minimatch')
 
@@ -15,11 +17,11 @@ module.exports = class JstCompiler
         delete @options.overrides
 
     getOptions: (path)->
-        options = _.extend {}, @options, sourceURL: @nameCleaner path
+        options = extend {}, @options, sourceURL: @nameCleaner path
         if @overrides
-            _.each @overrides, (override, pattern) ->
+            each @overrides, (override, pattern) ->
                 if minimatch sysPath.normalize(path), pattern, {nocase: true, matchBase: true}
-                    _.extend options, override
+                    extend options, override
                 return
 
         options
@@ -30,7 +32,7 @@ module.exports = class JstCompiler
         options = @getOptions path
 
         try
-            template = _.template(data, options).source
+            template = _template(data, options).source
 
             strict = if options.strict
                 "'use strict';"

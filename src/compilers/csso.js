@@ -1,7 +1,7 @@
 'use strict';
 
 var csso = require('csso'),
-    _ = require('lodash');
+    extend = require('lodash/extend');
 
 function CssoOptimizer(config) {
     this.options = config && config.plugins && config.plugins.csso || {};
@@ -30,7 +30,7 @@ CssoOptimizer.prototype.optimize = function(params, callback) {
         }
     }
 
-    var options = _.extend({
+    var options = extend({
         sourceMap: map || this.sourceMap
     }, this.options, {
         filename: path

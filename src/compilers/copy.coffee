@@ -5,7 +5,7 @@ fs = require 'fs'
 mkdirp = require 'mkdirp'
 sysPath = require 'path'
 semLib = require 'sem-lib'
-_ = require 'lodash'
+throttle = require 'lodash/throttle'
 
 builder = require '../builder'
 
@@ -50,7 +50,7 @@ copyFile = (dst, src, plugin, done)->
     if hasProp.call fns, dst
         fn = fns[dst]
     else
-        fn = fns[dst] = _.throttle _copyFile.bind(null, dst), wait, {leading: false, trailling: false}
+        fn = fns[dst] = throttle _copyFile.bind(null, dst), wait, {leading: false, trailling: false}
 
     fn.cancel()
     fn(src, plugin, done)
