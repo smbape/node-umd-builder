@@ -29,7 +29,7 @@ module.exports = class JstCompiler
 
             src = sysPath.join self.paths.APPLICATION_PATH, path
             dst = sysPath.join self.paths.PUBLIC_PATH, self.amdDestination(path, true)
-            data = _template(data, options)()
+            data = _template(data, options)(options.imports)
 
             writeData data, dst, (err)->
                 next err, params

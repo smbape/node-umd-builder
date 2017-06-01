@@ -219,9 +219,11 @@ _writeMainFile = (config, options, done)->
     dirname = sysPath.dirname(filename)
     source = fs.readFileSync filename, 'utf8'
 
+    imports = modules.makeModule(filename, module)
+
     template = _template(source, {
         variable: "root",
-        imports: modules.makeModule(filename, module)
+        imports: imports
     })
 
     tplOpts = extend {
@@ -231,7 +233,7 @@ _writeMainFile = (config, options, done)->
         optimize: options.config.isProduction
         root: paths.APPLICATION_PATH
         public: paths.PUBLIC_PATH
-    }, localOptions.tplOpts
+    }, imports, localOptions.tplOpts
 
     types =
         build: [sysPath.resolve(paths.APPLICATION_PATH, 'work/rbuild.js'), 'work/rbuild.js' ]
