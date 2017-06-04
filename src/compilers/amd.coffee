@@ -18,7 +18,7 @@ defaultsDeep = require("lodash/defaultsDeep")
 extend = require("lodash/extend")
 isEqual = require("lodash/isEqual")
 isFunction = require("lodash/isFunction")
-isObject = require("lodash/isObject")
+isObjectLike = require("lodash/isObjectLike")
 merge = require("lodash/merge")
 pick = require("lodash/pick")
 
@@ -33,7 +33,9 @@ _processComponent = (component, config, options, done)->
         done()
         return
 
-    return done() if not (component.files instanceof Array)
+    if not (component.files instanceof Array)
+        done()
+        return
 
     name = component.name
 
@@ -53,12 +55,12 @@ _processComponent = (component, config, options, done)->
                 if ~(idx = config.deps.indexOf name)
                     config.deps.splice idx, 1
             done(err)
-            give = ->
+            give = Function.prototype
         return
 
     take()
 
-    memo = {processed: {}, groupIndex: 0}
+    memo = {processed: {}}
     componentDir = sysPath.join options.paths.BOWER_COMPONENTS_ABSOLUTE_PATH, name
 
     task = (path, opts)->
@@ -97,7 +99,7 @@ _processComponent = (component, config, options, done)->
 _compileComponentFile = (path, component, config, memo, isAbsolutePath, options, opts, done)->
     name = component.name
     configPaths = options.paths
-    {processed, groupIndex} = memo
+    {processed} = memo
 
     if isAbsolutePath
         absolutePath = path
@@ -105,12 +107,12 @@ _compileComponentFile = (path, component, config, memo, isAbsolutePath, options,
     else
         absolutePath = sysPath.join configPaths.BOWER_COMPONENTS_ABSOLUTE_PATH, name, path
 
-    return done() if hasProp.call processed, absolutePath
+    if hasProp.call processed, absolutePath
+        done()
+        return
     logger.trace "compiling bower file #{component.name}: #{path}"
 
     processed[absolutePath] = true
-    extname = sysPath.extname path
-    destFile = sysPath.resolve configPaths.BOWER_PUBLIC_PATH, name, path
 
     memo.hasJs = true
     pathext = configPaths.BOWER_COMPONENTS_URL + '/' + sysPath.join(name, path).replace(/[\\]/g, '/')
@@ -143,7 +145,7 @@ _compileComponentFile = (path, component, config, memo, isAbsolutePath, options,
     else
         logger.debug  "[#{name}] add [#{path}] as group"
 
-        if isObject(opts.map)
+        if isObjectLike(opts.map)
             if opts.map.exports
                 exports = opts.map.exports
             paths = opts.map.paths
@@ -216,7 +218,6 @@ _writeMainFile = (config, options, done)->
 
     localOptions = options.options or {}
     filename = localOptions.mainTemplate or sysPath.resolve(__dirname, '../../templates/main.js')
-    dirname = sysPath.dirname(filename)
     source = fs.readFileSync filename, 'utf8'
 
     imports = modules.makeModule(filename, module)
@@ -265,16 +266,21 @@ _writeMainFile = (config, options, done)->
 
 _writeMainData = (data, dst, path, options, done)->
     mkdirp sysPath.dirname(dst), (err)->
-        return done err if err
+        if err
+            done(err)
+            return
 
         writer = fs.createWriteStream dst, flags: 'w'
 
         if options.optimizer
-            options.optimizer.optimize {data, path}, (err, {data: optimized, path, map})->
-                return done err if err
+            options.optimizer.optimize {data, path}, (err, {data: optimized})->
+                if err
+                    done(err)
+                    return
                 writer.write(optimized || data, 'utf8', done)
                 writer.end()
                 writer = null
+                return
         else
             writer.write beautify(data, 
                 indent_with_tabs: false
@@ -303,9 +309,12 @@ _compileIndex = (config, options, done)->
 
     try
         stats = fs.lstatSync(srcpath)
-        return done() if not stats.isFile()
-    catch e
-        return done()
+        if not stats.isFile()
+            done()
+            return
+    catch
+        done()
+        return
 
     source = fs.readFileSync srcpath, 'utf8'
     tplOpts =
@@ -321,14 +330,20 @@ _compileIndex = (config, options, done)->
 
         destFileSingle = sysPath.resolve paths.PUBLIC_PATH, 'index.single.html'
         _writeHTML template(defaults({build: 'app'}, tplOpts)), destFileSingle, options.options, (err)->
-            return done(err) if err
+            if err
+                done(err)
+                return
 
             destFileClassic = sysPath.resolve paths.PUBLIC_PATH, 'index.classic.html'
             _writeHTML template(defaults({build: 'web'}, tplOpts)), destFileClassic, options.options, (err)->
-                return done(err) if err
+                if err
+                    done(err)
+                    return
                 logger.info 'compiled index file'
                 done()
                 return
+
+            return
     catch err
         done(err)
 
@@ -405,11 +420,11 @@ defaultOptions.comWrapper = (data, options)->
 defaultFactories = defaultOptions.factories = {}
 
 ngFactory = (plugin, modulePath, data, parsed)->
-    [locals, name, args, head, declaration, body] = parsed
+    [locals, ctor, args, head, declaration, body] = parsed
 
     body = "#{declaration}#{args.join(', ')}#{body}"
 
-    ngmethod = ctor.substring 'ng'.length
+    ngmethod = ctor.slice 'ng'.length
     realPath = plugin.config.paths.modules + '/' + modulePath
     $name = modulePath.replace(/\//g, '.')
     $dirname = sysPath.dirname realPath
@@ -425,7 +440,7 @@ ngFactory = (plugin, modulePath, data, parsed)->
     for (var i = 0, len = ngdeps.length, dep; i < len; i++) {
         dep = ngdeps[i];
         if ('string' === typeof dep && '/' === dep.charAt(0)) {
-            ngdeps[i] = dep.substring(1);
+            ngdeps[i] = dep.slice(1);
             dep = ngdeps[i];
             // deps.length - ngoffset + 1 correspond to ng dependency index
             // that index will be used to know which ngdeps must only by a deps
@@ -451,7 +466,7 @@ do ->
     return
 
 defaultFactories.ngmodule = (plugin, modulePath, data, parsed)->
-    [locals, name, args, head, declaration, body] = parsed
+    [_UNUSED_, _UNUSED_, args, head, declaration, body] = parsed
 
     body = "#{declaration}#{args.join(', ')}#{body}"
 
@@ -465,7 +480,7 @@ defaultFactories.ngmodule = (plugin, modulePath, data, parsed)->
     for (var i = 0, len = ngdeps.length, dep; i < len; i++) {
         dep = ngdeps[i];
         if ('string' === typeof dep && '/' === dep.charAt(0)) {
-            ngdeps[i] = dep.substring(1);
+            ngdeps[i] = dep.slice(1);
             dep = ngdeps[i];
             // deps.length - ngoffset + 1 correspond to ng dependency index
             // that index will be used to know which ngdeps must only by a deps
@@ -491,7 +506,7 @@ defaultFactories.ngmodule = (plugin, modulePath, data, parsed)->
     """
 
 defaultFactories.freact = (plugin, modulePath, data, parsed)->
-    [locals, name, args, head, declaration, body] = parsed
+    [_UNUSED_, _UNUSED_, args, head, declaration, body] = parsed
 
     """
     #{head}
@@ -508,7 +523,7 @@ defaultFactories.freact = (plugin, modulePath, data, parsed)->
     """
 
 defaultFactories.factory = (plugin, modulePath, data, parsed)->
-    [locals, name, args, head, declaration, body] = parsed
+    [_UNUSED_, _UNUSED_, args, head, declaration, body] = parsed
 
     if 'require' isnt args[0]
         # remove any require variable
@@ -519,9 +534,6 @@ defaultFactories.factory = (plugin, modulePath, data, parsed)->
         data = "#{head}#{declaration}#{args.join(', ')}#{body}"
 
     return data
-
-JsHinter = require './jshinter'
-EsLinter = require './eslinter'
 
 module.exports = class AmdCompiler
     brunchPlugin: true
@@ -534,16 +546,19 @@ module.exports = class AmdCompiler
 
         @paths = builder.generateConfig(config).paths
         @paths.public = config.paths.public
+        @joinTo = config.files.javascripts.joinTo
 
         @config = clone config
         @sourceMaps = !!config.sourceMaps
         @amdDestination = config.modules.amdDestination
         @nameCleaner = config.modules.nameCleaner
-        @options = options = merge {}, defaultOptions, config.plugins?.amd
+        @options = merge {}, defaultOptions, config.plugins?.amd
 
         if @options.eslint
+            EsLinter = require './eslinter'
             @linter = new EsLinter config
         else if @options.jshint
+            JsHinter = require './jshinter'
             @linter = new JsHinter config
 
         @isIgnored = if @options.ignore then anymatch(@options.ignore) else if config.conventions and config.conventions.vendor then config.conventions.vendor else anymatch(/^(?:bower_components|vendor)/)
@@ -552,12 +567,14 @@ module.exports = class AmdCompiler
         @pending = []
         @requirejs = config.requirejs
         @packages = {}
+        @deepacks = {}
         @noAmd = @options.noAmd
         @factories = clone @options.factories
         @parseOptions = factories: Object.keys @factories
 
     compile: (params, done)->
-        {data, path, map} = params
+        { joinTo } = @
+        { data, path, map } = params
 
         if @options.bind
             data = data.replace /function\s*\(\)\s*\{\s*return fn.apply\(me, arguments\);\s*\}/, 'fn.bind(me)'
@@ -566,7 +583,7 @@ module.exports = class AmdCompiler
         
         if not @isIgnored params.path
             try
-                [locals, name] = parsed = factoryParse data, @parseOptions
+                [_UNUSED_, name] = parsed = factoryParse data, @parseOptions
             catch err
                 logger.error err
 
@@ -581,28 +598,44 @@ module.exports = class AmdCompiler
         dst = sysPath.join @paths.PUBLIC_PATH, @amdDestination(path) + '.js'
 
         @_getComponents (err, components)=>
-            return done(err) if (err)
+            if (err)
+                done(err)
+                return
+
             if /^bower_components[\/\\]/.test(path) and @isVendor and @isVendor(path)
                 [match, name, relpath] = path.match(/^bower_components[\/\\]([^\/\\]+)[\/\\](.+)/)
                 components[name].jsfiles or (components[name].jsfiles = {})
                 components[name].jsfiles[relpath] = true
 
             @_lint {comData, umdData, path, map, dst}, (err, options)=>
-                return done(err) if (err)
+                if (err)
+                    done(err)
+                    return
 
                 if @noAmd
                     done err, {data: comData, path}
                     return
 
                 @_writeData options, (err, options)=>
-                    return done(err) if err
+                    if err
+                        done(err)
+                        return
 
                     {comData, umdData, path} = options
 
                     if not @isVendor or not @isVendor(path)
-                        dirname = sysPath.dirname(path)
-                        @packages[dirname] or (@packages[dirname] = {})
-                        @packages[dirname][path.replace(/\.[^\.]+$/, '')] = true
+                        pathWithoutExt = path.replace(/\.[^\.]+$/, '')
+
+                        deepackName = fcache.deepackName
+                        reg = /[\/\\]/g
+                        while match = reg.exec(path)
+                            dirname = path.slice(0, match.index)
+                            if @canJoin(dirname + "/" + deepackName, joinTo)
+                                @deepacks[dirname] = {} if not hasProp.call(@deepacks, dirname)
+                                @deepacks[dirname][pathWithoutExt] = true
+
+                        @packages[dirname] = {} if not hasProp.call(@packages, dirname)
+                        @packages[dirname][pathWithoutExt] = true
 
                     done err, {data: comData, path}
 
@@ -611,14 +644,23 @@ module.exports = class AmdCompiler
             return
         return
 
+    canJoin: (path, joinTo)->
+        if /^bower_components[\/\\]/.test(path) and not /^bower_components[\/\\][^\/\\]+[\/\\]/.test(path)
+            return false
+
+        for file, reg of joinTo
+            if reg.test(path)
+                return true
+
+        return false
+
     onCompile: (generatedFiles, changedAssets)->
         if generatedFiles.length is 0 and changedAssets.length is 0
-            return
+            return null
 
         options = pick @, ['paths', 'lastPackages', 'options', 'config', 'optimizer']
 
-        resolve = ->
-        reject = ->
+        resolve = Function.prototype
         done = (err)->
             resolve()
             return
@@ -686,7 +728,10 @@ module.exports = class AmdCompiler
         # Start work
         take()
         @_getComponents (err, components)->
-            return give(err) if err
+            if err
+                give(err)
+                return
+
             for name, component of components
                 take()
                 _processComponent component, config, options, give
@@ -695,9 +740,8 @@ module.exports = class AmdCompiler
             give()
             return
 
-        return new Promise (_resolve, _reject)->
+        return new Promise (_resolve)->
             resolve = _resolve
-            reject = _reject
             return
 
     _getComponents: (done)->
@@ -713,7 +757,9 @@ module.exports = class AmdCompiler
         self.initializing = true
         readComponents sysPath.resolve(self.paths.APPLICATION_PATH), 'bower', (err, components)->
             self.initializing = false
-            return done(err) if (err)
+            if (err)
+                done(err)
+                return
 
             self.components = {}
             for component in components
@@ -732,7 +778,11 @@ module.exports = class AmdCompiler
 
     _lint: (options, done)->
         if linter = @linter
-            {comData, umdData, path, map, dst} = options
+            {umdData, path, map} = options
+            if sysPath.basename(path) in [ fcache.packageName.slice(0, -".js".length), fcache.deepackName.slice(0, -".js".length) ]
+                done null, options
+                return
+
             linter.lint {data: umdData, path, map}, (msg)->
                 if msg and linter.warnOnly
                     logger.warn path, msg
@@ -740,22 +790,28 @@ module.exports = class AmdCompiler
 
                 done msg, options
                 return
+
             return
         done null, options
         return
 
     _writeData: (options, done)->
-        {umdData, path, map, dst} = options
+        {umdData, path, dst} = options
 
         next = (err)->
-            return done(err) if err
+            if err
+                done(err)
+                return
             done(err, options)
             return
 
         if @optimizer
             @optimizer.optimize {data: umdData, path}, (err, res)->
-                return next(err) if err
-                {data: optimized, path, map} = res
+                if err
+                    next(err)
+                    return
+
+                {data: optimized, path} = res
                 writeData optimized || umdData, dst, next
                 return
             return
@@ -765,81 +821,185 @@ module.exports = class AmdCompiler
 
     _compilePackages: (generatedFiles, changedAssets)->
         plugin = @
-        {lastPackages, packages} = plugin
 
         if not plugin.options.package
             return false
 
+        { packages, deepacks } = plugin
+
         generatedFiles.forEach (generatedFile, index)->
             generatedFile.sourceFiles.forEach (file, index)->
-                if file.removed
-                    path = file.path
-                    if path
-                        dirname = sysPath.dirname(path).replace /[\\]/g, '/'
-                        delete packages[dirname]?[path.replace(/\.[^\.]+$/, '')]
+                return if not file.removed
+                path = file.path
+                return if not path
 
-                        dst = sysPath.join plugin.paths.PUBLIC_PATH, plugin.amdDestination(path) + '.js'
-                        fs.unlinkSync dst
+                reg = /[\/\\]/g
+                while match = reg.exec(path)
+                    dirname = path.slice(0, match.index).replace /[\\]/g, '/'
+                    delete deepacks[dirname]?[path.replace(/\.[^\.]+$/, '')]
+
+                delete packages[dirname]?[path.replace(/\.[^\.]+$/, '')]
+
+                dst = sysPath.join plugin.paths.PUBLIC_PATH, plugin.amdDestination(path) + '.js'
+                fs.unlinkSync dst
                 return
             return
 
+        res1 = @_processPackages(plugin, "package")
+
+        if not plugin.options.deepack
+            return res1
+
+        res2 = @_processPackages(plugin, "deepack")
+
+        res1 or res2
+
+    _processPackages: (plugin, name)->
+        packages = plugin[name + "s"]
+        lastPackagesKey = "last" + name[0].toUpperCase() + name.slice(1) + "s"
+        lastPackages = @[lastPackagesKey]
+        _packageName = fcache[name + "Name"]
+
+        __packageName = fcache.packageName.replace(/\.[^\.]+$/, '')
+        __deepackName = fcache.deepackName.replace(/\.[^\.]+$/, '')
+
         hasChanged = false
-        for dirname, paths of packages
+        if not lastPackages
+            lastPackages = {}
 
-            if not lastPackages or not isEqual(lastPackages[dirname], paths)
-                hasChanged = true
-                packageNameWithoutExt = fcache.packageName.replace(/\.[^\.]+$/, '')
-                packageName = sysPath.join dirname, fcache.packageName
-                absPath = sysPath.join(plugin.paths.APPLICATION_PATH, packageName).replace(/[\\]/g, sysPath.sep)
-                paths = Object.keys(paths).sort()
+        for dirname, paths of lastPackages
+            if hasProp.call(packages, dirname)
+                continue
 
-                if paths.length is 0
-                    delete packages[dirname]
-                    fs.unlinkSync absPath
-                    builder.fswatcher.emit 'unlink', absPath
+            hasChanged = true
+
+            packageNameWithoutExt = _packageName.replace(/\.[^\.]+$/, '')
+            packageName = sysPath.join dirname, _packageName
+            absPath = sysPath.join(plugin.paths.APPLICATION_PATH, packageName).replace(/[\\]/g, sysPath.sep)
+            paths = Object.keys(paths).sort()
+
+            if paths.length is 0
+                continue
+
+            hasFile = false
+            for path in paths
+                [match, basename] = path.match /([^\/\\]+)(?:\.[^\.]+)?$/
+                if basename in [ __packageName, __deepackName ]
                     continue
 
-                deps = []
-                args = []
-                keys = []
+                hasFile = true
+                break
 
-                i = 0
-                for path in paths
-                    hasFile = true
-                    [match, basename] = path.match /([^\/\\]+)(?:\.[^\.]+)?$/
-                    if basename is packageNameWithoutExt
-                        continue
-                    arg = 'arg' + i
-                    args.push arg
-                    deps.push './' + basename
-                    keys.push '"' + basename + '": ' + arg
-                    i++
+            if not hasFile
+                continue
 
-                if not hasFile
-                    return ''
+            fcache.removeFakeFile(packageName)
+            builder.fswatcher.emit 'unlink', absPath
 
-                content = """
-                    deps = [
-                        "#{deps.join('",\n    "')}"
-                    ];
 
-                    function factory(
-                        #{args.join(',\n    ')}
-                    ) {
-                        return {
-                            #{keys.join(',\n        ')}
-                        };
-                    }
-                """
+        for dirname, paths of packages
+            if isEqual(lastPackages[dirname], paths)
+                continue
 
-                status = fcache.updateFakeFile(packageName, content)
-                if status is 0
-                    builder.fswatcher.emit 'add', absPath
-                else
-                    builder.fswatcher.emit 'change', absPath
+            hasChanged = true
+            packageNameWithoutExt = _packageName.replace(/\.[^\.]+$/, '')
+            packageName = sysPath.join dirname, _packageName
+            absPath = sysPath.join(plugin.paths.APPLICATION_PATH, packageName).replace(/[\\]/g, sysPath.sep)
+            paths = Object.keys(paths).sort()
 
-        plugin.lastPackages = cloneDeep packages
+            if paths.length is 0
+                delete packages[dirname]
+                fcache.removeFakeFile(packageName)
+                fs.unlinkSync absPath
+                builder.fswatcher.emit 'unlink', absPath
+                continue
+
+            deps = []
+            _module = {}
+
+            i = 0
+            hasFile = false
+            for path in paths
+                relpath = path.slice(dirname.length + 1)
+                { name: basename, dir: _dirname } = sysPath.parse(relpath)
+
+                if basename in [ __packageName, __deepackName ]
+                    continue
+
+                if _dirname.length isnt 0
+                    _dirname = _dirname.replace(/\\/g, "/") + "/"
+
+                relModulePath = _dirname + basename
+
+                hasFile = true
+
+                deps.push "./" + relModulePath
+
+                obj = _module
+                reg = /\//g
+                lastIndex = 0
+                while match = reg.exec(relModulePath)
+                    key = relModulePath.slice(lastIndex, match.index)
+                    lastIndex = reg.lastIndex
+
+                    if !hasProp.call(obj, key)
+                        obj[key] = {}
+
+                    obj = obj[key]
+
+                obj[basename] = i
+
+                i++
+
+            if not hasFile
+                continue
+
+            content = """
+                deps = [
+                    "#{deps.join('",\n    "')}"
+                ];
+
+                function factory() {
+                    var args = Array.prototype.slice.call(arguments, arguments.length - #{i});
+                    return #{this.stringifyModule(_module, 4, 4, true)};
+                }
+            """
+
+            status = fcache.updateFakeFile(packageName, content)
+            if status is 0
+                builder.fswatcher.emit 'add', absPath
+            else
+                builder.fswatcher.emit 'change', absPath
+
+        plugin[lastPackagesKey] = cloneDeep packages
 
         return hasChanged
+
+    stringifyModule: (module, initialSpace = 0, space = 4, order)->
+        initialIndent = " ".repeat(initialSpace)
+        indent = " ".repeat(space)
+        str = []
+        initialSpace += space
+        keys = Object.keys(module)
+        if order
+            keys.sort()
+
+        for key in keys
+            value = module[key]
+
+            if isObjectLike(value)
+                str.push(JSON.stringify(key) + ": " + this.stringifyModule(value, initialSpace, space, order))
+            else
+                str.push(JSON.stringify(key) + ": args[" + value + "]" )
+        
+        if str.length is 0
+            return "{}"
+
+        indent = initialIndent + indent
+        if indent.length isnt 0
+            indent = "\n" + indent
+            initialIndent = "\n" + initialIndent
+
+        return "{#{ indent }#{ str.join("," + indent) }#{ initialIndent }}"
 
 AmdCompiler.brunchPluginName = 'amd-brunch'

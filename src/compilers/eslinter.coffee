@@ -1,7 +1,6 @@
-log4js = global.log4js || (global.log4js = require('log4js'))
-logger = log4js.getLogger 'EsLinter'
+# log4js = global.log4js || (global.log4js = require('log4js'))
+# logger = log4js.getLogger 'EsLinter'
 
-fs = require('fs')
 sysPath = require('path')
 anymatch = require('anymatch')
 minimatch = require('minimatch')
@@ -9,13 +8,6 @@ minimatch = require('minimatch')
 clone = require("lodash/clone")
 each = require("lodash/each")
 merge = require("lodash/merge")
-
-mkdirp = require('mkdirp')
-
-pad = (str, length) ->
-    while str.length < length
-        str = ' ' + str
-    str
 
 Module = require("module")
 
@@ -28,7 +20,7 @@ resolve = (name, directory)->
 
     try
         return Module._resolveFilename(name, relativeMod)
-    catch err
+    catch
         return null
 
 module.exports = class EsLinter
@@ -55,14 +47,16 @@ module.exports = class EsLinter
         @CLIEngine = require(resolve('eslint', process.cwd())).CLIEngine
 
     lint: (params, done)->
-        {data, path, map} = params
+        {data, path} = params
 
         # check if it is a file to lint
         if @isIgnored(path)
-            return done()
+            done()
+            return
 
         if @pattern and not @pattern(path)
-            return done()
+            done()
+            return
 
         config = @options
         if "function" is typeof config
@@ -83,7 +77,8 @@ module.exports = class EsLinter
         report = linter.executeOnText(data, path)
 
         if report.errorCount is 0 and report.warningCount is 0
-            return done()
+            done()
+            return
 
         formatter = CLIEngine.getFormatter()
         msg = 'ESLint reported:\n' + formatter(report.results)

@@ -91,21 +91,16 @@ shiftTransform = ([name, str, res], transformations, start, end, offset, leftoff
     return
 
 strReplace = (name, str, replace, start, end, transformations, state)->
-    res = str.substring(0, start) + replace + str.substring(end)
+    res = str.slice(0, start) + replace + str.slice(end)
 
     offset = replace.length - end + start
     leftoffset = offset
-    middle = null
-    rightoffset = null
+    # middle = null
+    # rightoffset = null
 
     shiftTransform [name, str, res], transformations, start, end, offset, leftoffset, null, null, state
 
     res
-
-
-hasAttriute = (name, attributes)->
-    attributes.some (node)->
-        node.name.name is name
 
 EXPRESSION_REG = /Expression/
 cid = 0
@@ -155,9 +150,9 @@ lookupTransforms = (ast, transformations, state = {level: 0, flattern: []}, astS
                             else
                                 if hasOwn.call TRF_DICT, attribute
                                     if ast.value.type is 'JSXExpressionContainer'
-                                        start = ast.name.start
-                                        middle = ast.name.end
-                                        end = ast.value.end
+                                        # start = ast.name.start
+                                        # middle = ast.name.end
+                                        # end = ast.value.end
 
                                         transformations.push [attribute, ast.name.start, ast.name.end, currState]
                                         transformations.push [attribute + 'Value', ast.value.start, ast.value.end, currState]
@@ -236,25 +231,25 @@ TRF_DICT =
                 throw new Error "invalid spRepeat value at #{node.start}, #{node.end}. expecting '(value, key) in obj' or 'element in elements'"
 
             {start: _start, end: _end} = ast.body[0].expression.left
-            args = value.substring _start, _end
+            args = value.slice _start, _end
             {start: _start, end: _end} = ast.body[0].expression.right
-            obj = value.substring _start, _end
+            obj = value.slice _start, _end
 
             left = options.map + "(#{obj}, function(#{args}) {return ("
             right = ")}.bind(this))"
 
-        if ~state.attributes.indexOf('spShow')
-            left = left.substring(0, left.length - 1)
-            right = right.substring(1)
+        if state.attributes.indexOf('spShow') isnt -1
+            left = left.slice(0, left.length - 1)
+            right = right.slice(1)
 
         if not state.inExpression and state.level > 1
             left = '{ ' + left
             right = right + ' }'
 
-        prefix = str.substring(0, start)
-        suffix = str.substring(end)
+        prefix = str.slice(0, start)
+        suffix = str.slice(end)
 
-        toRepeat = str.substring(start, node.start) + str.substring(node.end, end)
+        toRepeat = str.slice(start, node.start) + str.slice(node.end, end)
         res = prefix + left + toRepeat + right + suffix
 
         # attribute has been removed
@@ -268,8 +263,8 @@ TRF_DICT =
         res
 
     spShow: (str, options, transformations, start, end, state, node)->
-        condition = str.substring node.value.expression.start, node.value.expression.end
-        toDisplay = str.substring(start, node.start) + str.substring(node.end, end)
+        condition = str.slice node.value.expression.start, node.value.expression.end
+        toDisplay = str.slice(start, node.start) + str.slice(node.end, end)
 
         left = "(#{condition} ? "
         right = " : void 0)"
@@ -278,7 +273,7 @@ TRF_DICT =
             left = '{ ' + left
             right = right + ' }'
 
-        res = str.substring(0, start) + left + toDisplay + right + str.substring(end)
+        res = str.slice(0, start) + left + toDisplay + right + str.slice(end)
 
         # attribute has been removed
         leftoffset = left.length
@@ -291,7 +286,7 @@ TRF_DICT =
         res
 
     spModel: (str, options, transformations, start, end, state, expr)->
-        value = str.substring(start, end)
+        value = str.slice(start, end)
         ast = parse(value).program
 
         if ast.body.length is 1 and ast.body[0].type is 'ExpressionStatement'
@@ -316,7 +311,7 @@ TRF_DICT =
 
     mdlOpen: (str, options, transformations, start, end, state)->
         if options.mdl
-            replace = "#{options.mdl} tagName=\"#{str.substring(start, end)}\""
+            replace = "#{options.mdl} tagName=\"#{str.slice(start, end)}\""
             return strReplace 'mdlOpen', str, replace, start, end, transformations, state
 
         return str
@@ -372,15 +367,15 @@ do ->
     ]
 
     delegate = (type)->
-        type = type[0].toUpperCase() + type.substring(1)
+        type = type[0].toUpperCase() + type.slice(1)
 
         TRF_DICT['sp' + type] = (str, options, transformations, start, end)->
-            str.substring(0, start) + 'on' + type + str.substring(end)
+            str.slice(0, start) + 'on' + type + str.slice(end)
 
         TRF_DICT['sp' + type + 'Value'] = (str, options, transformations, start, end, state)->
             left = "{ (function(event, domID, originalEvent) "
             right = ").bind(this) }"
-            res = str.substring(0, start) + left + str.substring(start, end) + right + str.substring(end)
+            res = str.slice(0, start) + left + str.slice(start, end) + right + str.slice(end)
 
             offset = left.length + right.length
             leftoffset = left.length

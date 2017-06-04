@@ -2,7 +2,7 @@ vm = require 'vm'
 
 getDefineLocation = (stack, depth = 0)->
     if depth < 0
-        return
+        return []
 
     index = stack.indexOf '\n'
     index = stack.indexOf '\n', index + 1
@@ -12,21 +12,19 @@ getDefineLocation = (stack, depth = 0)->
 
     lastIndex = stack.indexOf '\n', index + 1
 
-    curr = col
-    _continue = true
     start = lastIndex
 
     end = start
     while start > index and stack[start] isnt ':'
         start--
-    # console.log 'col', stack.substring(start + 1, end)
-    col = parseInt stack.substring(start + 1, end)
+    # console.log 'col', stack.slice(start + 1, end)
+    col = parseInt stack.slice(start + 1, end), 10
 
     end = start--
     while start > index and stack[start] isnt ':'
         start--
-    # console.log 'line', stack.substring(start + 1, end)
-    line = parseInt stack.substring(start + 1, end)
+    # console.log 'line', stack.slice(start + 1, end)
+    line = parseInt stack.slice(start + 1, end), 10
 
     [line, col, index]
 
@@ -37,8 +35,8 @@ getIndex = (str, line, col)->
     curr = 1
     index = 0
     lastIndex = -1
-    while ~(index = str.indexOf '\n', index)
-        # console.log "line #{curr} ends at #{index}", str.substring(lastIndex + 1, index)
+    while (index = str.indexOf '\n', index) isnt -1
+        # console.log "line #{curr} ends at #{index}", str.slice(lastIndex + 1, index)
         lastIndex = index
         index++
         break if line is ++curr
@@ -74,14 +72,14 @@ ensureAmdName = (data, name, depth = 0)->
     try
         script = new vm.Script(data)
         script.runInContext(context)
-    catch e
+    catch
         return data
 
     # console.log sandbox
 
     if sandbox.anonymous
         stack = sandbox.stack
-        [line, col, index] = getDefineLocation stack, depth
+        [line, col] = getDefineLocation stack, depth
 
         # console.log stack.split('\n')
         # console.log line, col
@@ -92,9 +90,9 @@ ensureAmdName = (data, name, depth = 0)->
 
         defstart = res.indexOf '(', start
 
-        # console.log res.substring(0, defstart + 1)
+        # console.log res.slice(0, defstart + 1)
 
-        res = res.substring(0, defstart + 1) + "'" + name + '\', ' + res.substring(defstart + 1)
+        res = res.slice(0, defstart + 1) + "'" + name + '\', ' + res.slice(defstart + 1)
 
     return res
 

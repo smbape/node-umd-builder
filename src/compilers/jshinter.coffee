@@ -1,5 +1,5 @@
-log4js = global.log4js || (global.log4js = require('log4js'))
-logger = log4js.getLogger 'JsHinter'
+# log4js = global.log4js || (global.log4js = require('log4js'))
+# logger = log4js.getLogger 'JsHinter'
 
 JSHINT = require('jshint').JSHINT
 fs = require('fs')
@@ -11,8 +11,6 @@ minimatch = require('minimatch')
 clone = require("lodash/clone")
 each = require("lodash/each")
 extend = require("lodash/extend")
-
-mkdirp = require('mkdirp')
 
 pad = (str, length) ->
     while str.length < length
@@ -63,11 +61,12 @@ module.exports = class JsHinter
         @options = options
 
     lint: (params, done)->
-        {data, path, map} = params
+        {data, path} = params
 
         # check if it is a file to lint
         if @isIgnored path
-            return done null
+            done(null)
+            return
 
         config = @options
         globals = clone @globals

@@ -5,7 +5,7 @@ logger = log4js.getLogger 'umd-builder'
 
 sysPath = require 'path'
 
-exports.generateConfig = generateConfig = (options)->
+exports.generateConfig = (options)->
     config = {}
     APPLICATION_PATH = sysPath.resolve options.paths.root
     CLIENT_RELATIVE_PATH = options.paths.watched[0]

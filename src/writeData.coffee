@@ -13,10 +13,14 @@ writeData = (data, dst, done)->
             return
 
         mkdirp sysPath.dirname(dst), (err)->
-            return next(err) if err
+            if err
+                next(err)
+                return
+
             writeStream = fs.createWriteStream dst
             writeStream.write data, 'utf8', next
             writeStream.end()
+
             return
         return
     return

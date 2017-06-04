@@ -1,4 +1,4 @@
-sysPath = require 'path'
+`/* eslint-disable no-empty-function */`
 handlebars = require 'handlebars'
 
 module.exports = class HandlebarsCompiler

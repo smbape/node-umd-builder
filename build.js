@@ -10,6 +10,26 @@ var fs = require('fs'),
     fcache = require('./utils/fcache'),
     resolveFrom = require('./utils/resolveFrom');
 
+fs.ReadStream.prototype.open = function() {
+    var self = this;
+    var stack = (new Error()).stack;
+    fs.open(this.path, this.flags, this.mode, function(er, fd) {
+        if (er) {
+            if (self.autoClose) {
+                self.destroy();
+            }
+            er.stack = er.stack + (new Error()).stack + "\n" + stack;
+            self.emit('error', er);
+            return;
+        }
+
+        self.fd = fd;
+        self.emit('open', fd);
+        // start the flow of data.
+        self.read();
+    });
+};
+
 var cli = require('brunch/lib/cli'),
     program = require(resolveFrom('brunch', 'commander'));
 
@@ -20,8 +40,7 @@ program.commands.forEach(function(command) {
     }
 });
 
-var command = process.argv[2],
-    cleanOpt, forceOpt;
+var command = process.argv[2], cleanOpt, forceOpt;
 if (/^w|watch|b|build|bb|bbp|bw|bws$/.test(command)) {
     process.argv.slice(2).forEach(function(arg) {
         if (arg === '--clean') {

@@ -1,24 +1,24 @@
-'use strict';
+"use strict";
 
-var csso = require('csso'),
-    extend = require('lodash/extend');
+const csso = require("csso");
+const extend = require("lodash/extend");
 
 function CssoOptimizer(config) {
     this.options = config && config.plugins && config.plugins.csso || {};
-    this.sourceMap = !!config.sourceMaps;
+    this.sourceMap = Boolean(config.sourceMaps);
 }
 
 CssoOptimizer.prototype.brunchPlugin = true;
-CssoOptimizer.prototype.type = 'stylesheet';
+CssoOptimizer.prototype.type = "stylesheet";
 CssoOptimizer.prototype.optimize = function(params, callback) {
-    var data = params.data,
-        map = params.map,
-        path = params.path;
+    const data = params.data;
+    const map = params.map;
+    const path = params.path;
 
-    var ignored = this.options.ignored,
-        optimized;
+    const ignored = this.options.ignored;
+    let optimized;
 
-    if ('function' === typeof ignored) {
+    if ("function" === typeof ignored) {
         if (ignored(path)) {
             callback(null, params);
             return;
@@ -30,7 +30,7 @@ CssoOptimizer.prototype.optimize = function(params, callback) {
         }
     }
 
-    var options = extend({
+    const options = extend({
         sourceMap: map || this.sourceMap
     }, this.options, {
         filename: path

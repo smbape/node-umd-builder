@@ -29,7 +29,9 @@ _copyFile = (dst, src, plugin, next)->
             return
 
         mkdirp sysPath.dirname(dst), (err)->
-            return done(err) if err
+            if err
+                done(err)
+                return
 
             if logger.isDebugEnabled()
                 _src = sysPath.relative plugin.paths.APPLICATION_PATH, src
@@ -68,7 +70,7 @@ module.exports = class CopyCompiler
         {@paths} = builder.generateConfig(config)
 
     compile: (params, done)->
-        {data, path, map} = params
+        { path } = params
         self = @
         src = sysPath.join self.paths.APPLICATION_PATH, path
         dst = sysPath.join self.paths.PUBLIC_PATH, self.amdDestination(path, true)

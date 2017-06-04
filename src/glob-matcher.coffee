@@ -100,7 +100,7 @@ globMatcher = do ->
             # escape special meaning
             map[match] or '\\' + match
 
-module.exports = matcher = (include, exclude) ->
+module.exports = (include, exclude) ->
     include = globMatcher include
     exclude = globMatcher exclude
 

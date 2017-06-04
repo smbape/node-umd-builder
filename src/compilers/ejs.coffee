@@ -1,4 +1,3 @@
-sysPath = require 'path'
 ejs = require 'ejs'
 
 search = do ->

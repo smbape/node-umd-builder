@@ -10,6 +10,7 @@ const toAbsolute = require('path').resolve;
 exports = module.exports = fcache;
 
 exports.packageName = 'package.js'
+exports.deepackName = 'deepack.js'
 
 exports.isPackage = function(path) {
     return /(?:^|[\/\\])package\.js$/.test(path);
@@ -61,4 +62,14 @@ exports.updateFakeFile = function(path, data) {
     const status = cache.has(absPath) ? 1 : 0;
     cache.set(absPath, data);
     return status;
+};
+
+exports.removeFakeFile = function(path) {
+    const absPath = toAbsolute(path);
+    if (cache.has(absPath)) {
+        cache.delete(absPath);
+        return 1;
+    }
+
+    return 0;
 };

@@ -1,16 +1,20 @@
-sysPath = require 'path'
+`/* eslint-disable no-empty-function */`
 removeComments = require '../../utils/remove-comments'
 
-module.exports = class RemoveCommentsCompiler
+class RemoveCommentsCompiler
     brunchPlugin: true
     type: 'javascript'
     completer: true
 
     compile: (params, next)->
-        {data, path, map} = params
+        {data, path} = params
+
         if not (data = removeComments(data))
             console.log path
+
         params.data = data
         # next null, {data: removeComments(data), path, map}
         next null, params
         return
+
+module.exports = RemoveCommentsCompiler

@@ -18,17 +18,17 @@ module.exports = class JstCompiler
         {@paths} = builder.generateConfig(config)
 
     compile: (params, next)->
-        {data, path, map} = params
+        {data, path} = params
 
         try
             options = extend { variable: "root" }, @options, {
                 sourceURL: @nameCleaner path
             }
 
+            filename = sysPath.join this.paths.APPLICATION_PATH, path
             options.imports = extend modules.makeModule(filename, module), options.imports
 
-            src = sysPath.join self.paths.APPLICATION_PATH, path
-            dst = sysPath.join self.paths.PUBLIC_PATH, self.amdDestination(path, true)
+            dst = sysPath.join this.paths.PUBLIC_PATH, this.amdDestination(path, true)
             data = _template(data, options)(options.imports)
 
             writeData data, dst, (err)->

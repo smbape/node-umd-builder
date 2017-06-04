@@ -1,6 +1,10 @@
+extend = require 'lodash/extend'
+clone = require 'lodash/clone'
+each = require 'lodash/each'
 
 sysPath = require 'path'
 marked = require 'marked'
+minimatch = require 'minimatch'
 hljs = require 'highlight.js'
 languages = hljs.listLanguages()
 
@@ -25,19 +29,19 @@ module.exports = class MarkdownCompiler
         {@paths} = builder.generateConfig(config)
         @sourceMaps = !!config.sourceMaps
         options = config?.plugins?.markdown or {}
-        @options = _.extend {}, options, defaultOptions
+        @options = extend {}, options, defaultOptions
         {@overrides} = @options
         delete @options.overrides
         @amdDestination = config.modules.amdDestination
 
     compile: (params, next)->
-        {data, path, map} = params
+        {data, path} = params
 
-        options = _.clone @options
+        options = clone @options
         if @overrides
-            _.each @overrides, (override, pattern) ->
+            each @overrides, (override, pattern) ->
                 if minimatch sysPath.normalize(path), pattern, {nocase: true, matchBase: true}
-                    _.extend options, override
+                    extend options, override
                 return
 
         dst = sysPath.join @paths.PUBLIC_PATH, @amdDestination(path) + '.html'
@@ -49,7 +53,6 @@ module.exports = class MarkdownCompiler
             data = marked(data, options)
 
         writeData data, dst, (err)->
-            return next(err) if err
             next err, params
             return
 

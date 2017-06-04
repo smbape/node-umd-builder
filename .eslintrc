@@ -1,0 +1,204 @@
+{
+  "parser": "babel-eslint",
+
+  "parserOptions": {
+    "ecmaVersion": 7,
+    "ecmaFeatures": {
+      "classes": true
+    }
+  },
+
+  "env": {
+    "es6": true,
+    "node": true
+  },
+
+  "rules": {
+
+    // http://eslint.org/docs/rules/#best-practices
+    "accessor-pairs": 2,
+    "array-callback-return": 2,
+    "block-scoped-var": 2,
+    "class-methods-use-this": 2,
+    "complexity": [2, {
+      "max": 36 // magic number
+    }],
+    "consistent-return": 2,
+    "curly": [2, "all"],
+    "default-case": 2,
+    "dot-location": [2, "object"],
+    "dot-notation": 2,
+    "eqeqeq": [2, "always", {
+      "null": "ignore"
+    }],
+    // "guard-for-in": 2, // added by coffe-script
+    "no-alert": 2,
+    "no-caller": 2,
+    "no-case-declarations": 2,
+    "no-div-regex": 2,
+    "no-else-return": 2,
+    "no-empty-function": 2,
+    "no-empty-pattern": 2,
+    // "no-eq-null": 2, // often used
+    "no-eval": 2,
+    "no-extend-native": 2,
+    "no-extra-bind": 2,
+    "no-extra-label": 2,
+    "no-fallthrough": 2,
+    "no-floating-decimal": 2,
+    "no-global-assign": 2,
+    "no-implicit-coercion": 2,
+    "no-implicit-globals": 2,
+    "no-implied-eval": 2,
+    "no-invalid-this": 2,
+    "no-iterator": 2,
+    "no-labels": 2,
+    "no-lone-blocks": 2,
+    "no-loop-func": 2,
+    "no-magic-numbers": [1, {
+      "ignoreArrayIndexes": true,
+      "ignore": [
+        -1, // slice
+        0, // Array
+        1, // Array
+        2, // JSON.stringify, toString(2), bootstrap col-
+        3, // function arguments.length, bootstrap col-
+        4, // JSON.stringify, bootstrap col-
+        6, // bootstrap col-
+        7, // bootstrap col-
+        8, // toString(8), bootstrap col-
+        9, // bootstrap col-
+        10, // parseInt(..., 10), bootstrap col-
+        11, // bootstrap col-
+        12, // 3 * 4 === 2 * 6; 3, 4, 6 columns
+        16, // toString(16)
+        36, // toString(36)
+        300, // ofent used delay in ms
+        1000, // 1s
+        60, // s,m
+        24, // hours
+        3600, // 60 * 60
+        86400, // 24 * 60 * 60
+        80, // http
+        443, // https
+        200, // HTTP Status
+        404, // HTTP Status
+        1024, // Octect
+        3000, // common port number
+        3300, // common port number
+        3330, // common port number
+        3333, // common port number
+        8000, // common port number
+        8080, // common port number
+        8888, // common port number
+      ]
+    }],
+    "no-multi-spaces": 2,
+    "no-multi-str": 2,
+    "no-new-func": 2,
+    "no-new-wrappers": 2,
+    "no-new": 2,
+    "no-octal-escape": 2,
+    "no-octal": 2,
+    // "no-param-reassign": 2, // prevents initialization of default values. should be with use strict to prevent modification of arguments
+    "no-proto": 2,
+    // "no-redeclare": 2, // added by coffe-script
+    "no-restricted-properties": 2,
+    "no-return-assign": 2,
+    "no-return-await": 2,
+    "no-script-url": 2,
+    "no-self-assign": 2,
+    "no-self-compare": 2,
+    // "no-sequences": 2, // added by coffe-script
+    "no-throw-literal": 2,
+    "no-unmodified-loop-condition": 2,
+    // "no-unused-expressions": 2, // added by coffe-script
+    "no-unused-labels": 2,
+    "no-useless-call": 2,
+    "no-useless-concat": 2,
+    // "no-useless-escape": 2, // added by coffe-script
+    "no-useless-return": 2,
+    // "no-void": 2, // added by coffe-script
+    "no-warning-comments": 1,
+    "no-with": 2,
+    "prefer-promise-reject-errors": 2,
+    "radix": 2,
+    "require-await": 2,
+    // "vars-on-top": 2, // I prefer having variable declared for the first time where there are used
+    "wrap-iife": [2, "any"],
+    // "yoda": 2, // I am fine with it
+
+    // ===============
+    // Better maintenance
+    // ===============
+    "no-inner-declarations": 2,
+    "no-regex-spaces": 2,
+    "no-sparse-arrays": 2,
+    "no-unexpected-multiline": 2,
+    // "valid-jsdoc": 2,
+
+    // ===============
+    // use-strict rules
+    // ===============
+    "no-dupe-args": 2,
+    "no-delete-var": 2,
+    "no-undef": 2,
+
+    // enfore consistency of quotes.
+    // Single quote exists in common languages,
+    // and therefore are most likely to be part of a string
+    "quotes": [2, "double"],
+
+    // ===============
+    // probably unwanted
+    // ===============
+    "no-extra-semi": 2,
+    "no-debugger": 2,
+    "no-constant-condition": 2,
+    "no-unused-vars": [2, {
+      "vars": "all",
+      "args": "none",
+      "caughtErrors": "none",
+        "varsIgnorePattern": "\\b(?:_UNUSED_)\\b"
+    }],
+    "no-catch-shadow": 2,
+    "no-label-var": 2,
+    "no-shadow-restricted-names": 2, // allow use of undefined
+    "no-undef-init": 2,
+    "no-dupe-keys": 2,
+    "no-duplicate-case": 2,
+    "no-empty-character-class": 2,
+    "no-empty": 2,
+    "no-func-assign": 2,
+    "no-invalid-regexp": 2,
+    "no-obj-calls": 2,
+    // "no-unreachable": 2, // with preprocessor, unreachable are used
+    "no-unsafe-finally": 2,
+    "no-unsafe-negation": 2,
+    "use-isnan": 2,
+    // "prefer-const": [2, {"ignoreReadBeforeAssign": true}], // added by coffe-script
+
+    // ===============
+    // unecessary code
+    // ===============
+    "no-extra-boolean-cast": 2,
+    "no-extra-parens": 2,
+
+    // ===============
+    // stylistic
+    // ===============
+    "no-prototype-builtins": 2,
+    "semi": 2, // even if the no-unexpected-multiline rule can protect from buggy cases, semicolon separation spare unecessary brain computation.
+    "semi-spacing": 2, // improve readability
+
+    // ===============
+    // cutom
+    // ===============
+    // "strict": [2, "function"], // annoying warnings. no-undef will do the job
+
+    "no-use-before-define": [2, {
+      "functions": false,
+      "classes": true
+    }]
+  }
+}

@@ -64,6 +64,7 @@ describe 'jsx extension', ->
             expected = """<button type="button" on#{type}={ (function(event, domID, originalEvent) { this.changeLanguage(event, lng) }).bind(this) } className="btn btn-default">
                 { i18n.t('name', {lng: locale}) }
             </button>"""
+            assertStrictEqual code, expected
 
             code = """<button type="button" className="btn btn-default" sp#{type}={ this.changeLanguage(event, lng) }>
                 { i18n.t('name', {lng: locale}) }
@@ -71,6 +72,7 @@ describe 'jsx extension', ->
             expected = """<button type="button" className="btn btn-default" on#{type}={ (function(event, domID, originalEvent) { this.changeLanguage(event, lng) }).bind(this) }>
                 { i18n.t('name', {lng: locale}) }
             </button>"""
+            assertStrictEqual code, expected
 
             code = """<button sp#{type}={ this.changeLanguage(event, lng) } />"""
             expected = """<button on#{type}={ (function(event, domID, originalEvent) { this.changeLanguage(event, lng) }).bind(this) } />"""

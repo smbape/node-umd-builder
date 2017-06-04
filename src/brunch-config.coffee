@@ -1,7 +1,7 @@
 log4js = require '../log4js'
 logger = log4js.getLogger 'brunch-config'
 
-util = require 'util'
+# util = require 'util'
 sysPath = require 'path'
 builder = require './builder'
 read = require '../utils/read-components'
@@ -140,7 +140,8 @@ config = exports.config =
             if m = /^bower_components[\/\\]([^\/\\]+)/.exec(path)
                 folder = sysPath.join('bower_components', m[1])
                 if hasProp.call(cache, folder)
-                    return cache[path] = cache[folder]
+                    cache[path] = cache[folder]
+                    return cache[path]
 
             return res
 
