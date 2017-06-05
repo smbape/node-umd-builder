@@ -783,11 +783,13 @@ module.exports = class AmdCompiler
                 done null, options
                 return
 
-            linter.lint {data: umdData, path, map}, (msg)->
+            linter.lint {data: umdData, path, map}, (msg, output)->
                 if msg and linter.warnOnly
                     logger.warn path, msg
                     msg = null
 
+                if output
+                    options.umdData = output
                 done msg, options
                 return
 
@@ -873,7 +875,6 @@ module.exports = class AmdCompiler
 
             hasChanged = true
 
-            packageNameWithoutExt = _packageName.replace(/\.[^\.]+$/, '')
             packageName = sysPath.join dirname, _packageName
             absPath = sysPath.join(plugin.paths.APPLICATION_PATH, packageName).replace(/[\\]/g, sysPath.sep)
             paths = Object.keys(paths).sort()
@@ -902,7 +903,6 @@ module.exports = class AmdCompiler
                 continue
 
             hasChanged = true
-            packageNameWithoutExt = _packageName.replace(/\.[^\.]+$/, '')
             packageName = sysPath.join dirname, _packageName
             absPath = sysPath.join(plugin.paths.APPLICATION_PATH, packageName).replace(/[\\]/g, sysPath.sep)
             paths = Object.keys(paths).sort()

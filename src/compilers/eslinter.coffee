@@ -77,7 +77,7 @@ module.exports = class EsLinter
         report = linter.executeOnText(data, path)
 
         if report.errorCount is 0 and report.warningCount is 0
-            done()
+            done(null, report.results[0]?.output)
             return
 
         formatter = CLIEngine.getFormatter()
@@ -86,7 +86,7 @@ module.exports = class EsLinter
         if @warnOnly
             msg = "warn: #{msg}"
 
-        done(msg)
+        done(msg, report.results[0]?.output)
         return
 
 EsLinter.brunchPluginName = 'eslinter-brunch'
