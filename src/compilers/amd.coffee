@@ -779,7 +779,7 @@ module.exports = class AmdCompiler
     _lint: (options, done)->
         if linter = @linter
             {umdData, path, map} = options
-            if sysPath.basename(path) in [ fcache.packageName.slice(0, -".js".length), fcache.deepackName.slice(0, -".js".length) ]
+            if sysPath.basename(path) in [ fcache.packageName, fcache.deepackName ]
                 done null, options
                 return
 
