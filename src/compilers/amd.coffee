@@ -632,10 +632,10 @@ module.exports = class AmdCompiler
                             dirname = path.slice(0, match.index)
                             if @canJoin(dirname + "/" + deepackName, joinTo)
                                 @deepacks[dirname] = {} if not hasProp.call(@deepacks, dirname)
-                                @deepacks[dirname][pathWithoutExt] = true
+                                @deepacks[dirname][pathWithoutExt] = path
 
                         @packages[dirname] = {} if not hasProp.call(@packages, dirname)
-                        @packages[dirname][pathWithoutExt] = true
+                        @packages[dirname][pathWithoutExt] = path
 
                     done err, {data: comData, path}
 
@@ -719,7 +719,7 @@ module.exports = class AmdCompiler
                         done(err)
                         return
 
-                    plugin._compilePackages generatedFiles, changedAssets
+                    plugin._compilePackages generatedFiles, changedAssets, components
                     _compileIndex config, options, done
 
                     return
@@ -727,11 +727,13 @@ module.exports = class AmdCompiler
 
         # Start work
         take()
-        @_getComponents (err, components)->
+        components = null
+        @_getComponents (err, _components)->
             if err
                 give(err)
                 return
 
+            components = _components
             for name, component of components
                 take()
                 _processComponent component, config, options, give
@@ -821,7 +823,7 @@ module.exports = class AmdCompiler
         writeData umdData, dst, next
         return
 
-    _compilePackages: (generatedFiles, changedAssets)->
+    _compilePackages: (generatedFiles, changedAssets, components)->
         plugin = @
 
         if not plugin.options.package
@@ -847,16 +849,16 @@ module.exports = class AmdCompiler
                 return
             return
 
-        res1 = @_processPackages(plugin, "package")
+        res1 = @_processPackages(plugin, "package", components)
 
         if not plugin.options.deepack
             return res1
 
-        res2 = @_processPackages(plugin, "deepack")
+        res2 = @_processPackages(plugin, "deepack", components)
 
         res1 or res2
 
-    _processPackages: (plugin, name)->
+    _processPackages: (plugin, name, components)->
         packages = plugin[name + "s"]
         lastPackagesKey = "last" + name[0].toUpperCase() + name.slice(1) + "s"
         lastPackages = @[lastPackagesKey]
@@ -877,6 +879,7 @@ module.exports = class AmdCompiler
 
             packageName = sysPath.join dirname, _packageName
             absPath = sysPath.join(plugin.paths.APPLICATION_PATH, packageName).replace(/[\\]/g, sysPath.sep)
+
             paths = Object.keys(paths).sort()
 
             if paths.length is 0
@@ -884,7 +887,7 @@ module.exports = class AmdCompiler
 
             hasFile = false
             for path in paths
-                [match, basename] = path.match /([^\/\\]+)(?:\.[^\.]+)?$/
+                [_UNUSED_, basename] = path.match /([^\/\\]+)(?:\.[^\.]+)?$/
                 if basename in [ __packageName, __deepackName ]
                     continue
 
@@ -897,6 +900,43 @@ module.exports = class AmdCompiler
             fcache.removeFakeFile(packageName)
             builder.fswatcher.emit 'unlink', absPath
 
+        getIndex = (path)->
+            [ _UNUSED_, name ] = dirname.match(/^bower_components[\/\\]([^\/\\]+)/)
+            files = components[name].files
+            if files.length is 1
+                return 0
+
+            path = sysPath.join(plugin.paths.APPLICATION_PATH, path)
+
+            for file, i in files
+                if /[\^\$\|\?\*\+\(\)\[\]\{\}]/.test(file)
+                    if anymatch(file)(path)
+                        return i
+                else if file is path
+                    return i
+
+            return -1
+
+        sorter = (a, b)->
+            a = paths[a]
+            b = paths[b]
+
+            ia = getIndex(a)
+            ib = getIndex(b)
+
+            if ia > ib
+                return 1
+
+            if ia < ib
+                return -1
+
+            if a > b
+                return 1
+
+            if a < b
+                return -1
+
+            return 0
 
         for dirname, paths of packages
             if isEqual(lastPackages[dirname], paths)
@@ -905,7 +945,11 @@ module.exports = class AmdCompiler
             hasChanged = true
             packageName = sysPath.join dirname, _packageName
             absPath = sysPath.join(plugin.paths.APPLICATION_PATH, packageName).replace(/[\\]/g, sysPath.sep)
-            paths = Object.keys(paths).sort()
+
+            if /^bower_components[\/\\]/.test(dirname)
+                paths = Object.keys(paths).sort(sorter)
+            else
+                paths = Object.keys(paths).sort()
 
             if paths.length is 0
                 delete packages[dirname]
