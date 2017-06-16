@@ -197,6 +197,9 @@ _compileComponentFile = (path, component, config, memo, isAbsolutePath, options,
             else
                 deps = [name]
 
+            if hasProp.call(config.groups, name)
+                deps = deps.concat(config.groups[name])
+
             # make current file to load after the main file
             config.shim[plugin] =
                 exports: exports
@@ -1000,7 +1003,7 @@ module.exports = class AmdCompiler
 
             content = """
                 deps = [
-                    "#{deps.join('",\n    "')}"
+                    "#{ deps.join('",\n    "') }"
                 ];
 
                 function factory() {

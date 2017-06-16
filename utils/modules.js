@@ -21,8 +21,8 @@ function makeModule(filename, parent) {
 
 exports.makeRequireFunction = makeRequireFunction;
 function makeRequireFunction() {
-    const Module = this.constructor;
-    const self = this;
+    const self = this; // eslint-disable-line no-invalid-this
+    const Module = self.constructor;
     const require = self.require.bind(self);
 
     function resolve(request) {

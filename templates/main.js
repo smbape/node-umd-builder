@@ -134,14 +134,16 @@ switch(root.type) {
 
     requirejs.config(config);
 
+    function returnFirstArgument(main) {
+        return main;
+    }
+
     if (groups) {
         var name, index, deps, group;
         for (name in groups) {
             deps = groups[name];
             group = name + '-group';
-            define(group, deps, function(main) {
-                return main;
-            });
+            define(group, deps, returnFirstArgument);
 
             index = config.deps.indexOf(name);
             if (index !== -1) {

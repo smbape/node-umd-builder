@@ -125,12 +125,12 @@ function setup(projectRoot, done) {
             if (stats && stats.isDirectory()) {
                 preinstall.unshift(function() {
                     var next = arguments[arguments.length - 1];
-                    anyspawn.spawn('mv .git/ .git.bak/', spawnBrunchOptions, next);
+                    anyspawn.spawn('mv .git/ .github/', spawnBrunchOptions, next);
                 });
 
                 preinstall.push(function() {
                     var next = arguments[arguments.length - 1];
-                    anyspawn.spawn('mv .git.bak/ .git/', spawnBrunchOptions, next);
+                    anyspawn.spawn('mv .github/ .git/', spawnBrunchOptions, next);
                 });
                 push.apply(preinstall, resetRepoBrunchTasks);
 
@@ -138,12 +138,12 @@ function setup(projectRoot, done) {
                 return;
             }
 
-            fs.lstat(sysPath.join(projectBrunch, '.git.bak'), function(err, stats) {
+            fs.lstat(sysPath.join(projectBrunch, '.github'), function(err, stats) {
                 if (stats && stats.isDirectory()) {
 
                     preinstall.push(function() {
                         var next = arguments[arguments.length - 1];
-                        anyspawn.spawn('mv .git.bak/ .git/', spawnBrunchOptions, next);
+                        anyspawn.spawn('mv .github/ .git/', spawnBrunchOptions, next);
                     });
                 }
 
@@ -164,7 +164,7 @@ function setup(projectRoot, done) {
                     return done(err);
                 }
 
-                anyspawn.spawn('mv .git/ .git.bak/', {
+                anyspawn.spawn('mv .git/ .github/', {
                     cwd: projectBrunch
                 }, done);
             });

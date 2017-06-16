@@ -6,7 +6,7 @@ const logger = log4js.getLogger("babel");
 
 const babel = require("babel-core");
 const anymatch = require("anymatch");
-const removeComments = require("../../utils/remove-comments");
+const stripJsonComments = require("strip-json-comments");
 const defaults = require("lodash/defaults");
 const extend = require("lodash/extend");
 const sysPath = require("path");
@@ -58,7 +58,7 @@ function BabelCompiler(config) {
             const stats = fs.statSync(filename);
             if (stats.isFile()) {
                 const buff = fs.readFileSync(filename);
-                this.options = defaults(JSON.parse(removeComments(buff.toString())), this.options);
+                this.options = defaults(JSON.parse(stripJsonComments(buff.toString())), this.options);
             }
         } catch ( err ) {
             err = err.toString().replace("Error: ENOENT, ", "");

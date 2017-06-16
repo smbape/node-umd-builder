@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 /* eslint-disable func-style */
 
@@ -7,43 +7,48 @@
  */
 
 var hasProp = {}.hasOwnProperty;
-var removeComments = require('./remove-comments');
+var stripJsonComments = require("strip-json-comments");
 
-var sysPath = require('path');
-var fs = require('fs');
-var each = require('async-each');
+var sysPath = require("path");
+var fs = require("fs");
+var each = require("async-each");
 
 var jsonPaths = {
-  bower: 'bower.json',
-  dotbower: '.bower.json',
-  component: 'component.json',
+  bower: "bower.json",
+  dotbower: ".bower.json",
+  component: "component.json",
 };
 
 var dependencyLocator = {
-  bower: 'name',
-  component: 'repo',
+  bower: "name",
+  component: "repo",
 };
 
 function getDir(root, type, callback) {
-  if (type === 'bower') {
-    var defaultBowerDir = 'bower_components';
-    var bowerrcPath = sysPath.join(root, '.bowerrc');
+  if (type === "bower") {
+    var defaultBowerDir = "bower_components";
+    var bowerrcPath = sysPath.join(root, ".bowerrc");
 
     fs.access(bowerrcPath, error => {
       if (error) {
-        return callback(null, defaultBowerDir);
+        callback(null, defaultBowerDir);
+        return;
       }
 
-      fs.readFile(bowerrcPath, 'utf8', (error, bowerrcContent) => {
-        if (error) return callback(error);
+      fs.readFile(bowerrcPath, "utf8", (error, bowerrcContent) => {
+        if (error) {
+          callback(error);
+          return;
+        }
 
-        var bowerrcJson = JSON.parse(removeComments(bowerrcContent));
+        var bowerrcJson = JSON.parse(stripJsonComments(bowerrcContent));
         var bowerrcDirectory = bowerrcJson.directory;
         callback(null, bowerrcDirectory || defaultBowerDir);
       });
     });
   } else {
-    return callback(null);
+    callback(null);
+    
   }
 }
 
@@ -58,31 +63,36 @@ function unique(list) {
 }
 
 function sanitizeRepo(repo) {
-  if (repo.indexOf('/') !== repo.lastIndexOf('/')) {
-    var res = repo.split('/');
-    return res[res.length - 1] + '=' + res[res.length];
+  if (repo.indexOf("/") !== repo.lastIndexOf("/")) {
+    var res = repo.split("/");
+    return res[res.length - 1] + "=" + res[res.length];
   }
-  return repo.replace('/', '-');
+  return repo.replace("/", "-");
 }
 
 function readJson(file, type, callback) {
   fs.access(file, error => {
     if (error) {
-      var err = new Error('Component must have "' + file + '"');
-      err.code = 'NO_' + type.toUpperCase() + '_JSON';
-      return callback(err);
+      var err = new Error("Component must have \"" + file + "\"");
+      err.code = "NO_" + type.toUpperCase() + "_JSON";
+      callback(err);
+      return;
     }
 
     fs.readFile(file, (err, contents) => {
-      if (err) return callback(err);
+      if (err) {
+        callback(err);
+        return;
+      }
 
       var json;
 
       try {
-        json = JSON.parse(removeComments(contents.toString()));
-      } catch (_err) {
-        _err.code = 'EMALFORMED';
-        return callback(new Error('Component JSON file is invalid in "' + file + '": ' + _err));
+        json = JSON.parse(stripJsonComments(contents.toString()));
+      } catch ( _err ) {
+        _err.code = "EMALFORMED";
+        callback(new Error("Component JSON file is invalid in \"" + file + "\": " + _err));
+        return;
       }
 
       callback(null, json);
@@ -96,7 +106,7 @@ function getJsonPath(path, type) {
 
 var getPackageFiles = exports.getPackageFiles = function(pkg) {
   var list = [];
-  ['main', 'scripts', 'styles'].forEach(prop => {
+  ["main", "scripts", "styles"].forEach(prop => {
     if (pkg[prop]) {
       if (Array.isArray(pkg[prop])) {
         list.push.apply(list, pkg[prop]);
@@ -109,7 +119,7 @@ var getPackageFiles = exports.getPackageFiles = function(pkg) {
     }
   });
 
-  if (pkg.map && typeof pkg.map === 'object') {
+  if (pkg.map && typeof pkg.map === "object") {
     list.push.apply(list, Object.keys(pkg.map));
   } else {
     pkg.map = {};
@@ -122,20 +132,24 @@ function processPackage(type, pkg, callback) {
   var path = pkg.path;
   var overrides = pkg.overrides;
   var fullPath = getJsonPath(path, type);
-  var dotpath = getJsonPath(path, 'dotbower');
+  var dotpath = getJsonPath(path, "dotbower");
 
   function _read(actualPath) {
     readJson(actualPath, type, (error, pkg) => {
 
-      if (error) return callback(error);
+      if (error) {
+        callback(error);
+        return;
+      }
       if (overrides) {
         Object.keys(overrides).forEach(key => {
           pkg[key] = overrides[key];
         });
       }
 
-      if (type === 'bower' && !pkg.main) {
-        return callback(new Error('Component JSON file "' + actualPath + '" must have `main` property. See https://github.com/paulmillr/read-components#README'));
+      if (type === "bower" && !pkg.main) {
+        callback(new Error("Component JSON file \"" + actualPath + "\" must have `main` property. See https://github.com/paulmillr/read-components#README"));
+        return;
       }
 
       var files = getPackageFiles(pkg).map(relativePath => {
@@ -148,7 +162,7 @@ function processPackage(type, pkg, callback) {
           dependencies: pkg.dependencies || {},
           package: pkg,
         },
-        properties = ['name', 'version', 'type', 'umd', 'exports', 'lazy', 'paths', 'map'], prop, i, len;
+        properties = ["name", "version", "type", "umd", "exports", "lazy", "paths", "map"], prop, i, len;
 
       for (i = 0, len = properties.length; i < len; i++) {
         prop = properties[i];
@@ -182,11 +196,14 @@ function gatherDeps(packages, type) {
 
 function readPackages(root, type, allProcessed, list, overrides, callback) {
   getDir(root, type, (error, dir) => {
-    if (error) return callback(error);
+    if (error) {
+      callback(error);
+      return;
+    }
 
     var parent = sysPath.join(root, dir);
     var paths = list.map(item => {
-      if (type === 'component') {
+      if (type === "component") {
         item = sanitizeRepo(item);
       }
       return {
@@ -196,7 +213,10 @@ function readPackages(root, type, allProcessed, list, overrides, callback) {
     });
 
     each(paths, processPackage.bind(null, type), (error, newProcessed) => {
-      if (error) return callback(error);
+      if (error) {
+        callback(error);
+        return;
+      }
       var processed = allProcessed.concat(newProcessed);
 
       var processedNames = {};
@@ -209,7 +229,8 @@ function readPackages(root, type, allProcessed, list, overrides, callback) {
       });
 
       if (newDeps.length === 0) {
-        return callback(error, processed);
+        callback(error, processed);
+        return;
       }
       readPackages(root, type, processed, newDeps, overrides, callback);
     });
@@ -217,10 +238,12 @@ function readPackages(root, type, allProcessed, list, overrides, callback) {
 }
 
 // Find an item in list.
-function find(list, predicate) {
+function find(list, predicate) { // eslint-disable-line consistent-return
   for (var i = 0, length = list.length, item; i < length; i++) {
     item = list[i];
-    if (predicate(item)) return item;
+    if (predicate(item)) {
+      return item;
+    }
   }
 }
 
@@ -235,14 +258,14 @@ function setSortingLevels(packages, type) {
     deps.forEach(depName => {
       depName = sanitizeRepo(depName);
       var dep = find(packages, _ => {
-        if (type === 'component') {
+        if (type === "component") {
           var repo = _[dependencyLocator[type]];
           if (repo === depName) {
             return true;
           }
           // nasty hack to ensure component repo ends with the specified repo
           // e.g. "repo": "https://raw.github.com/component/typeof"
-          var suffix = '/' + depName;
+          var suffix = "/" + depName;
           return repo.indexOf(suffix, repo.length - suffix.length) !== -1;
         }
         return _[dependencyLocator[type]] === depName;
@@ -251,8 +274,8 @@ function setSortingLevels(packages, type) {
       if (!dep) {
         var names = Object.keys(packages).map(_ => {
           return packages[_].name;
-        }).join(', ');
-        throw new Error('Dependency "' + depName + '" is not present in the list of deps [' + names + ']. Specify correct dependency in ' + type + '.json or contact package author.');
+        }).join(", ");
+        throw new Error("Dependency \"" + depName + "\" is not present in the list of deps [" + names + "]. Specify correct dependency in " + type + ".json or contact package author.");
       }
       setLevel(initial + 1, dep);
     });
@@ -273,27 +296,32 @@ function init(directory, type, callback) {
 }
 
 function readComponents(directory, callback, type) {
-  if (typeof directory === 'function') {
+  if (typeof directory === "function") {
     callback = directory;
     directory = null;
   }
   if (directory === null) {
-    directory = '.';
+    directory = ".";
   }
 
   init(directory, type, (error, json) => {
     if (error) {
-      if (error.code === 'NO_' + type.toUpperCase() + '_JSON') {
-        return callback(null, []);
+      if (error.code === "NO_" + type.toUpperCase() + "_JSON") {
+        callback(null, []);
+        return;
       }
-      return callback(error);
+      callback(error);
+      return;
     }
 
     var deps = Object.keys(json.dependencies || {});
     var overrides = json.overrides || {};
 
     readPackages(directory, type, [], deps, overrides, (error, data) => {
-      if (error) return callback(error);
+      if (error) {
+        callback(error);
+        return;
+      }
       var sorted = sortPackages(data, type);
       callback(null, sorted);
     });
@@ -301,10 +329,10 @@ function readComponents(directory, callback, type) {
 }
 
 function read(root, type, callback) {
-  if (type === 'bower') {
+  if (type === "bower") {
     readComponents(root, callback, type);
   } else {
-    throw new Error('read-components: unknown type ' + type);
+    throw new Error("read-components: unknown type " + type);
   }
 }
 

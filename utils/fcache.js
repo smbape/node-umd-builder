@@ -1,16 +1,15 @@
-'use strict';
+"use strict";
 
-const sysPath = require('path');
-const fs = require('fs');
-const resolveFrom = require('./resolveFrom');
-const fcache = require(resolveFrom('brunch', 'fcache'));
+const fs = require("fs");
+const resolveFrom = require("./resolveFrom");
+const fcache = require(resolveFrom("brunch", "fcache"));
 const cache = new Map();
-const toAbsolute = require('path').resolve;
+const toAbsolute = require("path").resolve;
 
 exports = module.exports = fcache;
 
-exports.packageName = 'package.js'
-exports.deepackName = 'deepack.js'
+exports.packageName = "package.js";
+exports.deepackName = "deepack.js";
 
 exports.isPackage = function(path) {
     return /(?:^|[\/\\])package\.js$/.test(path);

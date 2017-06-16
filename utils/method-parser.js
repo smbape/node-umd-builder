@@ -1,20 +1,13 @@
-/* jshint node: true */
-'use strict';
-
-var vm = require('vm');
+/* eslint-disable no-labels, default-case */
+"use strict";
 
 exports.parse = parse;
-exports.vmParse = vmParse;
-
-function vmParse(str) {
-
-}
 
 // http://www.regular-expressions.info/characters.html#special
-var specialReg = new RegExp('([' + '\\/^$.|?*+()[]{}'.split('').join('\\') + '])', 'g');
+var specialReg = new RegExp("([" + "\\/^$.|?*+()[]{}".split("").join("\\") + "])", "g");
 
 function escapeRegExp(str) {
-    return str.replace(specialReg, '\\$1');
+    return str.replace(specialReg, "\\$1");
 }
 
 var FN_ARGS = /^function\s*[^\(]*\(\s*([^\)]*)\)/m;
@@ -28,43 +21,57 @@ function forEach(arr, cb) {
 
 function annotate(fn) {
     var $inject, argDecl, fnText;
-    if ('string' !== typeof fn) {
+    if ("string" !== typeof fn) {
         return;
     }
     $inject = [];
-    fnText = fn.replace(STRIP_COMMENTS, '');
+    fnText = fn.replace(STRIP_COMMENTS, "");
     argDecl = fnText.match(FN_ARGS);
     forEach(argDecl[1].split(FN_ARG_SPLIT), function(arg) {
         arg.replace(FN_ARG, function(all, underscore, name) {
             $inject.push(name);
         });
     });
-    return $inject;
+    return $inject; // eslint-disable-line consistent-return
 }
 
-exports.NG_FACTORIES = ['usable', 'run', 'config', 'module', 'factory', 'filter', 'directive', 'controller', 'service', 'value', 'constant', 'decorator', 'provider'].map(function(element) {
-    return 'ng' + element;
+exports.NG_FACTORIES = [
+    "usable",
+    "run",
+    "config",
+    "module",
+    "factory",
+    "filter",
+    "directive",
+    "controller",
+    "service",
+    "value",
+    "constant",
+    "decorator",
+    "provider"
+].map(function(element) {
+    return "ng" + element;
 });
 
-exports.FACTORY_FNS = ['factory', 'freact'];
+exports.FACTORY_FNS = ["factory", "freact"];
 
 var FN_ARGS_REG = /(\s*[^\(]*\(\s*[^\)]*\))/;
 
 var SYMBOLS = {
     LOCALS: /\/\*\s*locals\s*=\s*([^*]+)\s*\*\//,
-    LINE_COMMENT: '//',
-    BLOCK_COMMENT_START: '/*',
-    BLOCK_COMMENT_END: '*/',
+    LINE_COMMENT: "//",
+    BLOCK_COMMENT_START: "/*",
+    BLOCK_COMMENT_END: "*/",
     REGEXP_QUOTE_BEGIN: /([\,\{\}\[\]\;\=\(\+\-\!\&\|\:])[^\S\n]*\/(?!\/)/,
-    REGEXP_QUOTE_END: '/',
+    REGEXP_QUOTE_END: "/",
     SINGLE_QUOTE: "'",
-    DOUBLE_QUOTE: '"',
+    DOUBLE_QUOTE: "\"",
     ESCAPED_QUOTE_OR_NEW_LINE: /\\(?:["'\/\\]|\r?\n)/,
     NEW_LINE: /\r?\n/,
-    CURLY_BEGIN: '{',
-    CURLY_END: '}',
-    PAREN_BEGIN: '(',
-    PAREN_END: ')',
+    CURLY_BEGIN: "{",
+    CURLY_END: "}",
+    PAREN_BEGIN: "(",
+    PAREN_END: ")",
     NON_NEW_LINE: /./
 };
 
@@ -78,7 +85,7 @@ function createTokenizer(symbols) {
         }
     }
 
-    return new RegExp(tokenizer.join('|'), 'mg');
+    return new RegExp(tokenizer.join("|"), "mg");
 }
 
 function parse(str, options) {
@@ -89,7 +96,7 @@ function parse(str, options) {
         factories = exports.FACTORY_FNS.concat(exports.NG_FACTORIES);
     }
 
-    factories = '\\b(' + factories.join('|') + ')\\b';
+    factories = "\\b(" + factories.join("|") + ")\\b";
     var factories_REG = new RegExp("(?:" + factories + "\\s*=\\s*(?:function" + FN_ARGS_REG.source + ")?|function\\s+" + factories + FN_ARGS_REG.source + ")");
 
     var tokenizer = createTokenizer([
@@ -206,7 +213,7 @@ function _parse(str, tokenizer) {
                     default:
                         // console.log('single_quoting');
                         state = STATES.single_quoting;
-                        quoting_start = 'line ' + line + ' col ' + (index - col + 1);
+                        quoting_start = "line " + line + " col " + (index - col + 1);
                         return;
                 }
                 /* falls through */
@@ -223,7 +230,7 @@ function _parse(str, tokenizer) {
                     default:
                         // console.log('double_quoting');
                         state = STATES.double_quoting;
-                        quoting_start = 'line ' + line + ' col ' + (index - col + 1);
+                        quoting_start = "line " + line + " col " + (index - col + 1);
                         return;
                 }
                 /* falls through */
@@ -277,10 +284,12 @@ function _parse(str, tokenizer) {
                         if (
                             /^\s*$/.test(str.slice(col, index)) /* begining of line */ ||
                             /[\,\{\}\;\=\(\+\-\!\&\|\:]\s*$/m.test(str.slice(col, index)) ||
-                            'string' === typeof regexp_quote) {
+                            "string" === typeof regexp_quote) {
                             // console.log('regexp_quoting');
                             state = STATES.regexp_quoting;
-                            quoting_start = 'line ' + line + ' col ' + (index - col + 1);
+                            quoting_start = "line " + line + " col " + (index - col + 1);
+
+                            // eslint-disable-next-line no-invalid-this
                             if (findEndOfRegexpQuote(this, tokenizer, lastIndex)) {
                                 state = STATES.initial;
                             }
@@ -294,7 +303,7 @@ function _parse(str, tokenizer) {
                         case STATES.single_quoting:
                         case STATES.double_quoting:
                         case STATES.regexp_quoting:
-                            var msg = 'quoting ' + state + ' started at ' + quoting_start + ' not ended and found a new line at ' + line + ' col ' + (index - col + 1);
+                            var msg = "quoting " + state + " started at " + quoting_start + " not ended and found a new line at " + line + " col " + (index - col + 1);
                             throw new Error(msg);
                         case STATES.line_commenting:
                             state = STATES.initial;
@@ -302,9 +311,9 @@ function _parse(str, tokenizer) {
                         default:
                             line++;
                             col = lastIndex;
-                            return match;
+                            
                     }
-                } else if (!_locals && 'string' === typeof regexp_quote) {
+                } else if (!_locals && "string" === typeof regexp_quote) {
                     switch (state) {
                         case STATES.regexp_quoting:
                             state = STATES.initial;
@@ -317,11 +326,13 @@ function _parse(str, tokenizer) {
                         default:
                             // console.log('regexp_quoting', index);
                             state = STATES.regexp_quoting;
-                            quoting_start = 'line ' + line + ' col ' + (index - col + 1);
+                            quoting_start = "line " + line + " col " + (index - col + 1);
+
+                            // eslint-disable-next-line no-invalid-this
                             if (findEndOfRegexpQuote(this, tokenizer, lastIndex)) {
                                 state = STATES.initial;
                             }
-                            return;
+                            
                     }
                 } else if (scope === 0) {
                     switch (state) {
@@ -341,7 +352,7 @@ function _parse(str, tokenizer) {
                         if (args1 || args2) {
                             args = (args1 || args2).trim();
                             var declarationIndex = fnText.indexOf(args);
-                            var argIndex = fnText.indexOf('(', declarationIndex);
+                            var argIndex = fnText.indexOf("(", declarationIndex);
                             pos = [index, index + argIndex + 1, index + declarationIndex + args.length - 1, lastIndex];
                             args = annotate("function " + args);
                         } else {
