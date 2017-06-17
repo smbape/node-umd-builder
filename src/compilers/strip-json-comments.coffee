@@ -7,7 +7,7 @@ class StripJsonCommentsCompiler
     completer: true
 
     compile: (params, next)->
-        { data, path } = params
+        { data, path, map } = params
 
         params.data = data
         next null, {data: stripJsonComments(data), path, map}

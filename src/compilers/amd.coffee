@@ -110,7 +110,8 @@ _compileComponentFile = (path, component, config, memo, isAbsolutePath, options,
     if hasProp.call processed, absolutePath
         done()
         return
-    logger.trace "compiling bower file #{component.name}: #{path}"
+
+    # logger.trace "compiling bower file #{component.name}: #{path}"
 
     processed[absolutePath] = true
 
@@ -143,7 +144,7 @@ _compileComponentFile = (path, component, config, memo, isAbsolutePath, options,
         config.map['*'][path] = name
 
     else
-        logger.debug  "[#{name}] add [#{path}] as group"
+        # logger.trace  "[#{name}] add [#{path}] as group"
 
         if isObjectLike(opts.map)
             if opts.map.exports
