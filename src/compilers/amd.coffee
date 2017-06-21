@@ -321,16 +321,20 @@ _compileIndex = (config, options, done)->
         return
 
     source = fs.readFileSync srcpath, 'utf8'
-    tplOpts =
-        require: require
-        __filename: srcpath
-        __dirname: sysPath.dirname srcpath
-        optimize: !!options.optimizer
 
     try
+        filename = srcpath
+
+        imports = modules.makeModule(filename, module)
+
         template = _template(source, {
-            variable: "root"
+            variable: "root",
+            imports: imports
         })
+
+        tplOpts = defaults {
+            optimize: !!options.optimizer
+        }, imports
 
         destFileSingle = sysPath.resolve paths.PUBLIC_PATH, 'index.single.html'
         _writeHTML template(defaults({build: 'app'}, tplOpts)), destFileSingle, options.options, (err)->

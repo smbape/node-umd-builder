@@ -57,7 +57,7 @@
     "strip-ansi": "^3.0.1",
     "strip-json-comments": "^2.0.1",
     "stylus": "^0.54.5",
-    "uglify-js-brunch": "^1.7.8",
+    "uglify-js-brunch": "^2.10.0",
     "umd-wrapper": "^0.1.0",
     "username": "^2.3.0",
     "validator": "^5.7.0",
