@@ -59,26 +59,18 @@ function setup(projectRoot, done) {
     var resetRepoBrunchTasks = [
         function() {
             var next = arguments[arguments.length - 1];
-            anyspawn.spawn('git rev-parse', spawnBrunchOptions, function(code) {
-                if (code) {
-                    // invalid git repo
-                    anyspawn.spawn('rm -rf brunch', {
-                        stdio: 'inherit',
-                        cwd: sysPath.dirname(projectBrunch)
-                    }, function(code) {
-                        if (code) {
-                            return next(code);
-                        }
-                        anyspawn.spawn(cloneCmd, {
-                            stdio: 'inherit',
-                            cwd: sysPath.dirname(projectBrunch)
-                        }, next);
-                    });
-                    return;
-                }
+            anyspawn.exec('rm -rf brunch', {
+                stdio: 'inherit',
+                cwd: sysPath.dirname(projectBrunch)
+            }, next);
+        },
 
-                next();
-            });
+        function() {
+            var next = arguments[arguments.length - 1];
+            anyspawn.spawn(cloneCmd, {
+                stdio: 'inherit',
+                cwd: sysPath.dirname(projectBrunch)
+            }, next);
         },
 
         function() {
@@ -88,7 +80,6 @@ function setup(projectRoot, done) {
 
         function(data, code, next) {
             var commands = [
-                'git reset --hard HEAD',
                 'git checkout tags/' + bversion
             ];
 
