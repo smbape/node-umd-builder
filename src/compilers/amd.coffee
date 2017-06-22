@@ -277,14 +277,12 @@ _writeMainData = (data, dst, path, options, done)->
         writer = fs.createWriteStream dst, flags: 'w'
 
         if options.optimizer
-            options.optimizer.optimize {data, path}, (err, {data: optimized})->
-                if err
-                    done(err)
-                    return
+            options.optimizer.optimize({data, path}).then ({data: optimized})->
                 writer.write(optimized || data, 'utf8', done)
                 writer.end()
                 writer = null
                 return
+            , done
         else
             writer.write beautify(data, 
                 indent_with_tabs: false
@@ -818,14 +816,11 @@ module.exports = class AmdCompiler
             return
 
         if @optimizer
-            @optimizer.optimize {data: umdData, path}, (err, res)->
-                if err
-                    next(err)
-                    return
-
+            @optimizer.optimize({data: umdData, path}).then (res)->
                 {data: optimized, path} = res
                 writeData optimized || umdData, dst, next
                 return
+            , next
             return
 
         writeData umdData, dst, next
