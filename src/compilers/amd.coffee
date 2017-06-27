@@ -668,6 +668,8 @@ module.exports = class AmdCompiler
 
         resolve = Function.prototype
         done = (err)->
+            if err
+                logger.error(err)
             resolve()
             return
 
