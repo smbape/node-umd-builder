@@ -372,38 +372,14 @@ _writeHTML = (html, dst, options, done)->
 builder = require '../builder'
 writeData = require '../writeData'
 readComponents = require '../../utils/read-components'
-{ parse: factoryParse, NG_FACTORIES } = require('../../utils/method-parser')
+{ parse: factoryParse } = require('umd-loader/lib/method-parser')
 
 removeStrictOptions = (str)->
     str.replace /^\s*(['"])use strict\1;?[^\n]*$/m, ''
 
 defaultOptions = {}
 
-defaultOptions.umdWrapper = (data, options, modulePath)->
-    strict = ''
-    if options.strict
-        data = removeStrictOptions data
-        strict = "'use strict';"
-
-    """
-    (function(require, global) {
-        #{strict}
-        var deps = [];
-
-        #{data}
-
-        if (typeof process === 'object' && typeof process.platform !== 'undefined') {
-            // NodeJs
-            module.exports = depsLoader.common(require, 'node', deps, factory, global);
-        } else if (typeof exports !== 'undefined') {
-            // CommonJS
-            module.exports = depsLoader.common(require, global.require && global.require.brunch ? ['brunch', 'common'] : 'common', deps, factory, global);
-        } else if (typeof define === 'function' && define.amd) {
-            // AMD
-            depsLoader.amd(deps, factory, global);
-        }
-    }(require, typeof window !== 'undefined' && window === window.window ? window : typeof global !== 'undefined' ? global : null));
-    """
+defaultOptions.umdWrapper = require('umd-loader/lib/umdWrapper')
 
 defaultOptions.comWrapper = (data, options)->
     strict = ''
@@ -466,8 +442,22 @@ ngFactory = (plugin, modulePath, data, parsed)->
     """
 
 do ->
-    for name in NG_FACTORIES
-        defaultFactories[name] = ngFactory
+    for name in [
+        "usable",
+        "run",
+        "config",
+        "module",
+        "factory",
+        "filter",
+        "directive",
+        "controller",
+        "service",
+        "value",
+        "constant",
+        "decorator",
+        "provider"
+    ]
+        defaultFactories["ng" + name] = ngFactory
 
     return
 
@@ -528,18 +518,7 @@ defaultFactories.freact = (plugin, modulePath, data, parsed)->
     }
     """
 
-defaultFactories.factory = (plugin, modulePath, data, parsed)->
-    [_UNUSED_, _UNUSED_, args, head, declaration, body] = parsed
-
-    if 'require' isnt args[0]
-        # remove any require variable
-        while (index = args.indexOf('require')) isnt -1
-            args[index] = 'undefined'
-
-        args.unshift 'require'
-        data = "#{head}#{declaration}#{args.join(', ')}#{body}"
-
-    return data
+defaultFactories.factory = require("umd-loader/lib/factories").factory
 
 module.exports = class AmdCompiler
     brunchPlugin: true

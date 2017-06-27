@@ -59,6 +59,7 @@
     "stylus": "^0.54.5",
     "uglify-js-brunch": "^2.10.0",
     "umd-wrapper": "^0.1.0",
+    "umd-loader": "^0.0.1",
     "username": "^2.3.0",
     "validator": "^5.7.0",
     "which": "^1.2.4"
