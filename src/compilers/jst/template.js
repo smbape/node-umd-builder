@@ -324,17 +324,19 @@ function template(string, options, otherOptions) {
 
     // If `variable` is not specified wrap a with-statement around the generated
     // code to add the data object to the top of the scope chain.
-    const variable = options.variable;
-    if (!variable) {
+    let variable = options.variable;
+    if (variable == null) {
         source = "with (obj) {\n" + source + "\n}\n";
+        variable = "obj";
     }
     // Cleanup code by stripping empty strings.
     source = isEvaluating ? source.replace(reEmptyStringLeading, "") : source;
     source = source.replace(reEmptyStringMiddle, "$1").replace(reEmptyStringTrailing, "$1;");
 
     // Frame code as the function body.
-    source = "function(" + (variable || "obj") + ") {\n" +
-        (variable ? "" : "obj || (obj = {});\n") +
+    const declaration = options.async ? "async function" : "function";
+    source = declaration + "(" + variable + ") {\n" +
+        "if (" + variable + " == null) { " + variable + " = {}; }\n" +
         "var __t, __p = []" +
         (isEscaping ? ", __e = _.escape" : "") +
         (isEvaluating ? ", __j = Array.prototype.join;\n" +

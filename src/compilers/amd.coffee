@@ -382,6 +382,8 @@ defaultOptions = {}
 defaultOptions.umdWrapper = require('umd-loader/lib/umdWrapper')
 
 defaultOptions.comWrapper = (data, options)->
+    _g = options.global or 'typeof global === "undefined" ? self : global'
+
     strict = ''
     if options.strict
         data = removeStrictOptions data
@@ -396,7 +398,8 @@ defaultOptions.comWrapper = (data, options)->
     (function(require, global) {
         // CommonJS
         module.exports = depsLoader.common(require, global.require && global.require.brunch ? ['brunch', 'common'] : 'common', deps, factory, global);
-    }(require, typeof window !== 'undefined' && window === window.window ? window : typeof global !== 'undefined' ? global : null));
+
+    }(require, #{ _g }));
     """
 
 defaultFactories = defaultOptions.factories = {}
@@ -526,9 +529,6 @@ module.exports = class AmdCompiler
     completer: true
 
     constructor: (config = {})->
-        if config.isProduction
-            @optimizer = new UglifyJSOptimizer config
-
         @paths = builder.generateConfig(config).paths
         @paths.public = config.paths.public
         @joinTo = config.files.javascripts.joinTo
@@ -545,6 +545,14 @@ module.exports = class AmdCompiler
         else if @options.jshint
             JsHinter = require './jshinter'
             @linter = new JsHinter config
+
+        if config.isProduction
+            Ctor = @options.optimizer or UglifyJSOptimizer
+            @optimizer = new Ctor(config)
+
+        delete @options.eslint
+        delete @options.jshint
+        delete @options.optimizer
 
         @isIgnored = if @options.ignore then anymatch(@options.ignore) else if config.conventions and config.conventions.vendor then config.conventions.vendor else anymatch(/^(?:bower_components|vendor)/)
         @isVendor = config.conventions and config.conventions.vendor

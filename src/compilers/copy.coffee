@@ -36,7 +36,7 @@ _copyFile = (dst, src, plugin, next)->
             if logger.isDebugEnabled()
                 _src = sysPath.relative plugin.paths.APPLICATION_PATH, src
                 _dst = sysPath.relative plugin.paths.APPLICATION_PATH, dst
-                logger.debug "\n    #{_src}\n    #{_dst}"
+                logger.trace "\n    #{_src}\n    #{_dst}"
 
             readable = fs.createReadStream src
             writable = fs.createWriteStream dst
