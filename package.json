@@ -1,11 +1,14 @@
 {
   "name": "umd-builder",
   "version": "2.15.0",
+  "engines": {
+    "node": ">=6.0.0"
+  },
   "description": "Build modular client application with support of commonjs, requirejs and nodejs without duplicating source code",
   "main": "index.js",
   "scripts": {
     "lint": "eslint --fix \"lib/**/*.js\" || exit 0",
-    "prepublish": "node scripts/prepublish.js && npm run lint",
+    "prepack": "node scripts/prepack.js && npm run lint",
     "postinstall": "node scripts/postinstall.js",
     "test": "node node_modules/mocha/bin/_mocha --full-trace --compilers coffee:coffee-script/register --require test/mocha/common.coffee test/mocha"
   },

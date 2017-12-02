@@ -1,9 +1,19 @@
 'use strict';
 
-var fs = require('fs'),
-    sysPath = require('path'),
-    _ = global._ = require('lodash'),
-    QUnit = global.QUnit = require('lodash/node_modules/qunitjs/qunit/qunit.js');
+var fs = require("fs");
+const sysPath = require("path");
+const _ = global._ = require("lodash");
+const lodashPath = require.resolve("lodash");
+let dirname = lodashPath;
+while (!global.QUnit && dirname !== sysPath.dirname(dirname)) {
+    dirname = sysPath.dirname(dirname);
+    try {
+        global.QUnit = require(dirname + "/node_modules/qunitjs/qunit/qunit.js");
+    } catch(e) {
+
+    }
+}
+const QUnit = global.QUnit;
 
 _.template = require('../lib/compilers/jst/template');
 _.templateSettings.ignore = /<%--([\s\S]+?)--%>/g;
@@ -30,4 +40,4 @@ QUnit.test('should ignore', function(assert) {
     assert.deepEqual(actual, expected);
 });
 
-require('lodash/test/test');
+require(sysPath.dirname(lodashPath) + '/test/test');

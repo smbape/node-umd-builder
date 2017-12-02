@@ -1,42 +1,39 @@
-const path = require("path");
+const sysPath = require("path");
 
-exports.makeModule = makeModule;
-function makeModule(filename, parent) {
-    filename = path.resolve(filename);
-    const Module = parent.constructor;
-    const localModule = new Module(filename, parent);
-    const dirname = path.dirname(filename);
-    localModule.filename = filename;
-    localModule.paths = Module._nodeModulePaths(dirname);
-    const localRequire = makeRequireFunction.call(localModule);
+Object.assign(exports, {
+    makeModule: (filename, parent) => {
+        filename = sysPath.resolve(filename);
+        const Module = parent.constructor;
+        const localModule = new Module(filename, parent);
+        const dirname = sysPath.dirname(filename);
+        localModule.filename = filename;
+        localModule.paths = Module._nodeModulePaths(dirname);
+        const localRequire = exports.makeRequireFunction(localModule);
 
-    return {
-        exports: localModule.exports,
-        module: localModule,
-        require: localRequire,
-        __filename: filename,
-        __dirname: dirname
-    };
-}
+        return {
+            exports: localModule.exports,
+            module: localModule,
+            require: localRequire,
+            __filename: filename,
+            __dirname: dirname
+        };
+    },
 
-exports.makeRequireFunction = makeRequireFunction;
-function makeRequireFunction() {
-    const self = this; // eslint-disable-line no-invalid-this
-    const Module = self.constructor;
-    const require = self.require.bind(self);
+    makeRequireFunction: localModule => {
+        const Module = localModule.constructor;
+        const localRequire = localModule.require.bind(localModule);
 
-    function resolve(request) {
-        return Module._resolveFilename(request, self);
+        localRequire.resolve = (request, options) => {
+            return Module._resolveFilename(request, localModule, false, options);
+        };
+
+        localRequire.main = process.mainModule;
+
+        // Enable support to add extra extension types.
+        localRequire.extensions = Module._extensions;
+
+        localRequire.cache = Module._cache;
+
+        return localRequire;
     }
-
-    require.resolve = resolve;
-
-    require.main = process.mainModule;
-
-    // Enable support to add extra extension types.
-    require.extensions = Module._extensions;
-
-    require.cache = Module._cache;
-
-    return require;
-}
+});

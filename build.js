@@ -147,5 +147,11 @@ function remove(file, options, done) {
         }
     }
 
+    options = Object.assign({
+        fs: fs,
+        resolve: true,
+        followSymlink: false
+    }, options);
+
     _explore(file, callfile, calldir, options, done);
 }
