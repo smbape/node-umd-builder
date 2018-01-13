@@ -1,12 +1,3 @@
-From c51b52ecb9da0f1ac82c681f22fff06bed5e2726 Mon Sep 17 00:00:00 2001
-From: =?UTF-8?q?St=C3=A9phane=20MBAPE?= <rose.martin-8og3raxw@yopmail.com>
-Date: Wed, 1 Feb 2017 02:20:57 +0100
-Subject: [PATCH] nameCleaner normalized relative path
-
----
- lib/utils/modules.js | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
 diff --git a/lib/utils/modules.js b/lib/utils/modules.js
 index 85ad6ab..cffaae3 100644
 --- a/lib/utils/modules.js
@@ -22,6 +13,3 @@ index 85ad6ab..cffaae3 100644
    };
  };
  
--- 
-2.10.0.windows.1
-

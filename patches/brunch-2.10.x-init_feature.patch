@@ -1,17 +1,8 @@
-From 379b702842a083412ecc4d2028a708491ea429f7 Mon Sep 17 00:00:00 2001
-From: =?UTF-8?q?St=C3=A9phane=20MBAPE?= <rose.martin-8og3raxw@yopmail.com>
-Date: Tue, 31 Jan 2017 17:43:45 +0100
-Subject: [PATCH] add initialize feature
-
----
- lib/watch.js | 24 ++++++++++++++++++++++++
- 1 file changed, 24 insertions(+)
-
 diff --git a/lib/watch.js b/lib/watch.js
-index e9e5f4a..ce37913 100644
+index 6c674f9..0458376 100644
 --- a/lib/watch.js
 +++ b/lib/watch.js
-@@ -101,6 +101,25 @@ class BrunchWatcher {
+@@ -110,6 +110,25 @@ class BrunchWatcher {
      }
  
      application.loadConfig(persistent, options)
@@ -37,7 +28,7 @@ index e9e5f4a..ce37913 100644
        .then(cfg => {
          this.config = cfg;
          if (options.jobs > 1) {
-@@ -127,6 +147,10 @@ class BrunchWatcher {
+@@ -136,6 +155,10 @@ class BrunchWatcher {
  
          return Promise.all(this.hooks.preCompile()).then(() => {
            this.initWatcher(watchedPaths);
@@ -48,6 +39,3 @@ index e9e5f4a..ce37913 100644
            this.initCompilation();
          });
        })
--- 
-2.10.0.windows.1
-

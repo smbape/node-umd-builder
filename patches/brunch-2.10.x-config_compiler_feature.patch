@@ -1,17 +1,8 @@
-From d2505cd474437ec81e6f163f4c0268a6a464a923 Mon Sep 17 00:00:00 2001
-From: =?UTF-8?q?St=C3=A9phane=20MBAPE?= <rose.martin-8og3raxw@yopmail.com>
-Date: Tue, 31 Jan 2017 17:20:07 +0100
-Subject: [PATCH] add config compiler feature
-
----
- lib/utils/plugins.js | 17 ++++++++++------
- 1 file changed, 11 insertion(+), 6 deletion(-)
-
 diff --git a/lib/utils/plugins.js b/lib/utils/plugins.js
-index 0cce810..592930d 100644
+index f6e1a54..0c2bef5 100644
 --- a/lib/utils/plugins.js
 +++ b/lib/utils/plugins.js
-@@ -72,14 +72,21 @@ const plugins = (config, craDeps) => {
+@@ -73,14 +73,21 @@ const plugins = (config, craDeps) => {
      return true;
    });
  
@@ -38,7 +29,7 @@ index 0cce810..592930d 100644
      } catch (error) {
        if (error.code === 'MODULE_NOT_FOUND' && name in pkg.dependencies) {
          throw new BrunchError('RUN_NPM_INSTALL', {error});
-@@ -87,7 +92,7 @@ const plugins = (config, craDeps) => {
+@@ -88,7 +95,7 @@ const plugins = (config, craDeps) => {
        logger.warn(`Loading of ${name} failed due to`, error);
      }
      return plugins;
@@ -47,7 +38,3 @@ index 0cce810..592930d 100644
    .filter(plugin => {
      // Does the user's config say this plugin should definitely be used?
      if (on.includes(plugin.brunchPluginName)) return true;
-
--- 
-2.10.0.windows.1
-

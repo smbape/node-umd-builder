@@ -1,6 +1,6 @@
---- node_modules/log4js/lib/log4js.js.orig	2016-02-12 16:42:33.461550500 +0100
-+++ node_modules/log4js/lib/log4js.new.js	2016-02-12 16:45:57.437899400 +0100
-@@ -428,6 +428,12 @@
+--- a/node_modules/log4js/lib/log4js.js
++++ b/node_modules/log4js/lib/log4js.js
+@@ -454,6 +454,12 @@
    // not being able to be drained because of run-away log writes.
    loggerModule.disableAllLogWrites();
  

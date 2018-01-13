@@ -1,14 +1,5 @@
-From 2c75b1ace1afe58edb73669b7593d385a686ef09 Mon Sep 17 00:00:00 2001
-From: =?UTF-8?q?St=C3=A9phane=20MBAPE?= <rose.martin-8og3raxw@yopmail.com>
-Date: Tue, 31 Jan 2017 17:13:49 +0100
-Subject: [PATCH] add completer feature
-
----
- lib/fs_utils/pipeline.js | 44 ++++++++++++++++++++++++++++++++++++++++++--
- 1 file changed, 42 insertions(+), 2 deletions(-)
-
 diff --git a/lib/fs_utils/pipeline.js b/lib/fs_utils/pipeline.js
-index 9eb587b..c20bcad 100644
+index 9eb587b..044647a 100644
 --- a/lib/fs_utils/pipeline.js
 +++ b/lib/fs_utils/pipeline.js
 @@ -132,17 +132,57 @@ const processFile = parallel('PROCESS_FILE', file => {
@@ -71,6 +62,3 @@ index 9eb587b..c20bcad 100644
    if (!isNpm) return compiled;
  
    return compiled.then(file => {
--- 
-2.10.0.windows.1
-

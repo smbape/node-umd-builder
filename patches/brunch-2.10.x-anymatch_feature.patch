@@ -1,15 +1,3 @@
-From 09187a22c6a10378c1f5461c9d7b172bb884c128 Mon Sep 17 00:00:00 2001
-From: =?UTF-8?q?St=C3=A9phane=20MBAPE?= <rose.martin-8og3raxw@yopmail.com>
-Date: Tue, 31 Jan 2017 16:13:53 +0100
-Subject: [PATCH] add anymatch feature
-
----
- lib/utils/config.js  |  2 +-
- lib/utils/helpers.js | 33 ++++++++++++++++++++++++++++++++-
- lib/watch.js         | 13 ++++++++++--
- package.json         |  1 +
- 4 files changed, 45 insertions(+), 4 deletions(-)
-
 diff --git a/lib/utils/config.js b/lib/utils/config.js
 index 0f5a105..09d5272 100644
 --- a/lib/utils/config.js
@@ -24,7 +12,7 @@ index 0f5a105..09d5272 100644
  const helpers = require('./helpers');
  const deppack = require('deppack'); // isNpm, loadInit
 diff --git a/lib/utils/helpers.js b/lib/utils/helpers.js
-index 9338883..08f8a68 100644
+index f3ac53a..e79c486 100644
 --- a/lib/utils/helpers.js
 +++ b/lib/utils/helpers.js
 @@ -3,6 +3,8 @@ const basename = require('universal-path').basename;
@@ -36,7 +24,7 @@ index 9338883..08f8a68 100644
  
  // Single-level flatten.
  const flatten = array => [].concat.apply([], array);
-@@ -184,7 +186,35 @@ const deepFreeze = (object, except) => {
+@@ -199,7 +201,35 @@ const deepFreeze = (object, except) => {
  };
  
  const fsExists = path => {
@@ -74,7 +62,7 @@ index 9338883..08f8a68 100644
  
  const isSymlink = path => {
 diff --git a/lib/watch.js b/lib/watch.js
-index e9e5f4a..a1b45da 100644
+index 892bfb3..6c674f9 100644
 --- a/lib/watch.js
 +++ b/lib/watch.js
 @@ -47,9 +47,18 @@ const mergeHooks = (plugins, config) => {
@@ -99,7 +87,7 @@ index e9e5f4a..a1b45da 100644
  };
  
 diff --git a/package.json b/package.json
-index bbad3d3..a2dbd57 100644
+index fcd4f88..daa2b23 100644
 --- a/package.json
 +++ b/package.json
 @@ -59,6 +59,7 @@
@@ -110,6 +98,3 @@ index bbad3d3..a2dbd57 100644
      "init-skeleton": "~1.0",
      "loggy": "~1.0.2",
      "micro-es7-shim": "^0.1",
--- 
-2.10.0.windows.1
-

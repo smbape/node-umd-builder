@@ -1,13 +1,3 @@
-From 9dd169944f6e4fdefe4e421b5d82ee7bdab33139 Mon Sep 17 00:00:00 2001
-From: =?UTF-8?q?St=C3=A9phane=20MBAPE?= <rose.martin-8og3raxw@yopmail.com>
-Date: Tue, 31 Jan 2017 18:45:59 +0100
-Subject: [PATCH] make onCompile hook blocking
-
----
- lib/fs_utils/source_file.js |  2 +-
- lib/watch.js                | 30 ++++++++++++++++++++++++++++--
- 2 files changed, 29 insertions(+), 3 deletions(-)
-
 diff --git a/lib/fs_utils/source_file.js b/lib/fs_utils/source_file.js
 index 03fd440..e295946 100644
 --- a/lib/fs_utils/source_file.js
@@ -22,10 +12,10 @@ index 03fd440..e295946 100644
      this.disposed = true;
      this.error = null;
 diff --git a/lib/watch.js b/lib/watch.js
-index e9e5f4a..6dbd79f 100644
+index 0458376..e943f4b 100644
 --- a/lib/watch.js
 +++ b/lib/watch.js
-@@ -293,8 +293,34 @@ class BrunchWatcher {
+@@ -333,8 +333,34 @@ class BrunchWatcher {
        ));
  
        // Pass `fs_utils.GeneratedFile` instances to callbacks.
@@ -62,6 +52,3 @@ index e9e5f4a..6dbd79f 100644
      }, error => {
        this._endBundle();
        if (error.code === 'WRITE_FAILED') return; // Ignore write errors as they are logged already
--- 
-2.10.0.windows.1
-
