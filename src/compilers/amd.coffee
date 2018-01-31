@@ -404,123 +404,8 @@ defaultOptions.comWrapper = (data, options)->
 
 defaultFactories = defaultOptions.factories = {}
 
-ngFactory = (plugin, modulePath, data, parsed)->
-    [locals, ctor, args, head, declaration, body] = parsed
-
-    body = "#{declaration}#{args.join(', ')}#{body}"
-
-    ngmethod = ctor.slice 'ng'.length
-    realPath = plugin.config.paths.modules + '/' + modulePath
-    $name = modulePath.replace(/\//g, '.')
-    $dirname = sysPath.dirname realPath
-    $shortName = modulePath.replace(/.*\/([^\/]+)$/, '$1')
-
-    """
-    var ngdeps = [];
-
-    #{head}
-    deps.unshift({amd: 'angular', common: '!angular'});
-    var ngoffset = deps.length, ngmap = {};
-
-    for (var i = 0, len = ngdeps.length, dep; i < len; i++) {
-        dep = ngdeps[i];
-        if ('string' === typeof dep && '/' === dep.charAt(0)) {
-            ngdeps[i] = dep.slice(1);
-            dep = ngdeps[i];
-            // deps.length - ngoffset + 1 correspond to ng dependency index
-            // that index will be used to know which ngdeps must only by a deps
-            // and therefore removed from ngdeps
-            ngmap[deps.length - ngoffset + 1] = i;
-            deps.push(dep);
-        }
-    }
-
-    function factory(require, angular#{if locals then ', ' + locals else ''}) {
-        var resolvedDeps = Array.prototype.slice.call(arguments, ngoffset);
-
-        #{body}
-        
-        return depsLoader.createNgUsable(#{ctor}, '#{ngmethod}', '#{$name}', '#{realPath}', '#{$dirname}', '#{$shortName}', ngdeps, resolvedDeps, ngmap);
-    }
-    """
-
-do ->
-    for name in [
-        "usable",
-        "run",
-        "config",
-        "module",
-        "factory",
-        "filter",
-        "directive",
-        "controller",
-        "service",
-        "value",
-        "constant",
-        "decorator",
-        "provider"
-    ]
-        defaultFactories["ng" + name] = ngFactory
-
-    return
-
-defaultFactories.ngmodule = (plugin, modulePath, data, parsed)->
-    [_UNUSED_, _UNUSED_, args, head, declaration, body] = parsed
-
-    body = "#{declaration}#{args.join(', ')}#{body}"
-
-    """
-    var ngdeps = [];
-
-    #{head}
-    deps.unshift({amd: 'angular', common: '!angular'});
-    var ngoffset = deps.length, ngmap = {};
-
-    for (var i = 0, len = ngdeps.length, dep; i < len; i++) {
-        dep = ngdeps[i];
-        if ('string' === typeof dep && '/' === dep.charAt(0)) {
-            ngdeps[i] = dep.slice(1);
-            dep = ngdeps[i];
-            // deps.length - ngoffset + 1 correspond to ng dependency index
-            // that index will be used to know which ngdeps must only by a deps
-            // and therefore removed from ngdeps
-            ngmap[deps.length - ngoffset + 1] = i;
-            deps.push(dep);
-        }
-    }
-
-    function factory(require, angular) {
-        /*jshint validthis: true */
-        var name = '#{modulePath.replace(/\//g, '.')}',
-            resolvedDeps = Array.prototype.slice.call(arguments, ngoffset);
-
-        var exports = depsLoader.createNgModule(angular, name, ngdeps, ngmap, resolvedDeps);
-
-        #{body}
-
-        // eslint-disable-next-line no-invalid-this
-        ngmodule.apply(this, Array.prototype.slice.call(arguments, 2));
-        return exports;
-    }
-    """
-
-defaultFactories.freact = (plugin, modulePath, data, parsed)->
-    [_UNUSED_, _UNUSED_, args, head, declaration, body] = parsed
-
-    """
-    #{head}
-    deps.unshift({amd: 'react', common: '!React'}, {amd: 'react-dom', common: '!ReactDOM'});
-    
-    function factory(require, React, ReactDOM) {
-        /*jshint validthis: true */
-
-        #{declaration}#{args.join(', ')}#{body}
-
-        // eslint-disable-next-line no-invalid-this
-        return freact.apply(this, Array.prototype.slice.call(arguments, 3));
-    }
-    """
-
+require("../factories/ng")(defaultFactories);
+require("../factories/freact")(defaultFactories);
 defaultFactories.factory = require("umd-loader/lib/factories").factory
 
 module.exports = class AmdCompiler
@@ -980,6 +865,12 @@ module.exports = class AmdCompiler
 
                     if !hasProp.call(obj, key)
                         obj[key] = {}
+
+                    else if typeof obj[key] isnt "object"
+                        # handle cases like src/core.js, src/core/anoter.js
+                        obj[key] = {
+                            ".": obj[key]
+                        }
 
                     obj = obj[key]
 
