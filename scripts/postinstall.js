@@ -5,7 +5,7 @@ const async = require("async");
 const anyspawn = require("anyspawn");
 const mv = require("mv");
 
-const bversion = "2.10.9";
+const bversion = "2.10.12";
 const new_branch = "__umd_features__";
 const has_new_branch = new RegExp(`(?:^|\\n)\\s*(?:\\*?\\s*)${ new_branch }\\s*(?:\\n|$)`, "m");
 

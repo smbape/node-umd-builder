@@ -1,5 +1,4 @@
 // copy of https://github.com/brunch/stylus-brunch
-// use "progeny": "^0.5.2"
 
 // """
 // @import path
