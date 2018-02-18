@@ -1,0 +1,351 @@
+{
+    "parser": "babel-eslint",
+
+    "parserOptions": {
+        "ecmaVersion": 7,
+        "ecmaFeatures": {
+            "classes": true,
+            "jsx": false
+        }
+    },
+
+    "env": {
+        "browser": true,
+        "es6": true,
+        "node": true,
+    },
+
+    "globals": {
+        // "define": false,
+        // "expect": false,
+    },
+
+    "rules": {
+        // ===============
+        // Possible errors
+        // ===============
+        "for-direction": 2,
+        "getter-return": 2,
+        "no-await-in-loop": 2,
+        "no-compare-neg-zero": 2,
+        "no-cond-assign": 2,
+        // "no-console": 2,
+        "no-constant-condition": 2,
+        "no-control-regex": 2,
+        "no-debugger": 2,
+        "no-dupe-args": 2,
+        "no-dupe-keys": 2,
+        "no-duplicate-case": 2,
+        "no-empty": 2,
+        "no-empty-character-class": 2,
+        "no-ex-assign": 2,
+        "no-extra-boolean-cast": 2,
+        // "no-extra-parens": 2,
+        "no-extra-semi": 2,
+        "no-func-assign": 2,
+        "no-inner-declarations": 2,
+        "no-invalid-regexp": 2,
+        "no-irregular-whitespace": [2, {
+            "skipStrings": true
+        }],
+        "no-obj-calls": 2,
+        "no-prototype-builtins": 2,
+        "no-regex-spaces": 2,
+        "no-sparse-arrays": 2,
+        "no-template-curly-in-string": 2,
+        "no-unexpected-multiline": 2,
+        // "no-unreachable": 2, // with preprocessor, unreachable are used
+        "no-unsafe-finally": 2,
+        "no-unsafe-negation": 2,
+        "use-isnan": 2,
+        // " valid-jsdoc": 2,
+        "valid-typeof": [2, {
+            "requireStringLiterals": true
+        }],
+
+        // ===============
+        // http://eslint.org/docs/rules/#best-practices
+        // ===============
+        "accessor-pairs": 2,
+        "array-callback-return": 2,
+        "block-scoped-var": 2,
+        // "class-methods-use-this": 2, // React components method render may not use this
+        "complexity": [2, {
+            "max": 63 // magic number
+        }],
+        "consistent-return": 2,
+        "curly": [2, "all"],
+        "default-case": 2,
+        // "dot-location": [2, "object"],
+        // "dot-notation": 2,
+        "eqeqeq": [2, "always", {
+            "null": "ignore"
+        }],
+        "guard-for-in": 2,
+        "no-alert": 2,
+        "no-caller": 2,
+        "no-case-declarations": 2,
+        "no-div-regex": 2,
+        "no-else-return": 2,
+        "no-empty-function": 2,
+        "no-empty-pattern": 2,
+        // "no-eq-null": 2, // often used
+        "no-eval": 2,
+        "no-extend-native": 2,
+        "no-extra-bind": 2,
+        "no-extra-label": 2,
+        "no-fallthrough": 2,
+        "no-floating-decimal": 2,
+        "no-global-assign": 2,
+        "no-implicit-coercion": 2,
+        "no-implicit-globals": 2,
+        "no-implied-eval": 2,
+        "no-invalid-this": 2,
+        "no-iterator": 2,
+        "no-labels": 2,
+        "no-lone-blocks": 2,
+        "no-loop-func": 2,
+        "no-magic-numbers": [1, {
+            "ignoreArrayIndexes": true,
+            "ignore": [
+                -1, // slice
+                0, // Array
+                1, // Array
+            ]
+        }],
+        "no-multi-spaces": 2,
+        "no-multi-str": 2,
+        "no-new": 2,
+        "no-new-func": 2,
+        "no-new-wrappers": 2,
+        "no-octal": 2,
+        "no-octal-escape": 2,
+        // "no-param-reassign": 2, // prevents initialization of default values. should be with use strict to prevent modification of arguments
+        "no-proto": 2,
+        "no-redeclare": 2,
+        "no-restricted-properties": 2,
+        "no-return-assign": 2,
+        "no-return-await": 2,
+        "no-script-url": 2,
+        "no-self-assign": 2,
+        "no-self-compare": 2,
+        "no-sequences": 2,
+        "no-throw-literal": 2,
+        "no-unmodified-loop-condition": 2,
+        "no-unused-expressions": 2,
+        "no-unused-labels": 2,
+        "no-useless-call": 2,
+        "no-useless-concat": 2,
+        "no-useless-escape": 2,
+        "no-useless-return": 2,
+        "no-void": 2,
+        "no-warning-comments": 1,
+        "no-with": 2,
+        "prefer-promise-reject-errors": 2,
+        "radix": 2,
+        "require-await": 2,
+        // "vars-on-top": 2, // I prefer having variable declared for the first time where there are used
+        "wrap-iife": [2, "any"],
+        // "yoda": 2, // I am fine with it
+
+        // ===============
+        // Variables
+        // ===============
+        // "init-declarations": [2, "never", { "ignoreForLoopInit": true }],
+        // "no-catch-shadow": 2, // don't care about older browsers
+        "no-delete-var": 2,
+        "no-label-var": 2,
+        "no-shadow": [2, {
+            "allow": [
+                "require",
+                "promise",
+                "done",
+                "err",
+                "next"
+            ]
+        }],
+        "no-shadow-restricted-names": 2, // allow use of undefined
+        "no-undef": [2, {
+            "typeof": false
+        }],
+        "no-undef-init": 2,
+        // "no-undefined": 2,
+        "no-unused-vars": [2, {
+            "vars": "all",
+            "args": "none",
+            "caughtErrors": "none"
+        }],
+        "no-use-before-define": [2, {
+            "functions": false,
+            "classes": true
+        }],
+
+        // ===============
+        // Strict
+        // ===============
+        // "strict": [2, "function"], // annoying warnings. no-undef will do the job
+
+        // ===============
+        // Node.js and CommonJS
+        // ===============
+        // "callback-return": [2, ["callback", "cb", "next", "done"]], // conflict with consistent return
+        // "global-require": 2, // too much require("log4js")
+        // "handle-callback-err": 2, // there are too many cases where err i deliberatly ignored
+        "no-buffer-constructor": 2,
+        "no-mixed-requires": [2, {
+            "grouping": true,
+            "allowCall": true
+        }],
+        "no-new-require": 2,
+        // "no-path-concat": 2,
+        // "no-process-env": 2,
+        // "no-process-exit": 2,
+        // "no-restricted-modules": [2, "foo-module", "bar-module"],
+        // "no-sync": [2, { allowAtRootLevel: false }],
+
+        // ===============
+        // Stylistic Issues
+        // ===============
+        // "array-bracket-newline": [2, "consistent"],
+        // "array-bracket-spacing": [2, "never"],
+        // "array-element-newline": [2, { "multiline": true }],
+        "block-spacing": 2, // enforce consistent spacing inside single-line blocks
+        "brace-style": 2, // enforce consistent spacing inside single-line blocks
+        // "camelcase": [2, { "properties": "never" }],
+        // "capitalized-comments": 2,
+        // "comma-dangle": 2,
+        "comma-spacing": [2, {
+            "before": false,
+            "after": true
+        }],
+        // "comma-style": [2, "last"],
+        // "computed-property-spacing": [2, "always"],
+        // "consistent-this": [2, "_this"],
+        "eol-last": 2,
+        "func-call-spacing": [2, "never"],
+        "func-name-matching": 2,
+        // "func-names": [2, "always"],
+        // "func-style": [2 "declaration", { "allowArrowFunctions": true }],
+        // "function-paren-newline": [2, { "minItems": 6 }],
+        // "id-blacklist": [2, "data", "err", "e", "cb", "callback"],
+        // "id-length": [2, { "min": 2 }],
+        // "id-match": [2, "^[a-z]+([A-Z][a-z]+)*$"],
+        // "indent": [2, 4], // indent 4; dislexic friendly
+        "jsx-quotes": [2, "prefer-double"],
+        // "key-spacing": [2 {
+        //   "beforeColon": false,
+        //   "afterColon": true,
+        //   "mode": "strict"
+        // }],
+        "keyword-spacing": 2,
+        // "line-comment-position": [2 { "position": "above" }],
+        "linebreak-style": [2, "unix"],
+        // "lines-around-comment": [2, { "beforeBlockComment": true }],
+        "lines-between-class-members": [2, "always"],
+        "max-depth": [2, 7],
+        // "max-len": [2, 150],
+        // "max-lines": [2, 1500],
+        "max-nested-callbacks": [2, 5],
+        // "max-params": [2, 10],
+        // "max-statements": [2, 100],
+        // "max-statements-per-line": [2, 3],
+        // "multiline-comment-style": [2, "starred-block"],
+        // "multiline-ternary": [2, "never"],
+        // "new-cap": 2, // inherits method uses new ctor()
+        "new-parens": 2,
+        // "newline-per-chained-call": [2, { "ignoreChainWithDepth": 2 }],
+        "no-array-constructor": 2,
+        // "no-bitwise": 2,
+        // "no-continue": 2,
+        // "no-inline-comments": 2,
+        "no-lonely-if": 2,
+        // "no-mixed-operators": 2,
+        "no-mixed-spaces-and-tabs": 2,
+        "no-multi-assign": 2,
+        "no-multiple-empty-lines": [2, {
+            "max": 2,
+            "maxEOF": 1,
+            "maxBOF": 1
+        }],
+        // "no-negated-condition": 2,
+        // "no-nested-ternary": 2,
+        "no-new-object": 2,
+        // "no-plusplus": 2,
+        // "no-restricted-syntax": [2, "FunctionExpression", "WithStatement", "BinaryExpression[operator='in']"],
+        // "no-tabs": 2,
+        // "no-ternary": 2,
+        "no-trailing-spaces": 2,
+        // "no-underscore-dangle": 2,
+        "no-unneeded-ternary": 2, // disallow ternary operators when simpler alternatives exist
+        // "no-whitespace-before-property": 2,
+        "nonblock-statement-body-position": 2,
+        // "object-curly-newline": [2, {
+        //     "ObjectExpression": "always",
+        //     "ObjectPattern": { "multiline": true }
+        // }],
+        // "object-curly-spacing": [2, "always"], // may conflict with formatter
+        // "object-property-newline": 2, // may conflict with formatter
+        // "one-var": [2, {
+        //     "initialized": "never",
+        //     "uninitialized": "always"
+        // }],
+        // "one-var-declaration-per-line": 2,
+        "operator-assignment": [2, "always"],
+        // "operator-linebreak": [2, "after"],
+        "padded-blocks": [2, "never"],
+        // "padding-line-between-statements": [2, {
+        //   "blankLine": "always",
+        //   "prev": "var",
+        //   "next": "return"
+        // }],
+        "quote-props": [2, "as-needed"],
+
+        // enfore consistency of quotes.
+        // Single quote exists in common languages,
+        // and therefore are most likely to be part of a string
+        "quotes": [2, "double"],
+
+        // "require-jsdoc": [2, {
+        //   "require": {
+        //     "FunctionDeclaration": true,
+        //     "MethodDefinition": false,
+        //     "ClassDeclaration": false,
+        //     "ArrowFunctionExpression": false,
+        //     "FunctionExpression": false
+        //   }
+        // }],
+
+        "semi": 2, // even if the no-unexpected-multiline rule can protect from buggy cases, semicolon separation spare unecessary brain computation.
+        "semi-spacing": 2, // enforce consistent spacing before and after semicolons
+        "semi-style": [2, "last"], // enforce location of semicolons
+        // "sort-keys": [2, "asc", {"caseSensitive": true, "natural": false}],
+        // "sort-vars": [2, { "ignoreCase": true }],
+        "space-before-blocks": 2,
+        "space-before-function-paren": [2, {
+            "anonymous": "never",
+            "named": "never",
+            "asyncArrow": "always"
+        }],
+        // "space-in-parens": [2, "never"],
+        "space-infix-ops": [2, {
+            "int32Hint": true
+        }],
+        // "space-unary-ops": [
+        //   2, {
+        //     "words": true,
+        //     "nonwords": false,
+        //     "overrides": {
+        //       "new": false,
+        //       "++": true
+        //     }
+        //   }],
+        // "spaced-comment": [2, "always"],
+        "switch-colon-spacing": [2, {
+            "after": true,
+            "before": false
+        }],
+        "template-tag-spacing": [2, "always"],
+        // "unicode-bom": 2,
+        // "wrap-regex": 2,
+    }
+}

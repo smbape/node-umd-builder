@@ -1,28 +1,31 @@
 'use strict';
 
-require('coffee-script').register();
+require('coffeescript').register();
 
 var mkdirp = require('mkdirp'),
     sysPath = require('path');
 
-var log4js, logFolder, reloadSecs, config;
+var log4js, config;
 
 if (!global.log4js) {
     log4js = global.log4js = require('log4js');
     try {
         config = require(sysPath.join(process.cwd(), 'build-log4js'));
-    } catch (err) {
+    } catch ( err ) {
         config = {
-            "appenders": [
-                {
+            "appenders": {
+                "console": {
                     "type": "console",
                     "layout": {
                         "type": "colored"
                     }
                 }
-            ],
-            "levels": {
-                "[all]": "INFO"
+            },
+            "categories": {
+                "default": {
+                    "appenders": ["console"],
+                    "level": "INFO"
+                }
             }
         };
     }

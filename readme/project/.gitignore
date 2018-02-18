@@ -1,0 +1,8 @@
+/build.log
+/bower_components
+/node_modules
+/public
+/work
+/npm-debug.log
+/test/unit/test-main.js
+/*.sublime-workspace

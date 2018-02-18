@@ -1,0 +1,30 @@
+{
+  "folders": [
+    {
+      "path": ".",
+      "folder_exclude_patterns": [".svn", ".git", ".hg", "CVS", "providers", "providers-backup", "providers-refactoring"],
+      "follow_symlinks": true
+    }
+  ],
+  "settings": {
+    "binary_file_patterns": [
+      "*.jpg",
+      "*.jpeg",
+      "*.png",
+      "*.gif",
+      "*.gz",
+      "*.ttf",
+      "*.tga",
+      "*.dds",
+      "*.ico",
+      "*.eot",
+      "*.pdf",
+      "*.swf",
+      "*.jar",
+      "*.zip",
+      "node-manga-reader/bower_components/**",
+      "node-manga-reader/node_modules/**"
+    ],
+    "bold_folder_labels": true
+  }
+}

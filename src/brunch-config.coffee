@@ -87,6 +87,12 @@ config = exports.config =
             bare: true
         eslint:
             warnOnly: true
+            config:
+                fix: true
+                ignore: false # let brunch deal with ignore
+                globals: [
+                    "define:false"
+                ]
         jshint:
             warnOnly: true
         jst:

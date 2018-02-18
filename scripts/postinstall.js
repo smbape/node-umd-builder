@@ -1,15 +1,8 @@
 const fs = require("fs");
 const sysPath = require("path");
 const which = require("which");
-const async = require("async");
 const anyspawn = require("anyspawn");
-const mv = require("mv");
 
-const bversion = "2.10.12";
-const new_branch = "__umd_features__";
-const has_new_branch = new RegExp(`(?:^|\\n)\\s*(?:\\*?\\s*)${ new_branch }\\s*(?:\\n|$)`, "m");
-
-const {push} = Array.prototype;
 const emptyFn = Function.prototype;
 
 let patch_exe = "patch";
@@ -54,186 +47,24 @@ function setup(projectRoot, done) {
     config.project.brunch = projectBrunch;
     config.patches.folder = patchesFolder;
 
-    const cloneCmd = `git clone --depth 1 --branch ${ bversion } https://github.com/brunch/brunch.git`;
-
-    const preinstall = [
-        function() {
-            const next = arguments[arguments.length - 1];
-            anyspawn.spawn("npm install --production --ignore-scripts", {
-                stdio: "inherit",
-                cwd: projectRoot
-            }, next);
-        }
-    ];
-
-    const spawnBrunchOptions = {
-        stdio: "inherit",
-        cwd: projectBrunch
-    };
-
-    const resetRepoBrunchTasks = [
-        function() {
-            const next = arguments[arguments.length - 1];
-            anyspawn.exec("rm -rf brunch", {
-                stdio: "inherit",
-                cwd: sysPath.dirname(projectBrunch)
-            }, next);
-        },
-
-        function() {
-            const next = arguments[arguments.length - 1];
-            anyspawn.spawn(cloneCmd, {
-                stdio: "inherit",
-                cwd: sysPath.dirname(projectBrunch)
-            }, next);
-        },
-
-        function() {
-            const next = arguments[arguments.length - 1];
-            anyspawn.exec("git branch -l", spawnBrunchOptions, next);
-        },
-
-        function(data, code, next) {
-            let commands = [
-                `git checkout tags/${ bversion }`
-            ];
-
-            if (has_new_branch.test(data)) {
-                commands.push(`git branch -D "${ new_branch }"`);
-            }
-
-            commands = commands.map(cmd => {
-                return [cmd, {
-                    cwd: projectBrunch
-                }];
-            });
-
-            anyspawn.spawnSeries(commands, next);
-        }
-    ];
-
-    fs.lstat(projectBrunch, (err, stats) => {
-        if (err) {
-            // Brunch folder doesn't exists
-            // clone repo before installing
-            preinstall.push(function() {
-                const next = arguments[arguments.length - 1];
-                anyspawn.spawn(cloneCmd, {
-                    stdio: "inherit",
-                    cwd: sysPath.dirname(projectBrunch)
-                }, next);
-            });
-            doInstall();
-            return;
-        }
-
-        fs.lstat(sysPath.join(projectBrunch, ".git"), (err, stats) => {
-            if (stats && stats.isDirectory()) {
-                preinstall.unshift(function() {
-                    const next = arguments[arguments.length - 1];
-                    mv(sysPath.join(projectBrunch, ".git"), sysPath.join(projectBrunch, ".github"), next);
-                });
-
-                preinstall.push(function() {
-                    const next = arguments[arguments.length - 1];
-                    mv(sysPath.join(projectBrunch, ".git"), sysPath.join(projectBrunch, ".github"), next);
-                });
-                push.apply(preinstall, resetRepoBrunchTasks);
-
-                doInstall();
-                return;
-            }
-
-            fs.lstat(sysPath.join(projectBrunch, ".github"), (err, stats) => {
-                if (stats && stats.isDirectory()) {
-                    preinstall.push(function() {
-                        const next = arguments[arguments.length - 1];
-                        mv(sysPath.join(projectBrunch, ".git"), sysPath.join(projectBrunch, ".github"), next);
-                    });
-                }
-
-                push.apply(preinstall, resetRepoBrunchTasks);
-                doInstall();
-            });
-        });
-    });
-
-    function doInstall() {
-        async.waterfall(preinstall, err => {
-            if (err) {
-                done(err);
-                return;
-            }
-            install(config, err => {
-                if (err) {
-                    done(err);
-                    return;
-                }
-
-                mv(sysPath.join(projectBrunch, ".git"), sysPath.join(projectBrunch, ".github"), done);
-            });
-        });
-    }
+    install(config, done);
 }
 
 function install(config, done) {
-    const brunchPatches = [
-        "brunch-2.10.x-anymatch_feature",
-        "brunch-2.10.x-completer_feature",
-        "brunch-2.10.x-config_compiler_feature",
-        "brunch-2.10.x-init_feature",
-        "brunch-2.10.x-nameCleaner_path",
-        "brunch-2.10.x-onCompile_blocking"
-    ];
-
-    const filePatches = [
-        ["node_modules/log4js/lib/log4js.js", "log4js-v0.6.x-shutdown_fix.patch"],
-        // ["node_modules/highlight.js/lib/languages/handlebars.js", "hljs_hbs-8.7.0_fix.patch"],
-        ["node_modules/stylus/lib", "stylus-0.x-include-feature.patch"]
-    ];
-
-    const projectBrunch = config.project.brunch;
-    const patchesFolder = config.patches.folder;
-
-    const tasks = [];
-    let patchFile;
-
-    push.apply(tasks, [
-        [`git checkout tags/${ bversion }`, {
-            cwd: projectBrunch
-        }],
-        [`git checkout -b "${ new_branch }"`, {
-            cwd: projectBrunch
-        }]
-    ]);
-
-    const _len = brunchPatches.length;
-    for (let i = 0; i < _len; i++) {
-        patchFile = sysPath.relative(projectBrunch, sysPath.join(patchesFolder, `${ brunchPatches[i] }.patch`));
-        tasks.push([`git apply -v ${ anyspawn.quoteArg(patchFile) }`, {
-            cwd: projectBrunch
-        }]);
-    }
-
-    push.apply(tasks, [
+    anyspawn.spawnSeries([
         function(done) {
-            const readable = fs.createReadStream(sysPath.resolve(__dirname, "..", "utils", "read-components.js"));
-            const writable = fs.createWriteStream(sysPath.resolve(__dirname, "..", "node_modules", "brunch", "lib", "utils", "read-components.js"));
+            const readable = fs.createReadStream(sysPath.resolve(config.project.root, "utils", "read-components.js"));
+            const writable = fs.createWriteStream(sysPath.resolve(config.project.brunch, "lib", "utils", "read-components.js"));
             readable.pipe(writable);
             writable.on("finish", done);
         },
         function(done) {
-            const readable = fs.createReadStream(sysPath.resolve(__dirname, "..", "utils", "remove-comments.js"));
-            const writable = fs.createWriteStream(sysPath.resolve(__dirname, "..", "node_modules", "brunch", "lib", "utils", "remove-comments.js"));
+            const readable = fs.createReadStream(sysPath.resolve(config.project.root, "utils", "remove-comments.js"));
+            const writable = fs.createWriteStream(sysPath.resolve(config.project.brunch, "lib", "utils", "remove-comments.js"));
             readable.pipe(writable);
             writable.on("finish", done);
-        },
-        ["npm install --production", {
-            cwd: projectBrunch
-        }]
-    ]);
-
-    anyspawn.spawnSeries(tasks, {
+        }
+    ], {
         stdio: "inherit"
     }, err => {
         if (err) {
@@ -241,7 +72,21 @@ function install(config, done) {
             return;
         }
 
-        patchSeries(filePatches, config, done);
+        patchSeries([
+            "brunch-2.10.x-anymatch_feature",
+            "brunch-2.10.x-completer_feature",
+            "brunch-2.10.x-config_compiler_feature",
+            "brunch-2.10.x-init_feature",
+            "brunch-2.10.x-nameCleaner_path",
+            "brunch-2.10.x-onCompile_blocking"
+        ].map(patch => {
+            return ["node_modules/brunch", patch + ".patch"];
+        }).concat([
+            ["node_modules/log4js/lib/log4js.js", "log4js-v0.6.x-shutdown_fix.patch"],
+            // ["node_modules/highlight.js/lib/languages/handlebars.js", "hljs_hbs-8.7.0_fix.patch"],
+            ["node_modules/stylus/lib", "stylus-0.x-include-feature.patch"]
+        ]), config, done);
+
     });
 }
 

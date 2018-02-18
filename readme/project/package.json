@@ -3,22 +3,51 @@
   "version": "0.0.0",
   "description": "",
   "main": "index.js",
+  "engines": {
+    "node": ">=6.0.0"
+  },
   "scripts": {
     "postinstall": "bower install",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
-    "express": "^4.14.0",
-    "lodash": "^4.13.1",
-    "log4js": "^0.6.37"
+    "express": "^4.16.2",
+    "lodash": "^4.17.5",
+    "log4js": "^2.5.3"
   },
   "devDependencies": {
-    "babel-preset-react": "^6.11.1",
-    "coffee-script-brunch": "^2.0.0",
-    "uglify-js-brunch": "^2.0.1",
-    "umd-builder": "^2.4.0"
+    "babel-eslint": "^8.2.1",
+    "babel-plugin-check-es2015-constants": "^6.22.0",
+    "babel-plugin-syntax-flow": "^6.18.0",
+    "babel-plugin-syntax-jsx": "^6.18.0",
+    "babel-plugin-transform-es2015-arrow-functions": "^6.22.0",
+    "babel-plugin-transform-es2015-block-scoped-functions": "^6.22.0",
+    "babel-plugin-transform-es2015-block-scoping": "^6.26.0",
+    "babel-plugin-transform-es2015-classes": "^6.24.1",
+    "babel-plugin-transform-es2015-computed-properties": "^6.24.1",
+    "babel-plugin-transform-es2015-destructuring": "^6.23.0",
+    "babel-plugin-transform-es2015-duplicate-keys": "^6.24.1",
+    "babel-plugin-transform-es2015-for-of": "^6.23.0",
+    "babel-plugin-transform-es2015-function-name": "^6.24.1",
+    "babel-plugin-transform-es2015-literals": "^6.22.0",
+    "babel-plugin-transform-es2015-modules-umd-loader": "^0.0.1",
+    "babel-plugin-transform-es2015-object-super": "^6.24.1",
+    "babel-plugin-transform-es2015-parameters": "^6.24.1",
+    "babel-plugin-transform-es2015-shorthand-properties": "^6.24.1",
+    "babel-plugin-transform-es2015-spread": "^6.22.0",
+    "babel-plugin-transform-es2015-sticky-regex": "^6.24.1",
+    "babel-plugin-transform-es2015-template-literals": "^6.22.0",
+    "babel-plugin-transform-es2015-unicode-regex": "^6.24.1",
+    "babel-plugin-transform-flow-strip-types": "^6.22.0",
+    "babel-plugin-transform-react-jsx": "^6.24.1",
+    "babel-plugin-transform-regenerator": "^6.26.0",
+    "bower": "^1.8.2",
+    "coffee-script-brunch": "^2.10.2",
+    "eslint": "^4.18.0",
+    "uglify-js-brunch": "^2.10.0",
+    "umd-builder": "^2.15.2"
   }
 }

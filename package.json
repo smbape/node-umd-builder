@@ -10,7 +10,7 @@
     "lint": "eslint --fix \"lib/**/*.js\" || exit 0",
     "prepack": "node scripts/prepack.js && npm run lint",
     "postinstall": "node scripts/postinstall.js",
-    "test": "node node_modules/mocha/bin/_mocha --full-trace --compilers coffee:coffee-script/register --require test/mocha/common.js test/mocha"
+    "test": "node node_modules/mocha/bin/_mocha --full-trace --compilers coffee:coffeescript/register --require test/mocha/common.js test/mocha"
   },
   "repository": {
     "type": "git",
@@ -33,8 +33,9 @@
     "babel-core": "^6.26.0",
     "babel-eslint": "^8.2.1",
     "babylon": "^6.18.0",
+    "brunch": "git://github.com/brunch/brunch#2.10.12",
     "chalk": "^2.3.1",
-    "coffee-script": "^1.12.7",
+    "coffeescript": "^2.2.1",
     "csso": "^3.5.0",
     "ejs": "^2.5.7",
     "escodegen": "^1.9.0",

@@ -1,6 +1,6 @@
 /** vim: et:ts=4:sw=4:sts=4
- * @license RequireJS 2.2.0 Copyright jQuery Foundation and other contributors.
- * Released under MIT license, http://github.com/requirejs/requirejs/LICENSE
+ * @license RequireJS 2.3.5 Copyright jQuery Foundation and other contributors.
+ * Released under MIT license, https://github.com/requirejs/requirejs/blob/master/LICENSE
  */
 //Not using strict: uneven strict support in browsers, #392, and causes
 //problems with requirejs.exec()/transpiler plugins that may not be strict.
@@ -8,11 +8,11 @@
 /*global window, navigator, document, importScripts, setTimeout, opera */
 
 var requirejs, require, define;
-(function (global) {
+(function (global, setTimeout) {
     var req, s, head, baseElement, dataMain, src,
         interactiveScript, currentlyAddingScript, mainScript, subPath,
-        version = '2.2.0',
-        commentRegExp = /(\/\*([\s\S]*?)\*\/|([^:]|^)\/\/(.*)$)/mg,
+        version = '2.3.5',
+        commentRegExp = /\/\*[\s\S]*?\*\/|([^:"'=]|^)\/\/.*$/mg,
         cjsRequireRegExp = /[^.]\s*require\s*\(\s*["']([^'"\s]+)["']\s*\)/g,
         jsSuffixRegExp = /\.js$/,
         currDirRegExp = /^\.\//,
@@ -36,7 +36,7 @@ var requirejs, require, define;
         useInteractive = false;
 
     //Could match something like ')//comment', do not lose the prefix to comment.
-    function commentReplace(match, multi, multiText, singlePrefix) {
+    function commentReplace(match, singlePrefix) {
         return singlePrefix || '';
     }
 
@@ -417,9 +417,14 @@ var requirejs, require, define;
             var url, pluginModule, suffix, nameParts,
                 prefix = null,
                 parentName = parentModuleMap ? parentModuleMap.name : null,
+                parentBaseUrl = parentModuleMap ? parentModuleMap.url : null,
                 originalName = name,
                 isDefine = true,
                 normalizedName = '';
+
+            if (parentBaseUrl !== null && parentBaseUrl.slice(0, config.baseUrl.length) === config.baseUrl) {
+                parentBaseUrl = parentBaseUrl.slice(config.baseUrl.length);
+            }
 
             //If no name, then it means it is a require call, generate an
             //internal name.
@@ -440,7 +445,9 @@ var requirejs, require, define;
             //Account for relative paths if there is a base name.
             if (name) {
                 if (prefix) {
-                    if (pluginModule && pluginModule.normalize) {
+                    if (isNormalized) {
+                        normalizedName = name;
+                    } else if (pluginModule && pluginModule.normalize) {
                         //Plugin is loaded, use its normalize method.
                         normalizedName = pluginModule.normalize(name, function (name) {
                             return normalize(name, parentName, applyMap);
@@ -459,6 +466,11 @@ var requirejs, require, define;
                     }
                 } else {
                     //A regular module.
+                    if (parentBaseUrl !== null && name[0] === ".") {
+                        // relative name should be relative to parent
+                        name = normalize(name, parentBaseUrl, applyMap);
+                        parentName = "_@root";
+                    }
                     normalizedName = normalize(name, parentName, applyMap);
 
                     //Normalized name may be a plugin ID due to map config
@@ -972,7 +984,8 @@ var requirejs, require, define;
                         //prefix and name should already be normalized, no need
                         //for applying map config again either.
                         normalizedMap = makeModuleMap(map.prefix + '!' + name,
-                                                      this.map.parentMap);
+                                                      this.map.parentMap,
+                                                      true);
                         on(normalizedMap,
                             'defined', bind(this, function (value) {
                                 this.map.normalizedMap = normalizedMap;
@@ -1634,38 +1647,38 @@ var requirejs, require, define;
                     return context.nameToUrl(bundleId, ext, skipExt);
                 }
 
+                //A module that needs to be converted to a path.
+                paths = config.paths;
+
+                syms = moduleName.split('/');
+                //For each module name segment, see if there is a path
+                //registered for it. Start with most specific name
+                //and work up from it.
+                for (i = syms.length; i > 0; i -= 1) {
+                    parentModule = syms.slice(0, i).join('/');
+
+                    parentPath = getOwn(paths, parentModule);
+                    if (parentPath) {
+                        //If an array, it means there are a few choices,
+                        //Choose the one that is desired
+                        if (isArray(parentPath)) {
+                            parentPath = parentPath[0];
+                        }
+                        syms.splice(0, i, parentPath);
+                        break;
+                    }
+                }
+
                 //If a colon is in the URL, it indicates a protocol is used and it is just
                 //an URL to a file, or if it starts with a slash, contains a query arg (i.e. ?)
                 //or ends with .js, then assume the user meant to use an url and not a module id.
                 //The slash is important for protocol-less URLs as well as full paths.
-                if (req.jsExtRegExp.test(moduleName)) {
+                if (!parentPath && req.jsExtRegExp.test(moduleName)) {
                     //Just a plain path, not module name lookup, so just return it.
                     //Add extension if it is included. This is a bit wonky, only non-.js things pass
                     //an extension, this method probably needs to be reworked.
                     url = moduleName + (ext || '');
                 } else {
-                    //A module that needs to be converted to a path.
-                    paths = config.paths;
-
-                    syms = moduleName.split('/');
-                    //For each module name segment, see if there is a path
-                    //registered for it. Start with most specific name
-                    //and work up from it.
-                    for (i = syms.length; i > 0; i -= 1) {
-                        parentModule = syms.slice(0, i).join('/');
-
-                        parentPath = getOwn(paths, parentModule);
-                        if (parentPath) {
-                            //If an array, it means there are a few choices,
-                            //Choose the one that is desired
-                            if (isArray(parentPath)) {
-                                parentPath = parentPath[0];
-                            }
-                            syms.splice(0, i, parentPath);
-                            break;
-                        }
-                    }
-
                     //Join the path parts together, then figure out if baseUrl is needed.
                     url = syms.join('/');
                     url += (ext || (/^data\:|^blob\:|\?/.test(url) || skipExt ? '' : '.js'));
@@ -2139,4 +2152,4 @@ var requirejs, require, define;
 
     //Set up with config info.
     req(cfg);
-}(this));
+}(this, (typeof setTimeout === 'undefined' ? undefined : setTimeout)));

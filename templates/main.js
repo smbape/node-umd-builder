@@ -4,8 +4,7 @@ var util = require('util'),
     cloneDeep = require('lodash/cloneDeep'),
     sysPath = require('path');
 
-var config = cloneDeep(root.config),
-    pathBrowserify = root.pathBrowserify;
+var config = cloneDeep(root.config);
 
 function toString(obj) {
     return util.inspect(obj, {depth: null});
@@ -155,10 +154,7 @@ switch(root.type) {
     var deps = config.deps;
     delete config.deps;
 
-    require(['umd-core/src/depsLoader', 'umd-core/src/path-browserify'], function(depsLoader, pathBrowserify) {
-        window.depsLoader = depsLoader;
-        window.pathBrowserify = pathBrowserify;
-
+    require(['../vendor/path'], function(sysPath) {
         var TEST_REGEXP = <%= root.karma.pattern %>;
 
         // add test files
@@ -174,7 +170,7 @@ switch(root.type) {
 
         // Normalize a path to RequireJS module name.
         function pathToModule(path) {
-            return pathBrowserify.relative(config.baseUrl, path).replace(/\.js$/, '');
+            return sysPath.relative(config.baseUrl, path).replace(/\.js$/, '');
         }
     });<%--
 

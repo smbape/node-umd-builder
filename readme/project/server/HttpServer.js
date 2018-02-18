@@ -1,8 +1,9 @@
-var log4js = global.log4js || (global.log4js = require('log4js')),
-    logger = log4js.getLogger('HttpServer'),
-    sysPath = require('path'),
-    fs = require('fs'),
-    context = '/';
+const log4js = global.log4js || (global.log4js = require("log4js"));
+const logger = log4js.getLogger("HttpServer");
+const sysPath = require("path");
+const fs = require("fs");
+
+const CONTEXT = "/";
 
 /**
  * Called by brunch
@@ -12,46 +13,47 @@ var log4js = global.log4js || (global.log4js = require('log4js')),
  * @return {HttpServer}
  */
 exports.startServer = function(port, path, callback) {
-    path = sysPath.resolve(__dirname, '..', path);
+    path = sysPath.resolve(__dirname, "..", path);
 
-    var express = require('express'),
-        app = express();
+    const express = require("express");
+    const app = express();
+    const context = CONTEXT;
 
     // prefer using nginx or httpd for static files
     // http://expressjs.com/en/starter/static-files.html
     app.use(context.substring(0, context.length - 1), express.static(path));
 
     // default page redirection
-    if (context !== '/') {
-        app.get('/', function(req, res, next) {
+    if (context !== "/") {
+        app.get("/", (req, res, next) => {
             res.redirect(301, context);
         });
     }
 
-    app.get(context + '*', function(req, res, next) {
-        var url = req.path.substring(context.length);
-        if (url === '') {
-            sendContents(req, res, path, 'classic', context);
+    app.get(`${ context }*`, (req, res, next) => {
+        const url = req.path.substring(context.length);
+        if (url === "") {
+            sendContents(req, res, path, "classic", context);
         } else if (/^app\b/.test(url)) {
-            sendContents(req, res, path, 'single', context);
+            sendContents(req, res, path, "single", context);
         } else if (/^web\b/.test(url)) {
-            sendContents(req, res, path, 'classic', context);
+            sendContents(req, res, path, "classic", context);
         } else {
             next();
         }
     });
 
-    server = require('http').createServer(app);
+    const server = require("http").createServer(app);
 
-    server.listen(port, function() {
+    server.listen(port, () => {
         logStatus(server);
 
         // prevent crash on uncaught exception
-        process.on('uncaughtException', function(ex) {
-            logger.error("Exception: " + ex.stack);
+        process.on("uncaughtException", ex => {
+            logger.error(`Exception: ${ ex.stack }`);
         });
 
-        if ('function' === typeof callback) {
+        if ("function" === typeof callback) {
             callback();
         }
     });
@@ -67,11 +69,10 @@ exports.startServer = function(port, path, callback) {
  * @param  {String}       context   context path
  */
 function sendContents(req, res, path, page, context) {
-    var filePath;
-    filePath = sysPath.join(path, 'index.' + page + '.html');
-    fs.readFile(filePath, function(err, contents) {
-        contents = contents.toString().replace(/\b(href|src|data-main)="(?!https?:\/\/|\/)([^"]+)/g, "$1=\"" + context + "$2");
-        contents = contents.replace("baseUrl: ''", "baseUrl: '" + context + "'");
+    const filePath = sysPath.join(path, `index.${ page }.html`);
+    fs.readFile(filePath, (err, contents) => {
+        contents = contents.toString().replace(/\b(href|src|data-main)="(?!https?:\/\/|\/)([^"]+)/g, `$1="${ context }$2`);
+        contents = contents.replace("baseUrl: ''", `baseUrl: '${ context }'`);
         res.send(contents);
     });
     return true;
@@ -82,29 +83,34 @@ function sendContents(req, res, path, page, context) {
  * @param  {HttpServer} server
  */
 function logStatus(server) {
-    var i, iface, ifaces, info, len, listenedIface, ref, ref1;
-    listenedIface = server.address();
-    logger.info('Server listening on', listenedIface);
-    if ((ref = listenedIface.address) === '0.0.0.0' || ref === '::') {
-        ifaces = require('os').networkInterfaces();
-        for (iface in ifaces) {
-            ref1 = ifaces[iface];
-            for (i = 0, len = ref1.length; i < len; i++) {
-                info = ref1[i];
-                if (info.family === 'IPv6' || info.family === listenedIface.family) {
-                    log(info, listenedIface);
+    const listenedIface = server.address();
+    logger.info("Server listening on", listenedIface);
+
+    const {family, address} = listenedIface;
+
+    if (address === "0.0.0.0" || address === "::") {
+        const ifaces = require("os").networkInterfaces();
+
+        // eslint-disable-next-line guard-for-in
+        for (const iface in ifaces) {
+            const len = ifaces[iface].length;
+
+            for (let i = 0; i < len; i++) {
+                const info = ifaces[iface][i];
+                if (info.family === "IPv6" || info.family === family) {
+                    logInfo(info, listenedIface);
                 }
             }
         }
     } else {
-        log(listenedIface, listenedIface);
+        logInfo(listenedIface, listenedIface);
     }
+}
 
-    function log(info, listenedIface) {
-        if (info.family === 'IPv6') {
-            logger.info('http://[' + info.address + ']:' + listenedIface.port);
-        } else {
-            logger.info('http://' + info.address + ':' + listenedIface.port);
-        }
+function logInfo(info, listenedIface) {
+    if (info.family === "IPv6") {
+        logger.info(`http://[${ info.address }]:${ listenedIface.port }`);
+    } else {
+        logger.info(`http://${ info.address }:${ listenedIface.port }`);
     }
 }

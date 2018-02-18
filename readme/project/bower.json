@@ -18,11 +18,13 @@
   ],
   "licenses": "MIT",
   "dependencies": {
-    "bootstrap": "^3.3.6",
-    "jquery": "^2.1.4",
-    "jquery-ui": "^1.12.0",
-    "lodash": "^4.13.1",
-    "react": "^15.2.1"
+    "bootstrap": "git+https://github.com/twbs/bootstrap#^4.0.0",
+    "jquery": "git+https://github.com/jquery/jquery-dist#^3.3.1",
+    "jquery-ui": "git+https://github.com/components/jqueryui#^1.12.1",
+    "lodash": "git+https://github.com/lodash/lodash#^4.17.5",
+    "react": "https://unpkg.com/react@16/umd/react.production.min.js",
+    "react-dom": "https://unpkg.com/react-dom@16/umd/react-dom.production.min.js",
+    "popper.js": "git+https://github.com/FezVrasta/popper.js#^1.12.9"
   },
   "overrides": {
     "bootstrap": {
@@ -32,19 +34,19 @@
         "dist/fonts/**"
       ],
       "dependencies": {
-        "jquery": "*"
+        "jquery": "*",
+        "popper.js": "*"
       },
       "exports": "jQuery.fn.emulateTransitionEnd"
     },
     "jquery-ui": {
       "main": [
-        "jquery-ui.js"
+        "ui/version.js"
       ],
       "styles": [
         "themes/redmond/**"
       ],
       "scripts": [
-        "ui/version.js",
         "ui/keycode.js",
         "ui/widgets/datepicker.js",
         "ui/i18n/datepicker-ar.js",
@@ -56,12 +58,9 @@
     "lodash": {
       "main": "lodash.js"
     },
-    "react": {
-      "main": [
-        "react.min.js"
-      ],
-      "map": {
-        "react-dom.min.js": "react-dom"
+    "react-dom": {
+      "dependencies": {
+        "react": "*"
       }
     }
   }
