@@ -7,6 +7,7 @@
   "description": "Build modular client application with support of commonjs, requirejs and nodejs without duplicating source code",
   "main": "index.js",
   "scripts": {
+    "scripts-lint": "eslint --fix \"scripts/**/*.js\"",
     "lint": "eslint --fix \"lib/**/*.js\" || exit 0",
     "prepare": "node scripts/prepare.js && npm run lint",
     "postinstall": "node scripts/postinstall.js",
