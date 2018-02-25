@@ -1,0 +1,11 @@
+/node_modules
+/patches
+/readme
+/scripts
+/src
+/test
+/.eslintrc
+/.gitattributes
+/package-lock.json
+/*.sublime-project
+/*.sublime-workspace
