@@ -8,7 +8,7 @@
   "main": "index.js",
   "scripts": {
     "lint": "eslint --fix \"lib/**/*.js\" || exit 0",
-    "prepack": "node scripts/prepack.js && npm run lint",
+    "prepare": "node scripts/prepare.js && npm run lint",
     "postinstall": "node scripts/postinstall.js",
     "test": "node node_modules/mocha/bin/_mocha --full-trace --compilers coffee:coffeescript/register --require test/mocha/common.js test/mocha"
   },
