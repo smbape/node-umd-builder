@@ -80,7 +80,6 @@ function setup(projectRoot, done) {
         ].map(patch => {
             return ["node_modules/brunch", patch + ".patch"];
         }).concat([
-            ["node_modules/log4js/lib/log4js.js", "log4js-v0.6.x-shutdown_fix.patch"],
             // ["node_modules/highlight.js/lib/languages/handlebars.js", "hljs_hbs-8.7.0_fix.patch"],
             ["node_modules/stylus/lib", "stylus-0.x-include-feature.patch"]
         ]), config, done);
