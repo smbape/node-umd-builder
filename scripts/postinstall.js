@@ -40,7 +40,7 @@ function setup(projectRoot, done) {
     };
 
     const projectModules = sysPath.join(projectRoot, "node_modules");
-    const projectBrunch = sysPath.join(projectModules, "brunch");
+    const projectBrunch = sysPath.dirname(require.resolve("brunch/package.json"));
     const patchesFolder = sysPath.join(projectRoot, "patches");
 
     config.project.modules = projectModules;
@@ -48,31 +48,22 @@ function setup(projectRoot, done) {
     config.patches.folder = patchesFolder;
 
     anyspawn.spawnSeries([
-        function(done) {
-            try {
-                const readable = fs.createReadStream(sysPath.resolve(config.project.root, "utils", "read-components.js"));
-                const writable = fs.createWriteStream(sysPath.resolve(config.project.brunch, "lib", "utils", "read-components.js"));
-                writable.on("finish", done);
-                writable.on("error", done);
-                readable.pipe(writable);
-            } catch(err) {
-                done(err);
-            }
+        function(next) {
+            const readable = fs.createReadStream(sysPath.resolve(config.project.root, "utils", "read-components.js"));
+            const writable = fs.createWriteStream(sysPath.resolve(config.project.brunch, "lib", "utils", "read-components.js"));
+            writable.on("finish", next);
+            writable.on("error", next);
+            readable.pipe(writable);
         },
-        function(done) {
-            try {
-                const readable = fs.createReadStream(sysPath.resolve(config.project.root, "utils", "remove-comments.js"));
-                const writable = fs.createWriteStream(sysPath.resolve(config.project.brunch, "lib", "utils", "remove-comments.js"));
-                writable.on("finish", done);
-                writable.on("error", done);
-                readable.pipe(writable);
-            } catch(err) {
-                done(err);
-            }
+        function(next) {
+            const readable = fs.createReadStream(sysPath.resolve(config.project.root, "utils", "remove-comments.js"));
+            const writable = fs.createWriteStream(sysPath.resolve(config.project.brunch, "lib", "utils", "remove-comments.js"));
+            writable.on("finish", next);
+            writable.on("error", next);
+            readable.pipe(writable);
         }
     ], {
-        stdio: "inherit",
-        prompt: true
+        stdio: "inherit"
     }, err => {
         if (err) {
             done(err);
