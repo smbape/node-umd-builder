@@ -47,25 +47,32 @@ function setup(projectRoot, done) {
     config.project.brunch = projectBrunch;
     config.patches.folder = patchesFolder;
 
-    install(config, done);
-}
-
-function install(config, done) {
     anyspawn.spawnSeries([
         function(done) {
-            const readable = fs.createReadStream(sysPath.resolve(config.project.root, "utils", "read-components.js"));
-            const writable = fs.createWriteStream(sysPath.resolve(config.project.brunch, "lib", "utils", "read-components.js"));
-            readable.pipe(writable);
-            writable.on("finish", done);
+            try {
+                const readable = fs.createReadStream(sysPath.resolve(config.project.root, "utils", "read-components.js"));
+                const writable = fs.createWriteStream(sysPath.resolve(config.project.brunch, "lib", "utils", "read-components.js"));
+                writable.on("finish", done);
+                writable.on("error", done);
+                readable.pipe(writable);
+            } catch(err) {
+                done(err);
+            }
         },
         function(done) {
-            const readable = fs.createReadStream(sysPath.resolve(config.project.root, "utils", "remove-comments.js"));
-            const writable = fs.createWriteStream(sysPath.resolve(config.project.brunch, "lib", "utils", "remove-comments.js"));
-            readable.pipe(writable);
-            writable.on("finish", done);
+            try {
+                const readable = fs.createReadStream(sysPath.resolve(config.project.root, "utils", "remove-comments.js"));
+                const writable = fs.createWriteStream(sysPath.resolve(config.project.brunch, "lib", "utils", "remove-comments.js"));
+                writable.on("finish", done);
+                writable.on("error", done);
+                readable.pipe(writable);
+            } catch(err) {
+                done(err);
+            }
         }
     ], {
-        stdio: "inherit"
+        stdio: "inherit",
+        prompt: true
     }, err => {
         if (err) {
             done(err);
