@@ -33,7 +33,7 @@
     "babel-plugin-transform-es2015-for-of": "^6.23.0",
     "babel-plugin-transform-es2015-function-name": "^6.24.1",
     "babel-plugin-transform-es2015-literals": "^6.22.0",
-    "babel-plugin-transform-es2015-modules-eumd": "git+ssh://git@gitlab.smbape.com:smbape/babel-plugin-transform-es2015-modules-eumd.git#master",
+    "transform-modules-eumd": "^0.0.1",
     "babel-plugin-transform-es2015-object-super": "^6.24.1",
     "babel-plugin-transform-es2015-parameters": "^6.24.1",
     "babel-plugin-transform-es2015-shorthand-properties": "^6.24.1",
