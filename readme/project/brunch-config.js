@@ -42,6 +42,9 @@ exports.config = merge(config, {
             // ignore lint for vendor files
             ignore: ignore
         },
+        html: {
+            type: "common"
+        }
     },
 
     server: {
