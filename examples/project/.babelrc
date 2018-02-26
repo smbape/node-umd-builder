@@ -19,7 +19,7 @@
         "transform-es2015-destructuring",
         "transform-es2015-block-scoping",
         // "transform-es2015-typeof-symbol",
-        ["transform-modules-eumd", { "strict" : true, "allowTopLevelThis": true }],
+        ["transform-modules-eumd", { "strictMode" : true, "allowTopLevelThis": true, "noVoid": true }],
         ["transform-regenerator", { "asyncGenerators": false, "generators": true, "async": false }],
         ["transform-react-jsx", { "pragma": "React.createElement" }],
         "transform-flow-strip-types",

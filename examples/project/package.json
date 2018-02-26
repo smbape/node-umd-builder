@@ -33,7 +33,6 @@
     "babel-plugin-transform-es2015-for-of": "^6.23.0",
     "babel-plugin-transform-es2015-function-name": "^6.24.1",
     "babel-plugin-transform-es2015-literals": "^6.22.0",
-    "transform-modules-eumd": "^0.0.1",
     "babel-plugin-transform-es2015-object-super": "^6.24.1",
     "babel-plugin-transform-es2015-parameters": "^6.24.1",
     "babel-plugin-transform-es2015-shorthand-properties": "^6.24.1",
@@ -47,7 +46,8 @@
     "bower": "^1.8.2",
     "coffee-script-brunch": "^2.10.2",
     "eslint": "^4.18.0",
+    "transform-modules-eumd": "^0.0.1",
     "uglify-js-brunch": "^2.10.0",
-    "umd-builder": "git+ssh://git@gitlab.smbape.com:smbape/node-umd-builder.git#master"
+    "umd-builder": "^2.16.0"
   }
 }

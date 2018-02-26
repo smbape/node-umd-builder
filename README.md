@@ -15,7 +15,7 @@ This library build a mix of CommonJS files and AMD files.
 
 ## Project example
 
-There is a project example in [readme/project](https://github.com/smbape/node-umd-builder/tree/master/readme/project)
+There is a project example in [examples/project](https://github.com/smbape/node-umd-builder/tree/master/examples/project)
 
 Here is the project's structure
 
