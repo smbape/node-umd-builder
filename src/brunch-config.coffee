@@ -103,7 +103,8 @@ config = exports.config =
             escape: /<%-([\s\S]+?)%>/g # default value
             interpolate: /<%=([\s\S]+?)%>/g # default value
             evaluate: /<%([\s\S]+?)%>/g # default value
-            strict: true
+            strict: true,
+            esInterpolate: false
         stylus:
             # http://visionmedia.github.com/nib/
             plugins: [ require('nib')() ]

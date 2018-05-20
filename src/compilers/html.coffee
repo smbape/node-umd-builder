@@ -25,10 +25,10 @@ module.exports = class HtmlCompiler
             moduleName = path.slice(path.replace(/^.+?[/\/](?:bower_components|node_modules)[/\/]/, ""))
             data = """
                 (function(global, factory) {
-                    if (typeof define === "function" && define.amd) {
-                        define(["module", "handlebars"], factory);
-                    } else if (typeof exports === "object" && typeof module !== "undefined") {
+                    if (typeof module === 'object' && module && module.exports) {
                         factory(module);
+                    } else if (typeof define === "function" && define.amd) {
+                        define(["module", "handlebars"], factory);
                     } else {
                         var mod = {
                             exports: {}

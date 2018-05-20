@@ -882,14 +882,35 @@ module.exports = class AmdCompiler
                 continue
 
             content = """
-                deps = [
-                    "#{ deps.join('",\n    "') }"
-                ];
+                (function(global, factory) {
+                    if (typeof define === "function" && define.amd) {
+                        define(["module", "#{ deps.join('",\n    "') }"], function() {
+                            return factory.apply(global, arguments);
+                        });
+                    } else if (typeof exports === "object" && typeof module !== "undefined") {
+                        factory.call(global, module, require("#{ deps.join('"), require("') }"));
+                    } else {
+                        throw new Error("global loading is not allowed");
+                    }
+                })(function(_this) {
+                    var g;
 
-                function factory() {
+                    if (typeof window !== "undefined") {
+                        g = window;
+                    } else if (typeof global !== "undefined") {
+                        g = global;
+                    } else if (typeof self !== "undefined") {
+                        g = self;
+                    } else {
+                        g = _this;
+                    }
+
+                    return g; //eslint-disable-next-line no-invalid-this
+                }(this), function(module) {
+                    "use strict";
                     var args = Array.prototype.slice.call(arguments, arguments.length - #{i});
-                    return #{this.stringifyModule(_module, 4, 4, true)};
-                }
+                    module.exports = #{this.stringifyModule(_module, 4, 4, true)};
+                });
             """
 
             status = fcache.updateFakeFile(packageName, content)

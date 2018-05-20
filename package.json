@@ -9,7 +9,7 @@
   "scripts": {
     "scripts-lint": "eslint --fix \"scripts/**/*.js\"",
     "lint": "eslint --fix \"lib/**/*.js\" || exit 0",
-    "prepare": "node scripts/prepare.js && npm run lint",
+    "prepublishOnly": "node scripts/prepare.js && npm run lint",
     "postinstall": "node scripts/postinstall.js",
     "test": "node node_modules/mocha/bin/_mocha --full-trace --compilers coffee:coffeescript/register --require test/mocha/common.js test/mocha"
   },

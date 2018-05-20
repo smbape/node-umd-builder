@@ -40,9 +40,7 @@ module.exports = class HandlebarsCompiler
             moduleName = path.slice(path.replace(/^.+?[/\/](?:bower_components|node_modules)[/\/]/, ""))
             data = """
                 (function(global, factory) {
-                    if (typeof define === "function" && define.amd) {
-                        define(["module", "handlebars"], factory);
-                    } else if (typeof exports === "object" && typeof module !== "undefined") {
+                    if (typeof module === 'object' && module && module.exports) {
                         if (typeof process === "object" && typeof process.platform !== "undefined") {
                             factory(module, require("handlebars"));
                         } else if (global.require && global.require.brunch) {
@@ -50,6 +48,8 @@ module.exports = class HandlebarsCompiler
                         } else {
                             factory(module, require("handlebars"));
                         }
+                    } else if (typeof define === "function" && define.amd) {
+                        define(["module", "handlebars"], factory);
                     } else {
                         var mod = {
                             exports: {}

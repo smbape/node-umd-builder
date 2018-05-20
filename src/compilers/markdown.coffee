@@ -82,18 +82,21 @@ module.exports = class MarkdownCompiler
             if (options.decorate)
                 data = options.decorate(data)
 
-            data = """(function() {
+            data = """
+            // eslint-disable-next-line consistent-return
+            (function() {
                 var __templateData = #{data};
-                if (typeof define === 'function' && define.amd) {
+                if (typeof module === 'object' && module && module.exports) {
+                    module.exports = __templateData;
+                } else if (typeof define === 'function' && define.amd) {
                     define([], function() {
                         return __templateData;
                     });
-                } else if (typeof module === 'object' && module && module.exports) {
-                    module.exports = __templateData;
                 } else {
                     return __templateData;
                 }
-            })();"""
+            })();
+            """
 
             next null, {data, params, map}
 
