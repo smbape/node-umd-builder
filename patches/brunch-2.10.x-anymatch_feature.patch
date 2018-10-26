@@ -37,7 +37,7 @@ index f3ac53a..e79c486 100644
 +      // componentDir = <basedir>/<component>
 +      const componentDir = path.replace(/([^/\\]+[/\\][^/\\]+)[/\\].*/g, '$1');
 +
-+      const matcher = anymatch([path]);
++      const matcher = anymatch([path.replace(/\\/g, "/")]);
 +      const files = [];
 +      explore(componentDir, (path, stats, next) => {
 +        // replace(/[\\]/g, '/') to avoid path sep OS differencies
@@ -91,10 +91,10 @@ index fcd4f88..daa2b23 100644
 --- a/package.json
 +++ b/package.json
 @@ -59,6 +59,7 @@
-     "deppack": "~0.7",
+     "debug": "^3.1.0",
      "deps-install": "~0.1",
      "fcache": "~0.3",
 +    "fs-explorer": "^1.1.0",
      "init-skeleton": "~1.0",
-     "loggy": "~1.0.2",
+     "loggy": "~1.0.3",
      "micro-es7-shim": "^0.1",

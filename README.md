@@ -72,61 +72,30 @@ Depencies of the module must be defined in a `deps` variable.
 UMD builder will look into all files that transformed in a javascript to check if they are UMD files
 
 ```javascript
-// this is app/node_modules/some/path/module.js
-
-deps = [
-    './relative',       // look for module defined in app/node_modules/some/path/relative.js
-    'for-all',          // look for module defined in app/node_modules/for-all.js. In nodejs, will use the classic require
-    '!global-for-all',  // look for global variable global-for-all
-    {
-        common: 'use-this-in-single-page-mode', // in single page, look for module defined in app/node_modules/use-this-in-single-page-mode.js
-        amd: 'use-this-in-amd-mode',            // in amd mode, look for module defined in app/node_modules/use-this-in-amd-mode.js
-        node: 'use-this-in-nodejs'              // same as require('use-this-in-nodejs') in nodejs
-    },
-    {
-        common: '!use-this-global-in-single-page-mode' // in single page, look for global variable global-for-all
-        // ignore other environments
-    }
-]
-
-function factory(forAll, globalForAll, specificPerEnv, onlyDefinedInSinglePage) {
-
-}
-```
-
-```javascript
-function freact() {
-    // React and ReactDOM variables can be used
-}
-```
-
-`require` can be used within module declaration (factory or freact) and will also work with relative path
-
-```javascript
-// this is app/node_modules/some/path/module.js
-
-function factory() {
-    // Not safe way of using require.
-    // It will always work in single page mode and in nodejs.
-    // But will work in amd mode only if the required module has already been loaded.
-    // Here we look for the module defined in app/node_modules/someModule.js.
-    // In nodejs, will use the classic require.
-    var someModule = require('someModule');
-
-    // Safe way of using require.
-    // Work for every environments.
-    require([
-        'someModule', // look for module defined in app/node_modules/someModule.js. In nodejs, will use the classic require
-        './relative', // look for module defined in app/node_modules/some/path/relative.js
-        {
-            common: 'use-this-in-single-page-mode',
-            amd: 'use-this-in-amd-mode',
-            node: 'use-this-in-nodejs'
-        }
-    ], function(someModule, relative, specificPerEnv) {
-
-    });
-}
+// app/node_modules/some/path/module.js
+ 
+import relative from './relative';          // look for module defined in app/node_modules/some/path/relative.js
+import forAll from 'for-all';               // look for module defined in app/node_modules/for-all.js. In nodejs, will use the classic require
+import globalForAll from '!global-for-all'; // look for global variable global-for-all
+ 
+import specificPerEnv from "%{ common: 'use-this-in-single-page-mode', amd: 'use-this-in-amd-mode', node: 'use-this-in-nodejs' }";
+ 
+// in single page, look for global variable use-this-global-in-single-page-mode
+// ignore other environments
+import commonOnly from "%{ common: '!use-this-global-in-single-page-mode' }";
+ 
+// Can also be used with require
+ 
+// Dependency resolution will happend at runtime and the generated file will have a bigger overhead
+// For that reason, use require only when you need computed dependencies
+const nodeOnly = require({ node: "fs" });
+ 
+// this require style is always supported
+// it only loads modules asynchronously when in an AMD environment
+// otherwise, it is just a wrapper for the commonjs require
+require([ './relative',  'for-all', '!global-for-all', { node: "fs" }], (relative, forAll, globalForAll, nodeOnly) => {
+    // ...
+});
 ```
 
 ## Wild cards in bower.json file

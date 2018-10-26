@@ -2,7 +2,7 @@ diff --git a/lib/fs_utils/source_file.js b/lib/fs_utils/source_file.js
 index 03fd440..e295946 100644
 --- a/lib/fs_utils/source_file.js
 +++ b/lib/fs_utils/source_file.js
-@@ -175,7 +175,7 @@ class SourceFile {
+@@ -183,7 +183,7 @@ class SourceFile {
    dispose() {
      debug(`Disposing file ${this.path}`);
  
@@ -15,40 +15,38 @@ diff --git a/lib/watch.js b/lib/watch.js
 index 0458376..e943f4b 100644
 --- a/lib/watch.js
 +++ b/lib/watch.js
-@@ -333,8 +333,34 @@ class BrunchWatcher {
+@@ -333,8 +333,32 @@ class BrunchWatcher {
        ));
  
        // Pass `fs_utils.GeneratedFile` instances to callbacks.
 -      // Does not block the execution.
 -      this.hooks.onCompile(generatedFiles, assets);
 +      const results = this.hooks.onCompile(generatedFiles, assets);
-+
-+      let done;
-+      const promise = new Promise(resolve => {
-+        done = resolve;
-+      });
-+
 +      let count = results.length;
-+
-+      const give = () => {
-+        if (--count === 0) {
-+          done();
-+        }
-+      };
-+
-+      results.forEach(ret => {
-+        if (ret && typeof ret === 'object' && typeof ret.then === 'function') {
-+          ret.then(give);
-+        } else {
-+          give();
-+        }
-+      });
 +
 +      if (count === 0) {
 +        return;
 +      }
 +
-+      return promise;
++      return new Promise(resolve => {
++        // const timerInit = Date.now();
++
++        const give = () => {
++          if (--count === 0) {
++            // const duration = (Date.now() - timerInit);
++            // logger.info(`onCompile took ${ duration < 1000 ? duration : duration / 1000 } ${ duration < 1000 ? 'ms' : 'sec' }`);
++            resolve();
++          }
++        };
++
++        results.forEach(ret => {
++          if (ret && typeof ret === 'object' && typeof ret.then === 'function') {
++            ret.then(give);
++          } else {
++            give();
++          }
++        });
++      });
      }, error => {
        this._endBundle();
        if (error.code === 'WRITE_FAILED') return; // Ignore write errors as they are logged already
