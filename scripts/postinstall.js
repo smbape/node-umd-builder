@@ -76,7 +76,10 @@ function setup(projectRoot, done) {
             "brunch-2.10.x-config_compiler_feature",
             "brunch-2.10.x-init_feature",
             "brunch-2.10.x-nameCleaner_path",
-            "brunch-2.10.x-onCompile_blocking"
+            "brunch-2.10.x-onCompile_blocking",
+            "brunch-2.10.x-remove_debug_switch_from_fork",
+            "brunch-2.10.x-teardown_on_build",
+            "brunch-2.10.x-fix_plugins_on_off",
         ].map(patch => {
             return ["node_modules/brunch", patch + ".patch"];
         }).concat([

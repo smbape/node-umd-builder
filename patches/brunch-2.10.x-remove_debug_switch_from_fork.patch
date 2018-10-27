@@ -1,0 +1,59 @@
+diff --git a/lib/workers/manager.js b/lib/workers/manager.js
+index 0458376..e943f4b 100644
+--- a/lib/workers/manager.js
++++ b/lib/workers/manager.js
+@@ -1,5 +1,5 @@
+ 'use strict';
+-const fork = require('child_process').fork;
++const {fork, spawn} = require('child_process');
+ const EventEmitter = require('events');
+ const debug = require('debug')('brunch:workers');
+ 
+@@ -10,6 +10,9 @@
+ 
+   return () => counter++;
+ })();
++
++const argv = process.execArgv.join();
++const isDebug = argv.includes('--inspect') || argv.includes('--debug');
+ 
+ class WorkerManager {
+   constructor(options, config) {
+@@ -34,7 +37,36 @@
+     // pass parsed options to not make each worker parse the options
+     const workerEnv = {BRUNCH_OPTIONS: JSON.stringify(options)};
+     const env = Object.assign({}, process.env, workerEnv);
+-    const worker = fork(workerFile, {env});
++
++    const forkOptions = {
++        stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
++        env
++    };
++
++    let cp, command, parameters;
++    if (isDebug) {
++      cp = spawn;
++      command = process.execPath;
++
++      // Remove the debug switches since
++      // this might cause fork failed due to debug port already in used
++      parameters = process.execArgv.filter(arg => arg.indexOf('--inspect') === -1 && arg.indexOf('--debug') === -1).concat([workerFile]);
++
++      if (process._eval != null) {
++        const index = parameters.lastIndexOf(process._eval);
++        if (index > 0) {
++          // Remove the -e switch to avoid fork bombing ourselves.
++          parameters.splice(index - 1, 2);
++        }
++      }
++    } else {
++      cp = fork;
++      command = workerFile;
++      parameters = [];
++    }
++
++    const worker = cp(command, parameters, spawnOptions);
++
+     const events = this.events;
+     let idx;
+     worker.on('message', msg => {

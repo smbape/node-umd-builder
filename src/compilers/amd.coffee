@@ -626,6 +626,11 @@ module.exports = class AmdCompiler
             resolve = _resolve
             return
 
+    teardown: ->
+        if @linter?.teardown
+            @linter.teardown()
+        return
+
     _getComponents: (done)->
         if @components
             done(null, @components)

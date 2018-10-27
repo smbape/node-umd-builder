@@ -1,0 +1,12 @@
+diff --git a/lib/watch.js b/lib/watch.js
+index 0458376..e943f4b 100644
+--- a/lib/watch.js
++++ b/lib/watch.js
+@@ -383,6 +383,7 @@
+       if (!config.persistent) {
+         watcher.close();
+         workers.close();
++        this.hooks.teardown();
+       }
+       fileList.initial = false;
+     }).catch(logger.error);

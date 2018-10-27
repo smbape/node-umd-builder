@@ -1,0 +1,13 @@
+diff --git a/lib/utils/config.js b/lib/utils/config.js
+index 0458376..e943f4b 100644
+--- a/lib/utils/config.js
++++ b/lib/utils/config.js
+@@ -77,7 +77,7 @@
+         const cItem = config.plugins[v] || [];
+         overrideProps.plugins[v] = item.concat(cItem.filter(plugin => {
+           const list = overrideProps.plugins[k];
+-          return list && !list.includes(plugin);
++          return !list || !list.includes(plugin);
+         }));
+       }
+     });
