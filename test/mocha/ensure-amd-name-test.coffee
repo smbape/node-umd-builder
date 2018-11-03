@@ -1,3 +1,4 @@
+{assert} = require('chai');
 util = require 'util'
 ensureAmdName = require '../../src/ensure-amd-name'
 

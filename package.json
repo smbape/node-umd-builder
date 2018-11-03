@@ -11,7 +11,7 @@
     "lint": "eslint --fix \"lib/**/*.js\" || exit 0",
     "prepublishOnly": "node scripts/prepare.js && npm run lint",
     "postinstall": "node scripts/postinstall.js",
-    "test": "node node_modules/mocha/bin/_mocha --full-trace --require coffeescript/register --require test/mocha/common.js test/mocha"
+    "test": "node node_modules/mocha/bin/_mocha --full-trace --require coffeescript/register test/mocha/*-test.*"
   },
   "repository": {
     "type": "git",
