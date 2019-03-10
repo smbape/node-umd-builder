@@ -7,9 +7,7 @@ This library is part of a bigger project developped for the following reasons:
 * To be able to reuse the same code with a [nodejs](https://nodejs.org) server
 * Because I have the feeling that as the project grows, a big javascript file may become a nuisance
 
-Even though this library can be used as a replacement of [brunch], actually it can be seen as a customized version of brunch, I am unable to write a README that shows all its features.
-
-I should actually do some pull requests to brunch, but github is new to me. I don't know how to do a pull request. Even if I knew, I am still too shy/lazy to do it (that is not a joke).
+Even though this library can be used as a replacement of [brunch], actually it can be seen as a customized version of brunch.
 
 This library build a mix of CommonJS files and AMD files.
 

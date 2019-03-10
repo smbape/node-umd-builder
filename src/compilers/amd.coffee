@@ -416,7 +416,18 @@ module.exports = class AmdCompiler
     constructor: (config = {})->
         @paths = builder.generateConfig(config).paths
         @paths.public = config.paths.public
-        @joinTo = config.files.javascripts.joinTo
+
+        joinTo = config.files.javascripts.joinTo
+
+        if typeof joinTo is "string"
+            file = joinTo
+            joinTo = {}
+            joinTo[file] = /\.js$/ # matches all JavaScript files
+
+        for file, pattern of joinTo
+            joinTo[file] = anymatch(pattern)
+
+        @joinTo = joinTo
 
         @config = clone config
         @sourceMaps = !!config.sourceMaps
@@ -525,12 +536,7 @@ module.exports = class AmdCompiler
     canJoin: (path, joinTo)->
         if /^bower_components[\/\\]/.test(path) and not /^bower_components[\/\\][^\/\\]+[\/\\]/.test(path)
             return false
-
-        for file, reg of joinTo
-            if reg.test(path)
-                return true
-
-        return false
+        return Object.keys(joinTo).some((file) -> joinTo[file](path))
 
     onCompile: (generatedFiles, changedAssets)->
         if generatedFiles.length is 0 and changedAssets.length is 0

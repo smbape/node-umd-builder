@@ -1,51 +1,46 @@
-"use strict";
-
 const csso = require("csso");
-const extend = require("lodash/extend");
+const anymatch = require("anymatch");
 
-function CssoOptimizer(config) {
-    this.options = config && config.plugins && config.plugins.csso || {};
-    this.sourceMap = Boolean(config.sourceMaps);
+class CssoOptimizer {
+    constructor(config) {
+        this.options = Object.assign({}, config && config.plugins && config.plugins.csso);
+        this.sourceMap = Boolean(config.sourceMaps);
+        if (this.options.ignored) {
+            this.isIgnored = anymatch(this.options.ignored);
+        }
+    }
+
+    optimize(params, callback) {
+        const {data, path, map} = params;
+
+        const {ignored} = this.options;
+        let optimized;
+
+        if (this.isIgnored && typeof ignored === "function" && this.isIgnored(path)) {
+            callback(null, params);
+            return;
+        }
+
+        const options = Object.assign({
+            sourceMap: map || this.sourceMap
+        }, this.options, {
+            filename: path
+        });
+
+        try {
+            optimized = csso.minify(data, options);
+            callback(null, {
+                path: path,
+                data: optimized.css,
+                map: optimized.map
+            });
+        } catch (err) {
+            callback(err);
+        }
+    }
 }
 
 CssoOptimizer.prototype.brunchPlugin = true;
 CssoOptimizer.prototype.type = "stylesheet";
-CssoOptimizer.prototype.optimize = function(params, callback) {
-    const data = params.data;
-    const map = params.map;
-    const path = params.path;
-
-    const ignored = this.options.ignored;
-    let optimized;
-
-    if ("function" === typeof ignored) {
-        if (ignored(path)) {
-            callback(null, params);
-            return;
-        }
-    } else if (ignored instanceof RegExp) {
-        if (ignored.test(path)) {
-            callback(null, params);
-            return;
-        }
-    }
-
-    const options = extend({
-        sourceMap: map || this.sourceMap
-    }, this.options, {
-        filename: path
-    });
-
-    try {
-        optimized = csso.minify(data, options);
-        callback(null, {
-            path: path,
-            data: optimized.css,
-            map: optimized.map
-        });
-    } catch (err) {
-        callback(err);
-    }
-};
 
 module.exports = CssoOptimizer;

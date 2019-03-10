@@ -72,6 +72,7 @@ function setup(projectRoot, done) {
 
         patchSeries([
             "brunch-2.10.x-anymatch_feature",
+            "brunch-2.10.x-check-copy-written",
             "brunch-2.10.x-completer_feature",
             "brunch-2.10.x-config_compiler_feature",
             "brunch-2.10.x-init_feature",

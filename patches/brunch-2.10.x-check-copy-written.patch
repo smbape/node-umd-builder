@@ -1,0 +1,19 @@
+diff --git a/lib/fs_utils/write.js b/lib/fs_utils/write.js
+index 9eb587b..044647a 100644
+--- a/lib/fs_utils/write.js
++++ b/lib/fs_utils/write.js
+@@ -106,7 +106,13 @@
+         if (!type) return;
+         const target = file.targets[type];
+         const allTargets = allWrittenTargets[type] || [];
+-        if (!allTargets.includes(file.path) && target.data) {
++        const isIncluded = allTargets.includes(file.path);
++        const hasData = !!target.data;
++        if (type === "copy") {
++          if (isIncluded) {
++            logger.warn(`${file.path} should not be joined because it is copied. Check your ${type}s.joinTo config and your CopyCompiler.prototype.typePattern`);
++          }
++        } else if (!isIncluded && hasData) {
+           logger.warn(`${file.path} compiled, but not written. Check your ${type}s.joinTo config`);
+         }
+       });

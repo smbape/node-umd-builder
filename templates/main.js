@@ -59,7 +59,7 @@ switch(root.type) {
 %>(function() {
     'use strict';
 
-    <% if (!isMainBuild) { %>var appConfig = window.appConfig || (window.appConfig = {});<% } %>
+    <% if (!isMainBuild) { %>var appConfig = window.appConfig || (window.appConfig = { baseUrl: location.protocol === "file:" ? undefined : "/" });<% } %>
 
     var config = <%= toString(config) %>;
 

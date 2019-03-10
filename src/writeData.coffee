@@ -1,15 +1,13 @@
 fs = require 'fs'
 mkdirp = require 'mkdirp'
 sysPath = require 'path'
-semLib = require 'sem-lib'
+fcache = require '../utils/fcache'
 
-# 8 parallel write at most
-writeSem = semLib.semCreate Math.pow(2, 3), true
-writeData = (data, dst, done)->
-    writeSem.semTake ->
+writeData = (data, dst, cb)->
+    fcache.lock dst, (release)->
         next = (err)->
-            writeSem.semGive()
-            done(err)
+            release()
+            cb(err)
             return
 
         mkdirp sysPath.dirname(dst), (err)->
@@ -17,9 +15,9 @@ writeData = (data, dst, done)->
                 next(err)
                 return
 
-            writeStream = fs.createWriteStream dst
-            writeStream.write data, 'utf8', next
-            writeStream.end()
+            writable = fs.createWriteStream dst
+            writable.write data, 'utf8', next
+            writable.end()
 
             return
         return

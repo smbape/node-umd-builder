@@ -4,6 +4,7 @@ logger = log4js.getLogger 'brunch-config'
 # util = require 'util'
 sysPath = require 'path'
 builder = require './builder'
+anymatch = require 'anymatch'
 read = require '../utils/read-components'
 matcher = require './glob-matcher'
 hasProp = Object::hasOwnProperty
@@ -12,8 +13,8 @@ cache = {}
 
 exports.logger = logger
 exports.matcher = matcher
-exports.isVendor = new RegExp matcher(['bower_components', 'components', 'vendor', 'app/assets/vendor']).source + /[/\\]/.source
 
+joinToVendor = new RegExp matcher(['bower_components', 'components', 'vendor', 'app/assets/vendor']).source + /[/\\]/.source
 moduleSources = ['app/node_modules', 'bower_components', 'components']
 pathCleaner = new RegExp matcher(moduleSources).source + /[/\\](.*)$/.source
 
@@ -65,7 +66,7 @@ config = exports.config =
         javascripts:
             joinTo:
                 'javascripts/app.js': matcher ['app/node_modules/']
-                'javascripts/vendor.js': exports.isVendor
+                'javascripts/vendor.js': joinToVendor
 
         stylesheets:
             joinTo:
@@ -114,7 +115,7 @@ config = exports.config =
         read sysPath.resolve(config.paths.root), 'bower', (err, components)->
             throw err if err
             for component in components
-                cache[sysPath.join('bower_components', component.name)] = !component.umd
+                cache['bower_components/' + component.name] = !component.umd
             done()
             return
         return
@@ -141,11 +142,11 @@ config = exports.config =
             if hasProp.call(cache, path)
                 return cache[path]
 
-            res = cache[path] = exports.isVendor.test path
+            res = cache[path] = anymatch(exports.config.files.javascripts.joinTo['javascripts/vendor.js'])(path)
             return res if not res
 
             if m = /^bower_components[\/\\]([^\/\\]+)/.exec(path)
-                folder = sysPath.join('bower_components', m[1])
+                folder = 'bower_components/' + m[1]
                 if hasProp.call(cache, folder)
                     cache[path] = cache[folder]
                     return cache[path]

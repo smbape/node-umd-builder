@@ -2,29 +2,30 @@
   "folders": [
     {
       "path": ".",
-      "folder_exclude_patterns": [".svn", ".git", ".hg", "CVS", "providers", "providers-backup", "providers-refactoring"],
+      "folder_exclude_patterns": [".svn", ".git", ".hg", "CVS"],
+      "binary_file_patterns": [
+        "*.br",
+        "*.dds",
+        "*.eot",
+        "*.gif",
+        "*.gz",
+        "*.ico",
+        "*.jar",
+        "*.jpeg",
+        "*.jpg",
+        "*.pdf",
+        "*.png",
+        "*.swf",
+        "*.tga",
+        "*.ttf",
+        "*.zip",
+        "project/bower_components/**",
+        "project/node_modules/**"
+      ],
       "follow_symlinks": true
     }
   ],
   "settings": {
-    "binary_file_patterns": [
-      "*.jpg",
-      "*.jpeg",
-      "*.png",
-      "*.gif",
-      "*.gz",
-      "*.ttf",
-      "*.tga",
-      "*.dds",
-      "*.ico",
-      "*.eot",
-      "*.pdf",
-      "*.swf",
-      "*.jar",
-      "*.zip",
-      "node-manga-reader/bower_components/**",
-      "node-manga-reader/node_modules/**"
-    ],
     "bold_folder_labels": true
   }
 }

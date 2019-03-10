@@ -16,8 +16,6 @@
     },
 
     "globals": {
-        // "define": false,
-        // "expect": false,
     },
 
     "rules": {
@@ -97,10 +95,10 @@
         "no-fallthrough": 2,
         "no-floating-decimal": 2,
         "no-global-assign": 2,
-        "no-implicit-coercion": 2,
+        // "no-implicit-coercion": 2, // those coercion make the execution way faster ex: +foo vs Number(foo); "" + foo vs String(foo)
         "no-implicit-globals": 2,
         "no-implied-eval": 2,
-        "no-invalid-this": 2,
+        "no-invalid-this": 2, // umd modules has an invalid this
         "no-iterator": 2,
         "no-labels": 2,
         "no-lone-blocks": 2,
@@ -121,7 +119,7 @@
         "no-octal": 2,
         "no-octal-escape": 2,
         // "no-param-reassign": 2, // prevents initialization of default values. should be with use strict to prevent modification of arguments
-        "no-proto": 2,
+        // "no-proto": 2, // transformed class uses __proto__
         "no-redeclare": 2,
         "no-restricted-properties": 2,
         "no-return-assign": 2,
@@ -138,7 +136,7 @@
         "no-useless-concat": 2,
         "no-useless-escape": 2,
         "no-useless-return": 2,
-        "no-void": 2,
+        "no-void": 2, // don't care about ES3 browsers
         "no-warning-comments": 1,
         "no-with": 2,
         "prefer-promise-reject-errors": 2,
@@ -152,7 +150,7 @@
         // Variables
         // ===============
         // "init-declarations": [2, "never", { "ignoreForLoopInit": true }],
-        // "no-catch-shadow": 2, // don't care about older browsers
+        // "no-catch-shadow": 2, // don't care about IE8
         "no-delete-var": 2,
         "no-label-var": 2,
         "no-shadow": [2, {
@@ -223,7 +221,7 @@
         // "consistent-this": [2, "_this"],
         "eol-last": 2,
         "func-call-spacing": [2, "never"],
-        "func-name-matching": 2,
+        // "func-name-matching": 2, // transformed classes may not respect this rule
         // "func-names": [2, "always"],
         // "func-style": [2 "declaration", { "allowArrowFunctions": true }],
         // "function-paren-newline": [2, { "minItems": 6 }],
@@ -347,5 +345,53 @@
         "template-tag-spacing": [2, "always"],
         // "unicode-bom": 2,
         // "wrap-regex": 2,
-    }
+
+        // ===============
+        // ECMAScript 6
+        // ===============
+        // "arrow-body-style": [2, "as-needed"], // bug
+        "arrow-parens": [2, "as-needed"],
+        "arrow-spacing": [2, {
+            "before": true,
+            "after": true
+        }],
+        // "constructor-super": 2,
+        // "generator-star-spacing": [2, "after"]
+        "no-class-assign": 2,
+        "no-confusing-arrow": 2,
+        "no-const-assign": 2,
+        "no-dupe-class-members": 2,
+        "no-duplicate-imports": 2,
+        "no-new-symbol": 2,
+        // "no-restricted-imports": [2, "import1", "import2"],
+        // "no-this-before-super": [2, "import1", "import2"],
+        "no-useless-computed-key": 2,
+        "no-useless-constructor": 2,
+        "no-useless-rename": 2,
+        "no-var": 2,
+        "object-shorthand": 2,
+        "prefer-arrow-callback": 2, // reduce function footprint
+        "prefer-const": [2, {
+            "ignoreReadBeforeAssign": true
+        }],
+        // "prefer-destructuring": [2, {
+        //   "array": true,
+        //   "object": true
+        // }, {
+        //   "enforceForRenamedProperties": true
+        // }], // report a = obj[b] as error
+        "prefer-numeric-literals": 2,
+        // "prefer-rest-params": 2, // annoying errors when transfering arguments
+        "prefer-spread": 2,
+        "prefer-template": 2,
+        "require-yield": 2,
+        "rest-spread-spacing": 2,
+        // "sort-imports": 2, // who cares?
+        "symbol-description": 2,
+        "template-curly-spacing": [2, "always"],
+        "yield-star-spacing": [2, {
+            "before": false,
+            "after": true
+        }]
+    },
 }
