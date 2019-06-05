@@ -11,7 +11,7 @@
     "lint": "eslint --fix \"lib/**/*.js\" || exit 0",
     "prepublishOnly": "node scripts/prepare.js && npm run lint",
     "postinstall": "node scripts/postinstall.js",
-    "test": "node node_modules/mocha/bin/_mocha --full-trace --require coffeescript/register test/mocha/*-test.*"
+    "test": "mocha --full-trace --require coffeescript/register test/mocha/*-test.*"
   },
   "repository": {
     "type": "git",
@@ -50,7 +50,7 @@
     "js-beautify": "^1.7.5",
     "lodash": "^4.17.11",
     "log4js": "^2.6.1",
-    "marked": "^0.3.12",
+    "marked": "^0.6.2",
     "minimatch": "^3.0.4",
     "mkdirp": "^0.5.1",
     "mv": "^2.1.1",
