@@ -32,6 +32,6 @@
     "eslint": "^5.14.1",
     "transform-modules-eumd": "^0.0.1",
     "uglify-es-brunch": "^1.0.5",
-    "umd-builder": "^2.16.0"
+    "umd-builder": "^2.16.3"
   }
 }
