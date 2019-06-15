@@ -1,0 +1,42 @@
+diff -rupN a/windows/notify.ps1 b/windows/notify.ps1
+--- a/windows/notify.ps1
++++ b/windows/notify.ps1
+@@ -1,4 +1,13 @@
+ param($app, $icon, $title, $message)
++
++$appID = Get-StartApps | where Name -like $app | Format-Wide -Property AppID | Out-String
++if ([string]::IsNullOrEmpty($appID)) {
++    $appID = Get-StartApps | where Name -like 'Node.js' | Format-Wide -Property AppID | Out-String
++}
++if ([string]::IsNullOrEmpty($appID)) {
++    $appID = Get-StartApps | where Name -like 'Windows PowerShell' | Format-Wide -Property AppID | Out-String
++}
++$app = $appID.trim()
+ 
+ [Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType = WindowsRuntime] > $null
+ 
+diff -rupN a/windows/index.js b/windows/index.js
+--- a/windows/index.js
++++ b/windows/index.js
+@@ -1,11 +1,13 @@
+-'use strict';
+-
+-const sh = require('tag-shell');
+-const notify = `${__dirname}/notify.ps1`;
++const {spawn} = require('child_process');
++const notify = require('path').resolve(__dirname, 'notify.ps1');
+ 
+ module.exports = opts => {
+-  sh.async`powershell -file ${notify}
+-    -app ${opts.app} -icon ${opts.icon}
+-    -title ${opts.title} -message ${opts.message}
+-  `;
++  return spawn('powershell', [
++    '-ExecutionPolicy', 'Bypass',
++    '-File', notify,
++    '-app', opts.app,
++    '-icon', opts.icon,
++    '-title', opts.title,
++    '-message', opts.message.slice(0, 1024),
++  ], {stdio: 'inherit'});
+ };

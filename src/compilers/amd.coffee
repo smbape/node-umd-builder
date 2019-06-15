@@ -277,12 +277,18 @@ _writeMainData = (data, dst, path, options, done)->
         writer = fs.createWriteStream dst, flags: 'w'
 
         if options.optimizer
-            options.optimizer.optimize({data, path}).then ({data: optimized})->
+            writeOptimized = ({data: optimized})->
                 writer.write(optimized || data, 'utf8', done)
                 writer.end()
                 writer = null
                 return
-            , done
+            
+            obj = options.optimizer.optimize({data, path})
+
+            if obj isnt null and typeof obj is "object" and typeof obj.then is "function"
+                obj.then writeOptimized, done
+            else
+                writeOptimized(obj)
         else
             writer.write beautify(data, 
                 indent_with_tabs: false
