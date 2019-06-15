@@ -1,7 +1,7 @@
 'use strict'
 
-log4js = require '../log4js'
-logger = log4js.getLogger 'umd-builder'
+# log4js = require "../log4js'"
+# logger = log4js.getLogger "umd-builder"
 
 sysPath = require 'path'
 

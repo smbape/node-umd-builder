@@ -282,7 +282,7 @@ _writeMainData = (data, dst, path, options, done)->
                 writer.end()
                 writer = null
                 return
-            
+
             obj = options.optimizer.optimize({data, path})
 
             if obj isnt null and typeof obj is "object" and typeof obj.then is "function"
@@ -539,6 +539,7 @@ module.exports = class AmdCompiler
             return
         return
 
+    # eslint-disable-next-line class-methods-use-this
     canJoin: (path, joinTo)->
         if /^bower_components[\/\\]/.test(path) and not /^bower_components[\/\\][^\/\\]+[\/\\]/.test(path)
             return false
@@ -707,11 +708,16 @@ module.exports = class AmdCompiler
             return
 
         if @optimizer
-            @optimizer.optimize({data: umdData, path}).then (res)->
-                {data: optimized, path} = res
+            writeOptimized = ({data: optimized})->
                 writeData optimized || umdData, dst, next
                 return
-            , next
+
+            obj = @optimizer.optimize({data: umdData, path})
+
+            if obj isnt null and typeof obj is "object" and typeof obj.then is "function"
+                obj.then writeOptimized, next
+            else
+                writeOptimized(obj)
             return
 
         writeData umdData, dst, next

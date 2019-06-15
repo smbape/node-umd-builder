@@ -1,4 +1,3 @@
-`/* eslint-disable no-empty-function */`
 stripJsonComments = require 'strip-json-comments'
 
 class StripJsonCommentsCompiler
@@ -6,6 +5,7 @@ class StripJsonCommentsCompiler
     type: 'javascript'
     completer: true
 
+    # eslint-disable-next-line class-methods-use-this
     compile: (params, next)->
         { data, path, map } = params
 
