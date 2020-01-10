@@ -1,52 +1,52 @@
-'use strict';
 
-var fs = require('fs'),
-    sysPath = require('path'),
-    _explore = require('fs-explorer')._explore,
-    mkdirp = require('mkdirp'),
-    quoteArg = require('anyspawn').quoteArg,
-    log4js = require('./log4js'),
-    logger = log4js.getLogger('umd-builder'),
-    fcache = require('./utils/fcache'),
-    resolveFrom = require('./utils/resolveFrom');
+const fs = require("fs");
+const sysPath = require("path");
+const {explore} = require("fs-explorer");
+const {quoteArg} = require("anyspawn");
+const log4js = require("./log4js");
+const logger = log4js.getLogger("umd-builder");
+const resolveFrom = require("./utils/resolveFrom");
+require("./utils/fcache");
 
 fs.ReadStream.prototype.open = function() {
-    var self = this;
-    var stack = (new Error()).stack;
-    fs.open(this.path, this.flags, this.mode, function(er, fd) {
+    const self = this;
+    const stack = (new Error()).stack;
+    fs.open(this.path, this.flags, this.mode, (er, fd) => {
         if (er) {
             if (self.autoClose) {
                 self.destroy();
             }
-            er.stack = er.stack + (new Error()).stack + "\n" + stack;
-            self.emit('error', er);
+            er.stack = `${ er.stack + (new Error()).stack }\n${ stack }`;
+            self.emit("error", er);
             return;
         }
 
         self.fd = fd;
-        self.emit('open', fd);
+        self.emit("open", fd);
         // start the flow of data.
         self.read();
     });
 };
 
-var cli = require('brunch/lib/cli'),
-    program = require(resolveFrom('brunch', 'commander'));
+const cli = require("brunch/lib/cli");
+const program = require(resolveFrom("brunch", "commander"));
 
-program.commands.forEach(function(command) {
-    if (command._name === 'build' || command._name === 'watch') {
-        command.option('--clean', 'empty public directory before starting');
-        command.option('-f, --force', 'force clean without prompt');
+program.commands.forEach(command => {
+    if (command._name === "build" || command._name === "watch") {
+        command.option("--clean", "empty public directory before starting");
+        command.option("-f, --force", "force clean without prompt");
     }
 });
 
-var command = process.argv[2], cleanOpt, forceOpt;
+const command = process.argv[2];
+
+let cleanOpt, forceOpt;
 if (/^w|watch|b|build|bb|bbp|bw|bws$/.test(command)) {
-    process.argv.slice(2).forEach(function(arg) {
-        if (arg === '--clean') {
+    process.argv.slice(2).forEach(arg => {
+        if (arg === "--clean") {
             cleanOpt = true;
         }
-        if (arg === '--force' || (/^-\w/.test(arg) && ~arg.indexOf('f'))) {
+        if (arg === "--force" || /^-\w/.test(arg) && arg.indexOf("f") !== -1) {
             forceOpt = true;
         }
     });
@@ -64,34 +64,34 @@ function run() {
 
 function clean(next) {
     // TODO: take plublic path from config
-    var PUBLIC_PATH = sysPath.resolve('public');
+    const PUBLIC_PATH = sysPath.resolve("public");
 
-    var prompt = require('prompt');
+    const prompt = require("prompt");
     if (forceOpt) {
         prompt.override = {
-            answer: 'yes'
+            answer: "yes"
         };
     }
     prompt.colors = false;
-    prompt.message = '';
-    prompt.delimiter = '';
+    prompt.message = "";
+    prompt.delimiter = "";
     prompt.start();
 
     prompt.get({
         properties: {
             answer: {
-                description: 'Confirm cleaning of ' + quoteArg(PUBLIC_PATH) + '? [yes/no]: '
+                description: `Confirm cleaning of ${ quoteArg(PUBLIC_PATH) }? [yes/no]: `
             }
         }
-    }, function(err, result) {
+    }, (err, result) => {
         if (result && /^yes$/i.test(result.answer)) {
-            logger.warn('cleaning folder ' + quoteArg(PUBLIC_PATH));
+            logger.warn(`cleaning folder ${ quoteArg(PUBLIC_PATH) }`);
 
             remove(PUBLIC_PATH, {
                 empty: true
-            }, function(err) {
-                logger.warn('cleaned ' + quoteArg(PUBLIC_PATH));
-                if (err && err.code !== 'ENOENT') {
+            }, err => {
+                logger.warn(`cleaned ${ quoteArg(PUBLIC_PATH) }`);
+                if (err && err.code !== "ENOENT") {
                     logger.error(err);
                 }
                 next();
@@ -109,31 +109,30 @@ function clean(next) {
  * @param  {Function} done called on end
  */
 function remove(file, options, done) {
-    if (arguments.length === 2 && 'function' === typeof options) {
+    if (arguments.length === 2 && "function" === typeof options) {
         done = options;
         options = {};
     }
 
-    if ('function' !== typeof done) {
-        done = function() {};
+    if (typeof done !== "function") {
+        done = Function.prototype;
     }
 
-    function callfile(file, stats, done) {
-        fs.unlink(file, done);
+    function callfile(file_, stats, done) {
+        fs.unlink(file_, done);
     }
 
     function calldir(dir, stats, files, state, done) {
-        if (state === 'end') {
+        if (state === "end") {
             if (options.empty && dir === file) {
                 done();
-            } else {
-                if (stats.isSymbolicLink()) {
+            } else if (stats.isSymbolicLink()) {
                     fs.unlink(dir, done);
                 } else {
-                    fs.rmdir(dir, function(er) {
-                        if (er && (er.code === 'ENOTEMPTY' || er.code === 'EEXIST' || er.code === 'EPERM')) {
+                    fs.rmdir(dir, er => {
+                        if (er && (er.code === "ENOTEMPTY" || er.code === "EEXIST" || er.code === "EPERM")) {
                             // try in few time, last deletion is not completely ended
-                            setTimeout(function() {
+                            setTimeout(() => {
                                 fs.rmdir(dir, done);
                             }, 10);
                         } else {
@@ -141,17 +140,13 @@ function remove(file, options, done) {
                         }
                     });
                 }
-            }
         } else {
             done();
         }
     }
 
-    options = Object.assign({
-        fs: fs,
+    explore(file, callfile, calldir, Object.assign({
         resolve: true,
         followSymlink: false
-    }, options);
-
-    _explore(file, callfile, calldir, options, done);
+    }, options), done);
 }

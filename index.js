@@ -1,1 +1,1 @@
-exports.builder = require('./lib/builder');
+exports.builder = require("./lib/builder");

@@ -1,5 +1,3 @@
-"use strict";
-
 const fs = require("fs");
 const limitRetry = require("./limitRetry");
 const resolveFrom = require("./resolveFrom");
@@ -26,7 +24,7 @@ const readFile = (...args) => {
 
             // consider an empty file as a reading error
             if (!error && data.length === 0) {
-                error = new Error("No data");
+                error = new Error(`No data for ${ path }`);
                 error.code = "NO_DATA";
             }
 
@@ -142,7 +140,28 @@ class ResourceManager {
 
 const resources = {};
 
-exports.lock = (path, cb) => {
+// On windows and on a HDD, change event can be emitted before the new content is completely written
+const lockWin = (path, cb) => {
+    if (!hasProp.call(resources, path)) {
+        const manager = new ResourceManager(() => {
+            delete resources[path];
+        });
+        manager.replenish = manager.replenish.bind(manager);
+        resources[path] = manager;
+    }
+
+    const manager = resources[path];
+
+    manager.callbacks.push(cb);
+
+    if (manager.timerID) {
+        clearTimeout(manager.timerID);
+    }
+
+    manager.timerID = setTimeout(manager.replenish, 100);
+};
+
+const lockNotWin = (path, cb) => {
     if (!hasProp.call(resources, path)) {
         resources[path] = new ResourceManager(() => {
             delete resources[path];
@@ -151,3 +170,5 @@ exports.lock = (path, cb) => {
 
     resources[path].lock(cb);
 };
+
+exports.lock = process.platform === "win32" ? lockWin : lockNotWin;

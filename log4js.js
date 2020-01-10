@@ -1,36 +1,33 @@
-'use strict';
+require("coffeescript").register();
 
-require('coffeescript').register();
+const sysPath = require("path");
 
-var mkdirp = require('mkdirp'),
-    sysPath = require('path');
-
-var log4js, config;
+let config;
 
 if (!global.log4js) {
-    log4js = global.log4js = require('log4js');
+    global.log4js = require("log4js");
     try {
-        config = require(sysPath.join(process.cwd(), 'build-log4js'));
+        config = require(sysPath.join(process.cwd(), "build-log4js"));
     } catch ( err ) {
         config = {
-            "appenders": {
-                "console": {
-                    "type": "console",
-                    "layout": {
-                        "type": "colored"
+            appenders: {
+                console: {
+                    type: "console",
+                    layout: {
+                        type: "colored"
                     }
                 }
             },
-            "categories": {
-                "default": {
-                    "appenders": ["console"],
-                    "level": "INFO"
+            categories: {
+                default: {
+                    appenders: ["console"],
+                    level: "INFO"
                 }
             }
         };
     }
 
-    log4js.configure(config);
+    global.log4js.configure(config);
 }
 
 module.exports = global.log4js;
