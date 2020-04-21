@@ -2,21 +2,25 @@ diff --git a/lib/watch.js b/lib/watch.js
 index 6c674f9..0458376 100644
 --- a/lib/watch.js
 +++ b/lib/watch.js
-@@ -110,6 +110,25 @@ class BrunchWatcher {
+@@ -110,6 +110,29 @@ class BrunchWatcher {
      }
  
      application.loadConfig(persistent, options)
 +      .then(cfg => {
-+        return new Promise(resolve => {
++        return new Promise((resolve, reject) => {
 +          if (typeof cfg.initialize === 'function') {
 +            const initTimeout = setTimeout(function() {
 +              logger.warn('initialize is taking a long time to start');
 +              return logger.warn('**don\'t forget to invoke callback()**');
 +            }, cfg.timeout || 5000);
 +
-+            const callback = () => {
++            const callback = err => {
 +              clearTimeout(initTimeout);
-+              resolve(cfg);
++              if (err) {
++                reject(err);
++              } else {
++                resolve(cfg);
++              }
 +            };
 +
 +            cfg.initialize(cfg, callback);

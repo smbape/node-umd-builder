@@ -8,26 +8,6 @@ const logger = log4js.getLogger("umd-builder");
 const resolveFrom = require("./utils/resolveFrom");
 require("./utils/fcache");
 
-fs.ReadStream.prototype.open = function() {
-    const self = this;
-    const stack = (new Error()).stack;
-    fs.open(this.path, this.flags, this.mode, (er, fd) => {
-        if (er) {
-            if (self.autoClose) {
-                self.destroy();
-            }
-            er.stack = `${ er.stack + (new Error()).stack }\n${ stack }`;
-            self.emit("error", er);
-            return;
-        }
-
-        self.fd = fd;
-        self.emit("open", fd);
-        // start the flow of data.
-        self.read();
-    });
-};
-
 const cli = require("brunch/lib/cli");
 const program = require(resolveFrom("brunch", "commander"));
 
