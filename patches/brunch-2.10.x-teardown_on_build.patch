@@ -2,8 +2,33 @@ diff --git a/lib/watch.js b/lib/watch.js
 index 0458376..e943f4b 100644
 --- a/lib/watch.js
 +++ b/lib/watch.js
-@@ -383,6 +383,7 @@
-       if (!config.persistent) {
+@@ -100,6 +100,7 @@
+     this._startTime = Date.now() - speed.sinceStart;
+     this._isFirstRun = true;
+     this._onReload = options._onReload;
++    this._compiling = 0;
+     options.jobs = setDefaultJobsCount(options.jobs);
+ 
+     if (!persistent) {
+@@ -324,6 +325,8 @@
+       return;
+     }
+ 
++    this._compiling++;
++
+     // Determine which files has been changed,
+     // create new `fs_utils.GeneratedFile` instances and write them.
+     write(fileList, config, joinConfig, optimizers, startTime).then(data => {
+@@ -381,12 +384,14 @@
+         this.restartBrunch('package');
+       }
+     }).then(() => {
++      this._compiling--;
+       if (!this.watcherIsReady) return;
+       // If it’s single non-continuous build, close file watcher and
+       // exit process with correct exit code.
+-      if (!config.persistent) {
++      if (!config.persistent && this._compiling === 0) {
          watcher.close();
          workers.close();
 +        this.hooks.teardown();
