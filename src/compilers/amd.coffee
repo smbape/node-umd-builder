@@ -72,7 +72,10 @@ _processComponent = (component, config, options, done)->
 
     for prop in ['main', 'scripts']
         isScript = prop is 'scripts'
-        for path in component.package[prop]
+        files = component.package[prop]
+        continue if not files
+
+        for path in files
             # normalize path
             path = sysPath.relative(componentDir, sysPath.resolve(componentDir, path)).replace(/[\\]/g, '/')
             if /[\^\$\|\?\*\+\(\)\[\]\{\}]/.test(path)

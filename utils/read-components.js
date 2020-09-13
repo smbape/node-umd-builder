@@ -8,6 +8,7 @@
 
 var hasProp = {}.hasOwnProperty;
 var stripJsonComments = require("strip-json-comments");
+var env = process.env.NODE_ENV || "development";
 
 var sysPath = require("path");
 var fs = require("fs");
@@ -106,6 +107,13 @@ function getJsonPath(path, type) {
 
 var getPackageFiles = exports.getPackageFiles = function(pkg) {
   var list = [];
+
+  if (pkg.env !== null && typeof pkg.env === "object" && pkg.env[env]) {
+    pkg = Object.assign({}, pkg, pkg.env[env], {
+      env: undefined
+    });
+  }
+
   ["main", "scripts", "styles"].forEach(prop => {
     if (pkg[prop]) {
       if (Array.isArray(pkg[prop])) {
