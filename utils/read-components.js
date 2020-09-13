@@ -162,7 +162,7 @@ function processPackage(type, pkg, callback) {
           dependencies: pkg.dependencies || {},
           package: pkg,
         },
-        properties = ["name", "version", "type", "umd", "exports", "lazy", "paths", "map"], prop, i, len;
+        properties = ["name", "version", "type", "umd", "exports", "lazy", "paths", "map", "resolve"], prop, i, len;
 
       for (i = 0, len = properties.length; i < len; i++) {
         prop = properties[i];
